@@ -17,10 +17,15 @@
 
     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
-        <item>com.netflix.ninja</item>
-        <item>com.amazon.amazonvideo.livingroom</item>
-        <item>com.google.android.youtube.tv</item>
+        <!-- Top Dock (First 4 apps) -->
+        <item>org.smarttube.stable</item>
+        <item>com.phlox.tvwebbrowser</item>
         <item>in.startv.hotstar</item>
+        <item>com.mitv.tvhome.mitvplus</item>
+        <!-- Next Line (Grid Row 1) -->
+        <item>com.yablio.sendfilestotv</item>
+        <item>com.xiaomi.mitv.smartshare</item>
+        <item>com.android.vending</item>
     </string-array>
     <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
          the first grid apps, so the dock never shows a gap. false leaves them empty (#162); a theme can
@@ -29,12 +34,14 @@
 
     <!-- Apps never shown as tiles (e.g. the Live TV app, which the Inputs menu already covers). -->
     <string-array name="hidden_apps">
-        <item>com.mediatek.wwtv.tvcenter</item>
+        <item>com.android.tv</item>
         <item>com.mitv.gallery</item>
+        <item>com.mitv.dream</item>
+        <item>com.xiaomi.mitv.mediaexplorer</item>
     </string-array>
 
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
-    <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
+    <string name="live_tv_package" translatable="false">com.android.tv</string>
 
     <!-- Open the Live TV app above the first time Home comes up after the TV is switched on, for sets that are
          mostly used for broadcast TV. Once per boot: Home after that stays Home. Can also be set with
@@ -174,6 +181,12 @@
          still opens on a tap; "hold:scan:490:..." works for scancodes. A key with only a hold entry does nothing
          on a tap. A listed app that is not installed leaves the button doing nothing. Leave empty to omit. -->
     <string-array name="app_keys" translatable="false">
+        <item>KEYCODE_BUTTON_5:org.smarttube.stable</item>
+        <item>192:org.smarttube.stable</item>
+        <item>580:org.smarttube.stable</item>
+        <item>hold:KEYCODE_BUTTON_5:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>hold:192:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>hold:580:https://www.google.co.in/search?q=hdmovie2</item>
     </string-array>
 
     <!-- Package of the stock launcher, for TVs whose firmware turns it back on after it was disabled. XGIMI's
@@ -187,7 +200,7 @@
     <bool name="shamsi_date">false</bool>
 
     <!-- A name after the greeting: "Mr. Trịnh" shows GOOD MORNING, MR. TRỊNH. Empty: the greeting alone. -->
-    <string name="greeting_name" translatable="false"></string>
+    <string name="greeting_name" translatable="false">Bunty Ji</string>
     <!-- Optional VPN app the network pill opens (hold the pill for Wi-Fi settings), e.g. the package of the
          VPN you use. Empty: the pill opens Wi-Fi settings. The green VPN badge shows for any VPN either way;
          with an app set here, a red "VPN off" badge also shows while no VPN is up. -->
@@ -205,7 +218,7 @@
     <!-- The dock band as light frosted glass, like the Inputs, Wi-Fi and Settings pills, so a sky or wallpaper shows
          through it. false (the default) keeps the solid near-black band, or the cinematic shelf's dark glass. Can
          also be set with "dock_glass": true in a theme's config.json. -->
-    <bool name="dock_glass">false</bool>
+    <bool name="dock_glass">true</bool>
     <!-- The dock band's padding equals the gap between its tiles on all four sides (as far as the grid's edges leave room),
          so its corners are concentric with the tiles' and the spacing reads even. false (the default) keeps the fixed
          14dp above and below, up to 22dp at the sides and 26dp corners. Can also be set with "dock_even_padding": true in a theme's config.json. -->
@@ -215,9 +228,9 @@
     <bool name="reorder_button">false</bool>
     <!-- Wi-Fi and Settings as round icon-only buttons (the network name moves to the talkback description);
          Inputs keeps its label. -->
-    <bool name="icon_only_buttons">false</bool>
+    <bool name="icon_only_buttons">true</bool>
     <!-- The Inputs pill as a round icon button too (the label moves to the talkback description). -->
-    <bool name="icon_only_inputs">false</bool>
+    <bool name="icon_only_inputs">true</bool>
     <!-- true colours the Wi-Fi pill's icon green while the TV is online and leaves it white while it is not (dark on
          the focused pill either way), so the connection shows at a glance, also as an icon-only button. Can also be
          set with "wifi_status_color": true in a theme's config.json. -->
@@ -254,7 +267,7 @@
     <!-- Hold OK on a tile opens a small menu: Move (picks the tile up for reordering), Remove from Home (only with
          app_library) and App info. false keeps the old behaviour: holding OK opens the app's App info page.
          Can also be set with "tile_menu": true in a theme's config.json. -->
-    <bool name="tile_menu">false</bool>
+    <bool name="tile_menu">true</bool>
 
     <!-- Grid rows left visible under the dock on the home screen. 0 = dock sits at the very bottom. Tiles shrink if
          the dock, its title and this many rows would not otherwise fit the screen height. -->
@@ -309,7 +322,7 @@
 
     <!-- One line under the clock: CPU, free memory and free storage. Off by default; a theme can set
          "show_stats": true. Nothing is read, and the clock does not move, while this is false. -->
-    <bool name="show_stats">false</bool>
+    <bool name="show_stats">true</bool>
 
     <!-- Time-of-day backdrop behind everything: a dark gradient that follows the clock, with a warm
          horizon glow around sunrise and sunset. 0 keeps the plain background (the default); 1 to 100
@@ -360,5 +373,5 @@
     <!-- Shape of the glow behind the focused app, in its colour: radial (a soft glow, the default) or horizon (the
          colour washes down from the top edge and fades to black, brightest along the top). The cinematic shelf
          keeps its own glow. Can also be set with "glow_style": "horizon" in a theme's config.json. -->
-    <string name="glow_style" translatable="false">radial</string>
+    <string name="glow_style" translatable="false">horizon</string>
 </resources>

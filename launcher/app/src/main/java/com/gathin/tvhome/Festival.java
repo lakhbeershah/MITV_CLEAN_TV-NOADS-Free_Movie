@@ -76,6 +76,51 @@ final class Festival {
         return accent != 0 ? accent : DEFAULT_ACCENT;
     }
 
+    /**
+     * Automatic calendar-based festival greetings for major festivals (Diwali, Holi)
+     * across 2024 to 2035.
+     */
+    static String getCalendarFestivalGreeting(LocalDate today) {
+        if (today == null) return "";
+        int y = today.getYear();
+        int m = today.getMonthValue();
+        int d = today.getDayOfMonth();
+
+        // Diwali dates (Dhanteras through Bhai Dooj)
+        if ((y == 2024 && m == 10 && d >= 30) || (y == 2024 && m == 11 && d <= 3)
+                || (y == 2025 && m == 10 && d >= 19 && d <= 23)
+                || (y == 2026 && m == 11 && d >= 6 && d <= 10)
+                || (y == 2027 && ((m == 10 && d >= 28) || (m == 11 && d <= 1)))
+                || (y == 2028 && m == 10 && d >= 16 && d <= 20)
+                || (y == 2029 && m == 11 && d >= 4 && d <= 8)
+                || (y == 2030 && m == 10 && d >= 25 && d <= 29)
+                || (y == 2031 && m == 11 && d >= 13 && d <= 17)
+                || (y == 2032 && m == 11 && d >= 1 && d <= 5)
+                || (y == 2033 && m == 10 && d >= 21 && d <= 25)
+                || (y == 2034 && m == 11 && d >= 9 && d <= 13)
+                || (y == 2035 && ((m == 10 && d >= 29) || (m == 11 && d <= 2)))) {
+            return "Happy Diwali";
+        }
+
+        // Holi dates (Holika Dahan + Rangwali Holi)
+        if ((y == 2024 && m == 3 && d >= 24 && d <= 26)
+                || (y == 2025 && m == 3 && d >= 13 && d <= 15)
+                || (y == 2026 && m == 3 && d >= 3 && d <= 5)
+                || (y == 2027 && m == 3 && d >= 21 && d <= 23)
+                || (y == 2028 && m == 3 && d >= 10 && d <= 12)
+                || (y == 2029 && ((m == 2 && d == 28) || (m == 3 && d <= 2)))
+                || (y == 2030 && m == 3 && d >= 19 && d <= 21)
+                || (y == 2031 && m == 3 && d >= 8 && d <= 10)
+                || (y == 2032 && m == 3 && d >= 26 && d <= 28)
+                || (y == 2033 && m == 3 && d >= 15 && d <= 17)
+                || (y == 2034 && m == 3 && d >= 4 && d <= 6)
+                || (y == 2035 && m == 3 && d >= 24 && d <= 26)) {
+            return "Happy Holi";
+        }
+
+        return "";
+    }
+
     /** {@code #RRGGBB} to an opaque colour, anything else to 0. */
     static int parseColor(String s) {
         if (s == null) return 0;

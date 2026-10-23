@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.media.tv.TvContract;
+import android.net.Uri;
 import android.view.KeyEvent;
 
 import java.util.ArrayList;
@@ -167,6 +168,22 @@ final class RemoteKeys {
             try {
                 ctx.startActivity(view);
             } catch (ActivityNotFoundException ignored) {
+            }
+            return;
+        }
+        if (pkg.startsWith("http://") || pkg.startsWith("https://")) {
+            Intent view = new Intent(Intent.ACTION_VIEW, Uri.parse(pkg))
+                    .setPackage("com.phlox.tvwebbrowser")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                ctx.startActivity(view);
+                return;
+            } catch (ActivityNotFoundException ignored) {
+                try {
+                    ctx.startActivity(view.setPackage(null));
+                    return;
+                } catch (ActivityNotFoundException ignored2) {
+                }
             }
             return;
         }

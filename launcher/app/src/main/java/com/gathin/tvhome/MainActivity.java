@@ -613,6 +613,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (!cfg.showNetworkPill) btnWifi.setVisibility(View.GONE);
         showInputsPill = cfg.showInputsPill;
         showInputsMenuRow = cfg.showInputsPill;
+        btnBluetooth = findViewById(R.id.btnBluetooth);
+        if (btnBluetooth != null) {
+            btnBluetooth.setOnClickListener(v -> {
+                Intent i = new Intent();
+                i.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
+                try {
+                    startActivity(i);
+                } catch (Exception e) {
+                    open(systemIntent(Settings.ACTION_SETTINGS));
+                }
+            });
+        }
         btnLibraryTop = findViewById(R.id.btnLibraryTop);
         btnLibraryTop.setOnClickListener(v -> {
             onLibraryRequested();
@@ -648,6 +660,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (cfg.wifiLabelWidth > 0) btnWifi.setMaxWidth(Math.round(cfg.wifiLabelWidth * density));
             else makeIconOnly(btnWifi);
             makeIconOnly((TextView) btnSettings);
+            if (btnBluetooth instanceof TextView) makeIconOnly((TextView) btnBluetooth);
         }
         if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
         btnSettings.setOnLongClickListener(v -> {
@@ -674,11 +687,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         };
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
+        if (btnBluetooth != null) btnBluetooth.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnBluetooth, btnReorder, btnLibraryTop, btnSettings}) {
+                if (button == null) continue;
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
                         .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start());
@@ -2275,13 +2290,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             else if (hour < 22) res = R.string.good_evening;
             else res = R.string.good_night;
         }
+        String baseGreeting = greetingName.isEmpty() ? getString(res)
+                : getString(R.string.greeting_with_name, getString(res), greetingName);
+        String calFestival = Festival.getCalendarFestivalGreeting(LocalDate.now());
         String festiveGreeting = festive ? festival.greetingText(getResources()) : "";
-        if (!festiveGreeting.isEmpty()) {
+        if (!calFestival.isEmpty()) {
+            greeting.setText(baseGreeting + "  |  " + calFestival);
+            greeting.setTextColor(liftTowardsWhite(0xFFFFB23C, 0.25f));
+        } else if (!festiveGreeting.isEmpty()) {
             greeting.setText(festiveGreeting);
             greeting.setTextColor(liftTowardsWhite(festival.accentColor(), 0.25f));
         } else {
-            greeting.setText(greetingName.isEmpty() ? getString(res)
-                    : getString(R.string.greeting_with_name, getString(res), greetingName));
+            greeting.setText(baseGreeting);
             greeting.setTextColor(greetingColor);
         }
         if (shamsi) shamsiDate.setText(Shamsi.today(getResources()));
@@ -2389,7 +2409,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 vpn = false;
             } else if (ethernet) {
                 text = getString(R.string.ethernet);
-                icon = R.drawable.ic_ethernet;
+                icon = R.drawable.ic_wifi;
                 flame = 4;
                 steady = true;
             } else if (wifi) {
@@ -2467,6 +2487,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private ColorStateList wifiOnlineTint, wifiPlainTint;
     /** The app library button in the top bar (library_button). */
     private View btnLibraryTop;
+    private View btnBluetooth;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */
     private boolean libraryFromTopBar;
 
