@@ -4,15 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Outline;
-import android.graphics.drawable.GradientDrawable;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,7 +25,8 @@ import java.util.Set;
 
 /**
  * A continuous, smooth-scrolling horizontal strip of photos from the Download directory.
- * Natural portrait and landscape aspect ratios are preserved at full window height.
+ * Photos preserve their natural upright portrait and landscape aspect ratios at full window height,
+ * with square corners and seamless edge-to-edge layout.
  */
 public class PhotoSlider extends FrameLayout {
 
@@ -36,7 +36,6 @@ public class PhotoSlider extends FrameLayout {
 
     private FrameLayout container;
     private LinearLayout strip;
-    private View border;
 
     private float offset = 0f;
     private float singleSetWidth = 0f;
@@ -58,21 +57,12 @@ public class PhotoSlider extends FrameLayout {
 
     public PhotoSlider(Context context, AttributeSet attrs) {
         super(context, attrs);
-        float density = getResources().getDisplayMetrics().density;
-        int radius = Math.round(18 * density);
 
         setFocusable(true);
         setFocusableInTouchMode(true);
         setClipChildren(false);
 
         container = new FrameLayout(context);
-        container.setClipToOutline(true);
-        container.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
-            }
-        });
         container.setBackgroundColor(0xFF101318);
 
         strip = new LinearLayout(context) {
@@ -87,21 +77,11 @@ public class PhotoSlider extends FrameLayout {
 
         addView(container, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        border = new View(context);
-        GradientDrawable borderDrawable = new GradientDrawable();
-        borderDrawable.setCornerRadius(radius);
-        borderDrawable.setStroke(Math.round(1.5f * density), 0x26FFFFFF);
-        border.setBackground(borderDrawable);
-        addView(border, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
         setOnFocusChangeListener((v, hasFocus) -> {
             isFocused = hasFocus;
-            GradientDrawable d = (GradientDrawable) border.getBackground();
             if (hasFocus) {
-                d.setStroke(Math.round(2f * density), 0xFFFFFFFF);
-                animate().scaleX(1.015f).scaleY(1.015f).setDuration(180).start();
+                animate().scaleX(1.01f).scaleY(1.01f).setDuration(180).start();
             } else {
-                d.setStroke(Math.round(1.5f * density), 0x26FFFFFF);
                 animate().scaleX(1f).scaleY(1f).setDuration(180).start();
             }
         });
@@ -141,7 +121,7 @@ public class PhotoSlider extends FrameLayout {
             }
 
             float density = getResources().getDisplayMetrics().density;
-            int targetH = Math.round(170 * density);
+            int targetH = Math.round(210 * density);
 
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
@@ -185,15 +165,13 @@ public class PhotoSlider extends FrameLayout {
         }
 
         float density = getResources().getDisplayMetrics().density;
-        int margin = Math.round(8 * density);
-        int itemRadius = Math.round(12 * density);
-        int targetH = Math.round(170 * density);
+        int targetH = Math.round(210 * density);
 
         float setW = 0f;
         for (Bitmap bmp : loadedBitmaps) {
             int h = bmp.getHeight() > 0 ? bmp.getHeight() : targetH;
             int w = (bmp.getWidth() * targetH) / h;
-            setW += (w + margin);
+            setW += w;
         }
         singleSetWidth = setW;
 
@@ -208,16 +186,7 @@ public class PhotoSlider extends FrameLayout {
                 ImageView iv = new ImageView(getContext());
                 iv.setImageBitmap(bmp);
                 iv.setScaleType(ImageView.ScaleType.FIT_XY);
-                iv.setClipToOutline(true);
-                iv.setOutlineProvider(new ViewOutlineProvider() {
-                    @Override
-                    public void getOutline(View v, Outline outline) {
-                        outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), itemRadius);
-                    }
-                });
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.MATCH_PARENT);
-                lp.rightMargin = margin;
-                strip.addView(iv, lp);
+                strip.addView(iv, new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         }
 
@@ -228,18 +197,40 @@ public class PhotoSlider extends FrameLayout {
 
     private Bitmap decodeScaled(String path, int targetH) {
         try {
+            int rot = 0;
+            try {
+                ExifInterface exif = new ExifInterface(path);
+                int o = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+                if (o == 6) rot = 90;
+                else if (o == 8) rot = 270;
+                else if (o == 3) rot = 180;
+            } catch (Throwable ignored) {}
+
             BitmapFactory.Options opts = new BitmapFactory.Options();
             opts.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(path, opts);
 
+            int srcH = (rot == 90 || rot == 270) ? opts.outWidth : opts.outHeight;
             int inSampleSize = 1;
-            while ((opts.outHeight / inSampleSize) >= (targetH * 2)) {
+            while ((srcH / inSampleSize) >= (targetH * 2)) {
                 inSampleSize *= 2;
             }
             opts.inSampleSize = inSampleSize;
             opts.inPreferredConfig = Bitmap.Config.RGB_565;
             opts.inJustDecodeBounds = false;
-            return BitmapFactory.decodeFile(path, opts);
+            Bitmap bmp = BitmapFactory.decodeFile(path, opts);
+            if (bmp == null) return null;
+
+            if (rot != 0) {
+                Matrix m = new Matrix();
+                m.postRotate(rot);
+                Bitmap r = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
+                if (r != bmp) {
+                    bmp.recycle();
+                    bmp = r;
+                }
+            }
+            return bmp;
         } catch (Throwable t) {
             return null;
         }

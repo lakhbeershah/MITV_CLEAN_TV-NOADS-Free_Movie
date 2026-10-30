@@ -1561,7 +1561,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         View item = (View) card.getParent();
         if (dockRow && position < COLUMNS) {
-            if (photoSlider != null) photoSlider.animate().alpha(1f).setDuration(220).start();
+            if (photoSlider != null) photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
             // Dock: park it at the bottom of the screen and show the top shelf for this app.
             int decoratedTop = item.getTop() - (int) (6 * density);
             int dy = decoratedTop - grid.getPaddingTop();
@@ -1574,7 +1574,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
             showHero(position, scroll ? r.top - dy : r.top);
         } else {
-            if (photoSlider != null) photoSlider.animate().alpha(0f).setDuration(160).start();
+            if (photoSlider != null) {
+                photoSlider.animate().translationY(-photoSlider.getHeight()).alpha(0f).setDuration(200).start();
+            }
             // Below the dock (or in a plain grid) the glow follows the tile without the big name; letting it
             // fade out left the grid on plain black.
             showGlowOnly(position);
