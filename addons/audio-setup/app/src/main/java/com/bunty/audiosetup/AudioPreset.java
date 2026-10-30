@@ -46,6 +46,16 @@ public class AudioPreset {
     public static AudioPreset[] getAllPresets() {
         return new AudioPreset[] {
             new AudioPreset(
+                "crisp_default",
+                "Crisp & Balanced (Default)",
+                "✨",
+                "Your favorite crisp sound. DRC RF mode + Dialogue Night mode enabled. Natural, balanced speech & audio.",
+                0, 1, 0, false,
+                true, 1, 50, 50,
+                0, 0, 0,
+                new int[] { 0, 0, 0, 0, 0 }
+            ),
+            new AudioPreset(
                 "crisp",
                 "Crisp Dialogue",
                 "🎙️",

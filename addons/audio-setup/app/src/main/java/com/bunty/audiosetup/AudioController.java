@@ -362,7 +362,7 @@ public class AudioController {
             }
         }
 
-        // 8. Write to Settings.Global (TV System Persistence)
+        // 8. Write to Settings.Global and Settings.System (TV System Persistence)
         try {
             Settings.Global.putInt(cr, "sound_effect_sound_mode", soundMode);
             Settings.Global.putInt(cr, "sound_effect_dialog_clarity", dialogClarity);
@@ -371,6 +371,13 @@ public class AudioController {
             Settings.Global.putInt(cr, "sound_effect_treble", treble);
             Settings.Global.putInt(cr, "sound_effect_bass", bass);
             Settings.Global.putInt(cr, "drc_mode", drcMode);
+            Settings.Global.putInt(cr, "sound_effect_night_mode", nightMode ? 1 : 0);
+
+            try {
+                Settings.System.putInt(cr, "sound_effect_night_mode", nightMode ? 1 : 0);
+                Settings.System.putInt(cr, "drc_mode", drcMode);
+                Settings.System.putInt(cr, "sound_effect_surround", surround ? 1 : 0);
+            } catch (Exception ignored) {}
 
             if (eqBandsMb != null && eqBandsMb.length >= 5) {
                 for (int i = 0; i < 5; i++) {
@@ -379,7 +386,7 @@ public class AudioController {
                 }
             }
         } catch (Exception e) {
-            Log.w(TAG, "Settings.Global write warning: " + e.getMessage());
+            Log.w(TAG, "Settings write warning: " + e.getMessage());
         }
 
         // 9. AudioEffectsService AIDL calls
@@ -527,17 +534,17 @@ public class AudioController {
 
     public static String getActivePresetId(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(KEY_ACTIVE_PRESET, "music");
+        return prefs.getString(KEY_ACTIVE_PRESET, "crisp_default");
     }
 
     public static boolean getSavedNightMode(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(KEY_NIGHT_MODE, false);
+        return prefs.getBoolean(KEY_NIGHT_MODE, true);
     }
 
     public static int getSavedDrcMode(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return prefs.getInt(KEY_DRC_MODE, 0);
+        return prefs.getInt(KEY_DRC_MODE, 1);
     }
 
     public static boolean getSavedSurround(Context context) {
