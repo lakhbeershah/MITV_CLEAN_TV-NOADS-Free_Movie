@@ -309,7 +309,7 @@
                     style="@style/TopButton"
                     android:text="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
                     android:id="@+id/btnWifi"
@@ -319,21 +319,21 @@
                     android:ellipsize="end"
                     android:text="@string/wifi"
                     android:drawableStart="@drawable/ic_wifi"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
                     android:id="@+id/btnBluetooth"
                     style="@style/TopButton"
                     android:contentDescription="@string/bluetooth"
                     android:drawableStart="@drawable/ic_bluetooth"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
                     android:id="@+id/btnReorder"
                     style="@style/TopButtonIcon"
                     android:contentDescription="@string/reorder"
                     android:drawableStart="@drawable/ic_swap_vert"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
                     android:id="@+id/btnLibraryTop"
@@ -341,14 +341,14 @@
                     android:visibility="gone"
                     android:contentDescription="@string/app_library"
                     android:drawableStart="@drawable/ic_apps"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
                     android:id="@+id/btnSettings"
                     style="@style/TopButton"
                     android:text="@string/settings"
                     android:drawableStart="@drawable/ic_settings"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/photoSlider" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -357,7 +357,16 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="6dp">
+
+            <com.gathin.tvhome.PhotoSlider
+                android:id="@+id/photoSlider"
+                android:layout_width="740dp"
+                android:layout_height="170dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="8dp"
+                android:nextFocusUp="@+id/btnSettings"
+                android:nextFocusDown="@+id/grid" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/grid"
