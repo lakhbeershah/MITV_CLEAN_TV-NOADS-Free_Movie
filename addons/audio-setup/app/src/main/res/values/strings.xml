@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Audio Setup</string>
+    <string name="title_presets">Sound Profiles</string>
+    <string name="title_custom">Custom Equalizer &amp; Effects</string>
+    <string name="btn_custom">Customize EQ</string>
+    <string name="btn_test_audio">Test Sound</string>
+    <string name="btn_reset">Reset</string>
+</resources>

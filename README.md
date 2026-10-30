@@ -34,6 +34,13 @@ All APKs are bundled directly inside the [`apps/`](apps/) folder so anyone can i
    * 100+ free live streaming channels (news, movies, lifestyle) with zero subscription.
 4. **Send Files to TV (`SendFilesToTV.apk`):**
    * Easily send APKs, wallpapers, and videos directly from your smartphone or PC to your TV.
+5. **Audio Setup (`AudioSetup.apk`):**
+   * Built specifically for Xiaomi TV speakers with clean D-Pad remote navigation.
+   * **6 Sound Profiles:** 🎙️ Crisp Dialogue, 🍿 Cinema & Movie, 🌙 Late Night, 🎵 Music & Bhajans, 🏏 Sports Live, ⚖️ Flat.
+   * **Custom 5-Band Equalizer:** Adjust 100Hz, 500Hz, 1.5kHz, 5kHz, 10kHz with remote Left/Right keys.
+   * **Master Enhancements:** Dialogue Boost (Night Mode), DRC Limiter, and Virtual Surround toggles.
+   * **Real-Time Sound Test:** Built-in acoustic preview chord so you can hear changes instantly.
+   * Auto-restores your favorite profile across TV reboots.
 
 ---
 

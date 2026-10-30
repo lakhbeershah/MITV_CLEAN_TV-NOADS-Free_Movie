@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp"
+    android:viewportWidth="320" android:viewportHeight="180">
+    <path android:fillColor="#0E1217" android:pathData="M0,0h320v180h-320z" />
+    <!-- Gradient soundwave bars in center -->
+    <path android:fillColor="#00E676" android:pathData="M70,95h16v40h-16z" />
+    <path android:fillColor="#00E676" android:pathData="M100,75h16v60h-16z" />
+    <path android:fillColor="#00D26A" android:pathData="M130,55h16v80h-16z" />
+    <path android:fillColor="#00E676" android:pathData="M160,40h16v95h-16z" />
+    <path android:fillColor="#00D26A" android:pathData="M190,60h16v75h-16z" />
+    <path android:fillColor="#00E676" android:pathData="M220,80h16v55h-16z" />
+    <path android:fillColor="#00D26A" android:pathData="M250,100h16v35h-16z" />
+    <!-- Subtle speaker icon at top left -->
+    <path android:fillColor="#33FFFFFF" android:pathData="M24,24l16,12v24l-16,12v-48z" />
+</vector>
