@@ -2,18 +2,38 @@ package com.gathin.tvhome;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.Random;
+
 /**
- * The clock screensaver shown by Home itself after home_idle_clock_minutes without input. Some TVs' own
- * screens (CVTE's live TV) do not keep the screen on, so the system screensaver would cut into programmes;
- * this one only ever starts from Home. Any key returns to Home.
+ * Full-screen ambient photo screensaver with clock and seconds,
+ * shown after idle timeout or launched immediately via quick button.
+ * Any key immediately wakes the TV and returns to Home.
  */
 public class ClockActivity extends Activity {
 
-    private ClockScene scene;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Random random = new Random();
+    private PhotoSlider photoSlider;
+    private View dreamContent;
+
+    private final Runnable drift = new Runnable() {
+        @Override
+        public void run() {
+            if (dreamContent != null) {
+                float density = getResources().getDisplayMetrics().density;
+                float dx = (random.nextFloat() - 0.5f) * 36 * density;
+                float dy = (random.nextFloat() - 0.5f) * 20 * density;
+                dreamContent.animate().translationX(dx).translationY(dy).setDuration(3500).start();
+            }
+            handler.postDelayed(this, 60_000L);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,26 +41,38 @@ public class ClockActivity extends Activity {
         setContentView(R.layout.dream_clock);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
-        scene = new ClockScene(getWindow().getDecorView());
+        photoSlider = findViewById(R.id.dreamPhotoSlider);
+        if (photoSlider != null) {
+            photoSlider.setClickable(false);
+            photoSlider.setFocusable(false);
+            photoSlider.setOnClickListener(null);
+        }
+        dreamContent = findViewById(R.id.dreamContent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        scene.start();
+        if (photoSlider != null) {
+            photoSlider.reloadPhotos();
+            photoSlider.startLoop();
+        }
+        handler.removeCallbacks(drift);
+        handler.postDelayed(drift, 30_000L);
     }
 
     @Override
     protected void onPause() {
-        scene.stop();
+        handler.removeCallbacksAndMessages(null);
+        if (photoSlider != null) photoSlider.stopLoop();
         super.onPause();
         finish();   // never left behind in the back stack
     }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        // The key that wakes the clock should not also act on Home, so it is consumed here.
-        if (event.getAction() == KeyEvent.ACTION_UP) finish();
+        // Any key immediately exits screensaver and returns to Home cleanly
+        if (!isFinishing()) finish();
         return true;
     }
 

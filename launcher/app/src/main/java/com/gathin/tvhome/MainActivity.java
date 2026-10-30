@@ -116,7 +116,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private long settingsRevision;
     /** Idle time on Home before ClockActivity; 0 is off (config.xml, home_idle_clock_minutes). */
     private long idleClockMs;
-    private final Runnable showIdleClock = () -> startActivity(new Intent(this, ClockActivity.class));
+    private final Runnable showIdleClock = () -> {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null && am.isMusicActive()) {
+                restartIdleClock();
+                return;
+            }
+        } catch (Throwable ignored) {}
+        startActivity(new Intent(this, ClockActivity.class));
+    };
     private String liveTvAction;
     private String liveTvInputId;
     /** The app library is on (config.xml, app_library): only then can the tile menu take an app off Home. */
@@ -661,11 +670,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             topButtons.setLayoutParams(tlp);
             topButtons.setGravity(Gravity.CENTER_VERTICAL);
         }
+        View btnScreensaver = findViewById(R.id.btnScreensaver);
         if (iconOnlyButtons) {
             if (cfg.wifiLabelWidth > 0) btnWifi.setMaxWidth(Math.round(cfg.wifiLabelWidth * density));
             else makeIconOnly(btnWifi);
             makeIconOnly((TextView) btnSettings);
             if (btnBluetooth instanceof TextView) makeIconOnly((TextView) btnBluetooth);
+            if (btnScreensaver instanceof TextView) makeIconOnly((TextView) btnScreensaver);
+        }
+        if (btnScreensaver != null) {
+            btnScreensaver.setOnClickListener(v -> startActivity(new Intent(this, ClockActivity.class)));
         }
         if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
         btnSettings.setOnLongClickListener(v -> {
@@ -693,11 +707,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         if (btnBluetooth != null) btnBluetooth.setOnKeyListener(pillKeys);
+        if (btnScreensaver != null) btnScreensaver.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnBluetooth, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnBluetooth, btnScreensaver, btnReorder, btnLibraryTop, btnSettings}) {
                 if (button == null) continue;
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)

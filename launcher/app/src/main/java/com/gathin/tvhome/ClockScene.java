@@ -44,11 +44,13 @@ final class ClockScene {
         View ambient = root.findViewById(R.id.dreamAmbient);
         glow = new GradientDrawable();
         glow.setGradientType(GradientDrawable.RADIAL_GRADIENT);
-        ambient.setBackground(glow);
-        ambient.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) ->
-                glow.setGradientRadius((r - l) * 0.55f));
-        colorIndex = random.nextInt(PALETTE.length);
-        setGlow(PALETTE[colorIndex]);
+        if (ambient != null) {
+            ambient.setBackground(glow);
+            ambient.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) ->
+                    glow.setGradientRadius((r - l) * 0.55f));
+            colorIndex = random.nextInt(PALETTE.length);
+            setGlow(PALETTE[colorIndex]);
+        }
     }
 
     void start() {

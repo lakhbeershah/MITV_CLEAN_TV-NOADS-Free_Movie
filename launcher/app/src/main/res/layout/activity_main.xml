@@ -285,6 +285,13 @@
                     android:nextFocusDown="@+id/photoSlider" />
 
                 <TextView
+                    android:id="@+id/btnScreensaver"
+                    style="@style/TopButton"
+                    android:contentDescription="@string/dream_name"
+                    android:drawableStart="@drawable/ic_picture"
+                    android:nextFocusDown="@+id/photoSlider" />
+
+                <TextView
                     android:id="@+id/btnReorder"
                     style="@style/TopButtonIcon"
                     android:contentDescription="@string/reorder"

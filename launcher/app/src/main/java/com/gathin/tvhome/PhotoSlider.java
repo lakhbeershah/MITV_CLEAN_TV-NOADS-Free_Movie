@@ -120,8 +120,7 @@ public class PhotoSlider extends FrameLayout {
                 found = found.subList(0, 20);
             }
 
-            float density = getResources().getDisplayMetrics().density;
-            int targetH = Math.round(288 * density);
+            int targetH = computeTargetHeight();
 
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
@@ -165,7 +164,7 @@ public class PhotoSlider extends FrameLayout {
         }
 
         float density = getResources().getDisplayMetrics().density;
-        int targetH = Math.round(288 * density);
+        int targetH = computeTargetHeight();
 
         float setW = 0f;
         for (Bitmap bmp : loadedBitmaps) {
@@ -247,6 +246,18 @@ public class PhotoSlider extends FrameLayout {
     public void stopLoop() {
         isRunning = false;
         removeCallbacks(scrollRunnable);
+    }
+
+    private int computeTargetHeight() {
+        int h = getHeight();
+        if (h <= 0 && getLayoutParams() != null) {
+            if (getLayoutParams().height == ViewGroup.LayoutParams.MATCH_PARENT) {
+                h = getResources().getDisplayMetrics().heightPixels;
+            } else if (getLayoutParams().height > 0) {
+                h = getLayoutParams().height;
+            }
+        }
+        return h > 0 ? h : Math.round(288 * getResources().getDisplayMetrics().density);
     }
 
     @Override
