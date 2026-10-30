@@ -168,6 +168,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean heroShown;
     private boolean animations;
     private boolean advancedEffects;
+    private boolean dockTitle = true;
     private TextView greeting;
     private View clockBlock;
     private View btnInputs;
@@ -419,7 +420,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (cinematic) setUpCinematicShelf(cfg.cinematicScrim);
         // dock_title false: the name above the dock (and the cinematic lines under it) never shows; the glow
         // still follows the dock.
-        if (!cfg.dockTitle) hero.setVisibility(View.GONE);
+        dockTitle = cfg.dockTitle;
+        if (!dockTitle) hero.setVisibility(View.GONE);
         greeting = findViewById(R.id.greeting);
         clockBlock = findViewById(R.id.leftBlock);
         greetingColor = greeting.getCurrentTextColor();
@@ -511,7 +513,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             public void onChildViewDetachedFromWindow(@NonNull View v) {
             }
         });
-        if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding));
+        if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, !dockTitle || cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding));
         if (cfg.fadeRows) TopFade.attach(grid, 48 * density);
         // Reduced motion: the tiles are simply there, with no entrance (reloadApps skips it there too).
         if (animations && !reducedMotion) {
@@ -1592,6 +1594,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     // ---- top shelf -------------------------------------------------------------------------------
 
     private void showHero(int position, float dockTopInRoot) {
+        if (!dockTitle) {
+            showGlowOnly(position);
+            return;
+        }
         String label = adapter.labelAt(position);
         int color = adapter.ambientColorAt(position);
         float y = dockTopInRoot - 14 * density - 26 * density - hero.getHeight();
