@@ -424,7 +424,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         dockTitle = cfg.dockTitle;
         if (!dockTitle) hero.setVisibility(View.GONE);
         greeting = findViewById(R.id.greeting);
-        clockBlock = findViewById(R.id.leftBlock);
+        View center = findViewById(R.id.centerClockBlock);
+        clockBlock = center != null ? center : findViewById(R.id.leftBlock);
         greetingColor = greeting.getCurrentTextColor();
         if (getResources().getBoolean(R.bool.rtl_menu_bar)) {
             // Center Hebrew greetings over the numeric time, independent of a visible AM/PM label.

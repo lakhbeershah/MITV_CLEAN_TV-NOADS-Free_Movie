@@ -21,7 +21,7 @@
     <string name="offline">Offline</string>
     <string name="not_available">Not available on this TV</string>
     <string name="cant_open">Can\'t open %1$s</string>
-    <string name="date_format">EEEE  d MMMM</string>
+    <string name="date_format">EEEE, d MMM yyyy</string>
     <!-- Date next to the clock on Home; a locale can split it over two lines with \n. -->
     <string name="date_format_home" translatable="false">@string/date_format</string>
     <string name="shamsi_month_farvardin">Farvardin</string>
@@ -37,8 +37,8 @@
     <string name="shamsi_month_bahman">Bahman</string>
     <string name="shamsi_month_esfand">Esfand</string>
     <string name="stats_cpu">CPU %1$d%%</string>
-    <string name="stats_memory">Memory %1$d / %2$d MB</string>
-    <string name="stats_storage">Storage %1$s free</string>
+    <string name="stats_memory">RAM %1$d/%2$d MB</string>
+    <string name="stats_storage">%1$s Free</string>
     <string name="storage_gb_whole">%1$.0f GB</string>
     <string name="storage_gb_decimal">%1$.1f GB</string>
     <string name="dream_name">Clock</string>
