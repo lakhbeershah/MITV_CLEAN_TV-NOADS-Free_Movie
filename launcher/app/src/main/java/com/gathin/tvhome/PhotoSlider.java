@@ -1,12 +1,10 @@
 package com.gathin.tvhome;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Environment;
@@ -18,13 +16,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
-import android.view.animation.DecelerateInterpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,27 +27,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * An auto-looping photo carousel that scans system storage
- * and smoothly slides through photos in the empty space between the clock and the dock.
+ * An auto-looping photo carousel that scans the Download directory
+ * and smoothly slides through photos with seamless edge-to-edge motion.
  */
 public class PhotoSlider extends FrameLayout {
 
-    private static final long INTERVAL_MS = 5000L;
-    private static final int ANIM_DURATION_MS = 550;
-
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final List<File> photoFiles = new ArrayList<>();
 
     private FrameLayout container;
-    private FrameLayout imageLayer;
     private ImageView imageA, imageB;
     private TextView caption;
     private View border;
+    private ValueAnimator slideAnimator;
 
     private boolean isAActive = true;
     private int currentIndex = -1;
@@ -64,33 +53,18 @@ public class PhotoSlider extends FrameLayout {
         public void run() {
             if (!isRunning) return;
             slideNext();
-            handler.postDelayed(this, INTERVAL_MS);
+            handler.postDelayed(this, 5000L);
         }
     };
 
-    public PhotoSlider(@NonNull Context context) {
-        super(context);
-        init(context);
-    }
-
-    public PhotoSlider(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public PhotoSlider(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
-    }
-
-    public PhotoSlider(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
-    }
-
-    private void init(Context context) {
         float density = getResources().getDisplayMetrics().density;
         int radius = Math.round(18 * density);
 
         setFocusable(true);
         setFocusableInTouchMode(true);
         setClipChildren(false);
-        setClipToPadding(false);
 
         container = new FrameLayout(context);
         container.setClipToOutline(true);
@@ -102,22 +76,18 @@ public class PhotoSlider extends FrameLayout {
         });
         container.setBackgroundColor(0xFF151820);
 
-        imageLayer = new FrameLayout(context);
         imageA = new ImageView(context);
         imageA.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        imageLayer.addView(imageA, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        container.addView(imageA, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         imageB = new ImageView(context);
         imageB.setScaleType(ImageView.ScaleType.CENTER_CROP);
         imageB.setVisibility(View.GONE);
-        imageLayer.addView(imageB, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        container.addView(imageLayer, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        container.addView(imageB, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         View gradient = new View(context);
-        GradientDrawable shade = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                new int[]{0xCC000000, 0x66000000, 0x00000000});
-        gradient.setBackground(shade);
+        gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                new int[]{0xCC000000, 0x66000000, 0x00000000}));
         LayoutParams gradLp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.round(55 * density));
         gradLp.gravity = Gravity.BOTTOM;
         container.addView(gradient, gradLp);
@@ -137,7 +107,6 @@ public class PhotoSlider extends FrameLayout {
         GradientDrawable borderDrawable = new GradientDrawable();
         borderDrawable.setCornerRadius(radius);
         borderDrawable.setStroke(Math.round(1.5f * density), 0x26FFFFFF);
-        borderDrawable.setColor(Color.TRANSPARENT);
         border.setBackground(borderDrawable);
         addView(border, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -161,19 +130,22 @@ public class PhotoSlider extends FrameLayout {
     }
 
     public void reloadPhotos() {
-        executor.execute(() -> {
+        new Thread(() -> {
             List<File> found = new ArrayList<>();
             Set<String> seen = new HashSet<>();
-            File[] searchDirs = new File[]{
-                    new File(Environment.getExternalStorageDirectory(), "Pictures"),
-                    new File(Environment.getExternalStorageDirectory(), "DCIM"),
-                    new File(Environment.getExternalStorageDirectory(), "Download"),
-                    Environment.getExternalStorageDirectory()
-            };
 
-            for (File dir : searchDirs) {
-                if (dir != null && dir.exists() && dir.isDirectory()) {
-                    scanDir(dir, found, seen, 0);
+            File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            if (downloadDir == null || !downloadDir.exists()) {
+                downloadDir = new File(Environment.getExternalStorageDirectory(), "Download");
+            }
+            if (downloadDir.exists() && downloadDir.isDirectory()) {
+                scanDir(downloadDir, found, seen, 0);
+            }
+
+            if (found.isEmpty()) {
+                File picDir = new File(Environment.getExternalStorageDirectory(), "Pictures");
+                if (picDir.exists() && picDir.isDirectory()) {
+                    scanDir(picDir, found, seen, 0);
                 }
             }
 
@@ -187,7 +159,7 @@ public class PhotoSlider extends FrameLayout {
                     showPhotoAt(currentIndex);
                 }
             });
-        });
+        }).start();
     }
 
     private void scanDir(File dir, List<File> result, Set<String> seen, int depth) {
@@ -195,25 +167,22 @@ public class PhotoSlider extends FrameLayout {
         File[] files = dir.listFiles();
         if (files == null) return;
         for (File f : files) {
-            if (f.isDirectory() && !f.getName().startsWith(".")) {
-                scanDir(f, result, seen, depth + 1);
-            } else if (f.isFile() && isImage(f.getName())) {
-                String path = f.getAbsolutePath();
-                if (seen.add(path)) result.add(f);
+            if (f.isDirectory()) {
+                if (!f.getName().startsWith(".")) scanDir(f, result, seen, depth + 1);
+            } else {
+                String n = f.getName().toLowerCase();
+                if ((n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp"))
+                        && seen.add(f.getAbsolutePath())) {
+                    result.add(f);
+                }
             }
         }
-    }
-
-    private boolean isImage(String name) {
-        String lower = name.toLowerCase();
-        return lower.endsWith(".jpg") || lower.endsWith(".jpeg")
-                || lower.endsWith(".png") || lower.endsWith(".webp");
     }
 
     private void showPhotoAt(int index) {
         if (photoFiles.isEmpty() || index < 0 || index >= photoFiles.size()) return;
         File file = photoFiles.get(index);
-        executor.execute(() -> {
+        new Thread(() -> {
             Bitmap bmp = decodeSampledBitmap(file.getAbsolutePath(), 960, 400);
             if (bmp != null) {
                 handler.post(() -> {
@@ -221,22 +190,21 @@ public class PhotoSlider extends FrameLayout {
                     ImageView inactive = isAActive ? imageB : imageA;
                     active.setImageBitmap(bmp);
                     active.setTranslationX(0f);
-                    active.setAlpha(1f);
                     active.setVisibility(View.VISIBLE);
                     inactive.setVisibility(View.GONE);
                     caption.setText(formatCaption(file.getName(), index));
                 });
             }
-        });
+        }).start();
     }
 
     private void slideNext() {
-        if (isAnimating || photoFiles.isEmpty()) return;
+        if (isAnimating || photoFiles.size() <= 1) return;
         int nextIndex = (currentIndex + 1) % photoFiles.size();
         File nextFile = photoFiles.get(nextIndex);
 
         isAnimating = true;
-        executor.execute(() -> {
+        new Thread(() -> {
             Bitmap bmp = decodeSampledBitmap(nextFile.getAbsolutePath(), 960, 400);
             if (bmp == null) {
                 handler.post(() -> {
@@ -251,49 +219,42 @@ public class PhotoSlider extends FrameLayout {
                 ImageView activeView = isAActive ? imageA : imageB;
                 ImageView incomingView = isAActive ? imageB : imageA;
 
-                incomingView.setImageBitmap(bmp);
-                caption.setText(formatCaption(nextFile.getName(), nextIndex));
-
                 int w = getWidth() > 0 ? getWidth() : container.getWidth();
                 if (w <= 0) w = 960;
+                final int slideW = w;
 
-                incomingView.setTranslationX(w * 0.45f);
-                incomingView.setAlpha(0f);
+                incomingView.setImageBitmap(bmp);
+                incomingView.setTranslationX(slideW);
                 incomingView.setVisibility(View.VISIBLE);
+                activeView.setTranslationX(0f);
+                activeView.setVisibility(View.VISIBLE);
 
-                activeView.animate()
-                        .translationX(-w * 0.45f)
-                        .alpha(0f)
-                        .setDuration(ANIM_DURATION_MS)
-                        .setInterpolator(new DecelerateInterpolator(1.5f))
-                        .start();
+                caption.setText(formatCaption(nextFile.getName(), nextIndex));
 
-                incomingView.animate()
-                        .translationX(0f)
-                        .alpha(1f)
-                        .setDuration(ANIM_DURATION_MS)
-                        .setInterpolator(new DecelerateInterpolator(1.5f))
-                        .setListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                activeView.setVisibility(View.GONE);
-                                activeView.setTranslationX(0f);
-                                activeView.setAlpha(1f);
-                                activeView.setImageDrawable(null);
-                                isAActive = !isAActive;
-                                isAnimating = false;
-                            }
-                        })
-                        .start();
+                if (slideAnimator != null) slideAnimator.cancel();
+                slideAnimator = ValueAnimator.ofFloat(0f, 1f);
+                slideAnimator.setDuration(600);
+                slideAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+                slideAnimator.addUpdateListener(animation -> {
+                    float f = (float) animation.getAnimatedValue();
+                    activeView.setTranslationX(-slideW * f);
+                    incomingView.setTranslationX(slideW * (1f - f));
+                    if (f >= 1.0f) {
+                        activeView.setVisibility(View.GONE);
+                        activeView.setTranslationX(0f);
+                        isAActive = !isAActive;
+                        isAnimating = false;
+                    }
+                });
+                slideAnimator.start();
             });
-        });
+        }).start();
     }
 
-    private String formatCaption(String filename, int index) {
-        int dot = filename.lastIndexOf('.');
-        String name = dot > 0 ? filename.substring(0, dot) : filename;
-        name = name.replace('-', ' ').replace('_', ' ');
-        return "✨ " + name + " (" + (index + 1) + "/" + photoFiles.size() + ")";
+    private String formatCaption(String f, int i) {
+        int dot = f.lastIndexOf('.');
+        String name = dot > 0 ? f.substring(0, dot) : f;
+        return "✨ " + name.replace('_', ' ').replace('-', ' ') + " (" + (i + 1) + "/" + photoFiles.size() + ")";
     }
 
     private Bitmap decodeSampledBitmap(String path, int reqW, int reqH) {
@@ -302,7 +263,11 @@ public class PhotoSlider extends FrameLayout {
             opts.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(path, opts);
 
-            opts.inSampleSize = calculateInSampleSize(opts, reqW, reqH);
+            int inSampleSize = 1;
+            while ((opts.outHeight / inSampleSize) >= (reqH * 2) || (opts.outWidth / inSampleSize) >= (reqW * 2)) {
+                inSampleSize *= 2;
+            }
+            opts.inSampleSize = inSampleSize;
             opts.inPreferredConfig = Bitmap.Config.RGB_565;
             opts.inJustDecodeBounds = false;
             return BitmapFactory.decodeFile(path, opts);
@@ -311,32 +276,19 @@ public class PhotoSlider extends FrameLayout {
         }
     }
 
-    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        int height = options.outHeight;
-        int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-            while ((halfHeight / inSampleSize) >= reqHeight || (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-        return Math.max(1, inSampleSize);
-    }
-
     public void startLoop() {
         if (!isRunning) {
             isRunning = true;
             handler.removeCallbacks(slideNextRunnable);
-            handler.postDelayed(slideNextRunnable, INTERVAL_MS);
+            handler.postDelayed(slideNextRunnable, 5000L);
         }
     }
 
     public void stopLoop() {
         isRunning = false;
         handler.removeCallbacks(slideNextRunnable);
+        if (slideAnimator != null) slideAnimator.cancel();
+        isAnimating = false;
     }
 
     @Override
