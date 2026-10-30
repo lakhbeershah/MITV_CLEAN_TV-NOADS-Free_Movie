@@ -96,7 +96,6 @@ public class MainActivity extends Activity {
             AudioController.applyCustom(this, customNightMode, customDrcMode, customSurround, customEqBands);
             updateActiveStatusDisplay("CUSTOM USER PROFILE");
             highlightSelectedCard(null);
-            AudioController.playTestSample();
             Toast.makeText(this, "Custom audio profile applied!", Toast.LENGTH_SHORT).show();
         });
 
@@ -169,7 +168,6 @@ public class MainActivity extends Activity {
                 AudioController.applyPreset(this, preset);
                 updateActiveStatusDisplay(preset.title);
                 highlightSelectedCard(preset.id);
-                AudioController.playTestSample();
                 Toast.makeText(this, preset.title + " applied!", Toast.LENGTH_SHORT).show();
             });
 
