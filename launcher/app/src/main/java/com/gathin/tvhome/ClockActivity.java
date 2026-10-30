@@ -27,8 +27,8 @@ public class ClockActivity extends Activity {
         public void run() {
             if (dreamContent != null) {
                 float density = getResources().getDisplayMetrics().density;
-                float dx = (random.nextFloat() - 0.5f) * 36 * density;
-                float dy = (random.nextFloat() - 0.5f) * 20 * density;
+                float dx = (random.nextFloat() - 0.5f) * 20 * density;
+                float dy = (random.nextFloat() - 0.5f) * 16 * density;
                 dreamContent.animate().translationX(dx).translationY(dy).setDuration(3500).start();
             }
             handler.postDelayed(this, 60_000L);
@@ -69,10 +69,15 @@ public class ClockActivity extends Activity {
         finish();   // never left behind in the back stack
     }
 
+    private boolean exiting = false;
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        // Any key immediately exits screensaver and returns to Home cleanly
-        if (!isFinishing()) finish();
+        // Consume both DOWN and UP; finish on UP so the key never leaks to Home
+        if (event.getAction() == KeyEvent.ACTION_UP && !exiting) {
+            exiting = true;
+            finish();
+        }
         return true;
     }
 

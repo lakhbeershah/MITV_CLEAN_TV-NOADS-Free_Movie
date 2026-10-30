@@ -116,6 +116,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private long settingsRevision;
     /** Idle time on Home before ClockActivity; 0 is off (config.xml, home_idle_clock_minutes). */
     private long idleClockMs;
+    private long wakeIgnoreUntilMs;
     private final Runnable showIdleClock = () -> {
         try {
             android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
@@ -846,6 +847,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        wakeIgnoreUntilMs = android.os.SystemClock.uptimeMillis() + 350;
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1168,6 +1170,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (android.os.SystemClock.uptimeMillis() < wakeIgnoreUntilMs) return true;
         if (handleSettingsKey(event)) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
