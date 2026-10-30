@@ -121,7 +121,7 @@ public class PhotoSlider extends FrameLayout {
             }
 
             float density = getResources().getDisplayMetrics().density;
-            int targetH = Math.round(210 * density);
+            int targetH = Math.round(288 * density);
 
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
@@ -165,7 +165,7 @@ public class PhotoSlider extends FrameLayout {
         }
 
         float density = getResources().getDisplayMetrics().density;
-        int targetH = Math.round(210 * density);
+        int targetH = Math.round(288 * density);
 
         float setW = 0f;
         for (Bitmap bmp : loadedBitmaps) {
