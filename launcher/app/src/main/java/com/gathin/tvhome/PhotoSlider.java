@@ -99,14 +99,32 @@ public class PhotoSlider extends FrameLayout {
             List<File> found = new ArrayList<>();
             Set<String> seen = new HashSet<>();
 
-            File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            if (downloadDir == null || !downloadDir.exists()) {
-                downloadDir = new File(Environment.getExternalStorageDirectory(), "Download");
-            }
-            if (downloadDir.exists() && downloadDir.isDirectory()) {
-                scanDir(downloadDir, found, seen, 0);
+            // Priority 1: dedicated screensaver folder
+            File tvScreensaver = new File(Environment.getExternalStorageDirectory(), "tv_screensaver");
+            if (tvScreensaver.exists() && tvScreensaver.isDirectory()) {
+                scanDir(tvScreensaver, found, seen, 0);
             }
 
+            // Priority 2: Pictures/tv_screensaver
+            if (found.isEmpty()) {
+                File picScreensaver = new File(new File(Environment.getExternalStorageDirectory(), "Pictures"), "tv_screensaver");
+                if (picScreensaver.exists() && picScreensaver.isDirectory()) {
+                    scanDir(picScreensaver, found, seen, 0);
+                }
+            }
+
+            // Priority 3: standard downloads
+            if (found.isEmpty()) {
+                File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                if (downloadDir == null || !downloadDir.exists()) {
+                    downloadDir = new File(Environment.getExternalStorageDirectory(), "Download");
+                }
+                if (downloadDir.exists() && downloadDir.isDirectory()) {
+                    scanDir(downloadDir, found, seen, 0);
+                }
+            }
+
+            // Priority 4: general pictures
             if (found.isEmpty()) {
                 File picDir = new File(Environment.getExternalStorageDirectory(), "Pictures");
                 if (picDir.exists() && picDir.isDirectory()) {
@@ -114,13 +132,14 @@ public class PhotoSlider extends FrameLayout {
                 }
             }
 
-            Collections.sort(found, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
-
-            if (found.size() > 20) {
-                found = found.subList(0, 20);
+            // Shuffle so every run has fresh pictures, capped to max 10 photos to keep total RAM under 15 MB
+            if (found.size() > 10) {
+                Collections.shuffle(found);
+                found = found.subList(0, 10);
             }
 
-            int targetH = computeTargetHeight();
+            // Enforce strict max resolution cap: max 480px height for lightweight RGB_565 loading
+            int targetH = Math.min(computeTargetHeight(), 480);
 
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
@@ -130,6 +149,11 @@ public class PhotoSlider extends FrameLayout {
 
             List<File> finalFound = found;
             handler.post(() -> {
+                for (Bitmap oldBmp : loadedBitmaps) {
+                    if (oldBmp != null && !oldBmp.isRecycled()) {
+                        oldBmp.recycle();
+                    }
+                }
                 photoFiles.clear();
                 photoFiles.addAll(finalFound);
                 loadedBitmaps.clear();
@@ -176,6 +200,9 @@ public class PhotoSlider extends FrameLayout {
 
         int screenW = getResources().getDisplayMetrics().widthPixels;
         int copies = Math.max(2, (int) Math.ceil((screenW * 2f) / (setW > 0 ? setW : screenW)) + 1);
+        if (copies * setW > 10000f && setW > 0) {
+            copies = Math.max(2, (int) (10000f / setW));
+        }
 
         for (int c = 0; c < copies; c++) {
             for (Bitmap bmp : loadedBitmaps) {
@@ -210,8 +237,9 @@ public class PhotoSlider extends FrameLayout {
             BitmapFactory.decodeFile(path, opts);
 
             int srcH = (rot == 90 || rot == 270) ? opts.outWidth : opts.outHeight;
+            int srcW = (rot == 90 || rot == 270) ? opts.outHeight : opts.outWidth;
             int inSampleSize = 1;
-            while ((srcH / inSampleSize) >= (targetH * 2)) {
+            while ((srcH / inSampleSize) > (targetH * 1.25f) || (srcW / inSampleSize) > 720) {
                 inSampleSize *= 2;
             }
             opts.inSampleSize = inSampleSize;

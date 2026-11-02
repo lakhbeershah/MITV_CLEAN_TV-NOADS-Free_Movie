@@ -21,3 +21,6 @@ traces/
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
 run_adb.py
+download_album.py
+tv_screensaver/
+tv_screensaver_optimized/

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF0F1115"
+    android:orientation="vertical"
+    android:paddingStart="40dp"
+    android:paddingTop="28dp"
+    android:paddingEnd="40dp">
+
+    <TextView
+        android:id="@+id/setupTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Screensaver Setup"
+        android:textColor="#FFFFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/setupStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Loading..."
+        android:textColor="#FF4DAE6D"
+        android:textSize="13sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:text="Home Idle Timeout"
+        android:textColor="#B3FFFFFF"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnTimeout1"
+            android:layout_width="110dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="1 Min"
+            android:textColor="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/btnTimeout2"
+            android:layout_width="110dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="2 Min"
+            android:textColor="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/btnTimeout5"
+            android:layout_width="110dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="5 Min"
+            android:textColor="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/btnTimeout10"
+            android:layout_width="110dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="10 Min"
+            android:textColor="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/btnTimeoutOff"
+            android:layout_width="110dp"
+            android:layout_height="44dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="Off"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:text="Actions"
+        android:textColor="#B3FFFFFF"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnTestScreensaver"
+            android:layout_width="180dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="▶ Test Screensaver"
+            android:textColor="#FFFFFFFF"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnSystemScreensaver"
+            android:layout_width="200dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="⚙ System Daydream"
+            android:textColor="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/btnRescan"
+            android:layout_width="140dp"
+            android:layout_height="48dp"
+            android:background="@drawable/settings_choice_bg"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="🔄 Rescan"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+</LinearLayout>

@@ -681,6 +681,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         if (btnScreensaver != null) {
             btnScreensaver.setOnClickListener(v -> startActivity(new Intent(this, ClockActivity.class)));
+            btnScreensaver.setOnLongClickListener(v -> {
+                startActivity(new Intent(this, ScreensaverSetupActivity.class));
+                return true;
+            });
         }
         if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
         btnSettings.setOnLongClickListener(v -> {
@@ -1057,7 +1061,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void restartIdleClock() {
         root.removeCallbacks(showIdleClock);
-        if (idleClockMs > 0) root.postDelayed(showIdleClock, idleClockMs);
+        android.content.SharedPreferences sp = getSharedPreferences(ScreensaverSetupActivity.PREFS_NAME, MODE_PRIVATE);
+        int timeoutMin = sp.getInt(ScreensaverSetupActivity.KEY_TIMEOUT_MIN, -1);
+        long effectiveIdleMs = timeoutMin >= 0 ? (timeoutMin * MINUTE_MS) : idleClockMs;
+        if (effectiveIdleMs > 0) root.postDelayed(showIdleClock, effectiveIdleMs);
     }
 
     @Override
