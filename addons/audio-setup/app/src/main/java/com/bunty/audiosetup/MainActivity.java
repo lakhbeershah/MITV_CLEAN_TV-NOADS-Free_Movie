@@ -63,6 +63,10 @@ public class MainActivity extends Activity {
         setupPresetsGrid();
         setupCustomSliders();
 
+        // Ensure session 0 AudioFX and hardware settings are active
+        AudioController.initAudioEffects();
+        AudioController.applySavedSettings(this);
+
         btnPlaySample.setOnClickListener(v -> {
             AudioController.playTestSample();
             Toast.makeText(this, "Playing sound test...", Toast.LENGTH_SHORT).show();
@@ -281,9 +285,10 @@ public class MainActivity extends Activity {
     }
 
     private String getPresetTitleById(String id) {
+        if ("hdmove2".equals(id)) return "HDMovie2 Cinema";
         for (AudioPreset p : AudioPreset.getAllPresets()) {
             if (p.id.equals(id)) return p.title;
         }
-        return "Crisp Dialogue";
+        return "HDMovie2 Cinema";
     }
 }

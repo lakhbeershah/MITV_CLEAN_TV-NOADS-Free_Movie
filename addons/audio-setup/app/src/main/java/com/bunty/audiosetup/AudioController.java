@@ -1,10 +1,8 @@
 package com.bunty.audiosetup;
 
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
@@ -15,8 +13,6 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.LoudnessEnhancer;
 import android.media.audiofx.Virtualizer;
-import android.os.IBinder;
-import android.os.Parcel;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -33,13 +29,13 @@ public class AudioController {
     private static final String KEY_SURROUND = "surround";
     private static final String KEY_EQ_PREFIX = "eq_band_";
 
-    // Standard Android AudioFX Plugins (Loaded in AudioFlinger insert chain on Session 0)
+    // Standard Android AudioFX Plugins on Session 0
     private static Equalizer standardEqualizer = null;
     private static BassBoost bassBoostEffect = null;
     private static Virtualizer virtualizerEffect = null;
     private static LoudnessEnhancer loudnessEffect = null;
 
-    // Amlogic Hardware DSP Effect UUIDs (running in AudioFlinger postproc on Session 0)
+    // Amlogic Hardware DSP Effect UUIDs on Session 0
     private static final UUID TYPE_TREBLE_BASS = UUID.fromString("7e282240-242e-11e6-bb63-0002a5d5c51b");
     private static final UUID UUID_TREBLE_BASS = UUID.fromString("76733af0-2889-11e2-81c1-0800200c9a66");
 
@@ -53,39 +49,9 @@ public class AudioController {
     private static AudioEffect hpeqEffect = null;
     private static AudioEffect amlSurroundEffect = null;
 
-    private static IBinder audioEffectsServiceBinder = null;
-    private static boolean isServiceBound = false;
+    private static AudioTrack testAudioTrack = null;
 
-    private static final ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            audioEffectsServiceBinder = service;
-            isServiceBound = true;
-            Log.i(TAG, "AudioEffectsService connected");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            audioEffectsServiceBinder = null;
-            isServiceBound = false;
-            Log.i(TAG, "AudioEffectsService disconnected");
-        }
-    };
-
-    public static synchronized void bindServiceIfNeeded(Context context) {
-        if (!isServiceBound && context != null) {
-            try {
-                Intent intent = new Intent("com.droidlogic.tvinput.services.AudioEffectsService");
-                intent.setPackage("com.droidlogic.tvinput");
-                context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-            } catch (Exception e) {
-                Log.w(TAG, "Binding AudioEffectsService warning: " + e.getMessage());
-            }
-        }
-        initAudioEffects();
-    }
-
-    private static synchronized void initAudioEffects() {
+    public static synchronized void initAudioEffects() {
         // 1. Android Standard Equalizer on Session 0
         if (standardEqualizer == null) {
             try {
@@ -206,34 +172,32 @@ public class AudioController {
 
     public static void applyPreset(Context context, AudioPreset preset) {
         if (preset == null || context == null) return;
-        bindServiceIfNeeded(context);
-        applySettings(context, preset.id, preset.soundMode, preset.dialogClarity, preset.bassBoost,
+        applySettings(context, preset.id, preset.dialogClarity, preset.bassBoost,
                 preset.surround, preset.nightMode, preset.drcMode, preset.treble, preset.bass,
                 preset.bassBoostStrength, preset.virtualizerStrength, preset.loudnessGainMb, preset.eqBandsMb);
     }
 
     public static void applyCustom(Context context, boolean nightMode, int drcMode, boolean surround, int[] eqBandsDb) {
         if (context == null) return;
-        bindServiceIfNeeded(context);
         int bassVal = 50;
         int trebleVal = 50;
         int[] eqBandsMb = new int[5];
         if (eqBandsDb != null && eqBandsDb.length >= 5) {
-            bassVal = Math.max(0, Math.min(100, 50 + eqBandsDb[0] * 5));
-            trebleVal = Math.max(0, Math.min(100, 50 + eqBandsDb[3] * 5));
+            bassVal = Math.max(0, Math.min(100, 50 + eqBandsDb[0] * 6));
+            trebleVal = Math.max(0, Math.min(100, 50 + eqBandsDb[3] * 6));
             for (int i = 0; i < 5; i++) {
-                eqBandsMb[i] = eqBandsDb[i] * 100; // dB to millibels
+                eqBandsMb[i] = eqBandsDb[i] * 120; // Scale dB to millibels for clear audibility
             }
         }
         int bbStrength = Math.max(0, (bassVal - 50) * 20); // 0..1000
         int virtStrength = surround ? 1000 : 0;
-        int loudGain = (trebleVal > 50) ? (trebleVal - 50) * 10 : 0; // 0..500 mB
+        int loudGain = (trebleVal > 50) ? (trebleVal - 50) * 12 : 0; // 0..600 mB
 
-        applySettings(context, "custom", 3, 2, 0, surround, nightMode, drcMode, trebleVal, bassVal,
-                bbStrength, virtStrength, loudGain, eqBandsMb);
+        applySettings(context, "custom", 2, (bassVal > 50) ? 0 : 1, surround, nightMode, drcMode,
+                trebleVal, bassVal, bbStrength, virtStrength, loudGain, eqBandsMb);
     }
 
-    private static void applySettings(Context context, String presetId, int soundMode, int dialogClarity,
+    private static void applySettings(Context context, String presetId, int dialogClarity,
                                       int bassBoostSetting, boolean surround, boolean nightMode, int drcMode,
                                       int treble, int bass, int bassBoostStrength, int virtualizerStrength,
                                       int loudnessGainMb, int[] eqBandsMb) {
@@ -289,7 +253,7 @@ public class AudioController {
             }
         }
 
-        // 3. Real-time Android AudioFX: Virtualizer on Session 0
+        // 3. Real-time Android AudioFX: Virtualizer on Session 0 (Spacious Surround)
         if (virtualizerEffect != null) {
             try {
                 if (virtualizerStrength > 0 || surround) {
@@ -306,7 +270,7 @@ public class AudioController {
             }
         }
 
-        // 4. Real-time Android AudioFX: LoudnessEnhancer on Session 0 (Dialogue Punch)
+        // 4. Real-time Android AudioFX: LoudnessEnhancer on Session 0 (Dialogue Presence)
         if (loudnessEffect != null) {
             try {
                 if (loudnessGainMb > 0) {
@@ -362,9 +326,12 @@ public class AudioController {
             }
         }
 
-        // 8. Write to Settings.Global and Settings.System (TV System Persistence)
+        // 8. Write to Settings.Global and Settings.System for TV Persistence
         try {
-            Settings.Global.putInt(cr, "sound_effect_sound_mode", soundMode);
+            // Keep sound_effect_sound_mode at 3 (User/Custom) to prevent DroidLogicTvInput
+            // from crashing with "setSoundMode creat fail" and overwriting user sliders.
+            Settings.Global.putInt(cr, "sound_effect_sound_mode", 3);
+
             Settings.Global.putInt(cr, "sound_effect_dialog_clarity", dialogClarity);
             Settings.Global.putInt(cr, "sound_effect_bass_boost", bassBoostSetting);
             Settings.Global.putInt(cr, "sound_effect_surround", surround ? 1 : 0);
@@ -389,20 +356,10 @@ public class AudioController {
             Log.w(TAG, "Settings write warning: " + e.getMessage());
         }
 
-        // 9. AudioEffectsService AIDL calls
-        if (audioEffectsServiceBinder != null) {
-            callServiceTransact(15, soundMode);
-            callServiceTransact(21, surround ? 1 : 0);
-            callServiceTransact(22, dialogClarity);
-            callServiceTransact(23, bassBoostSetting);
-            callServiceTransact(18, treble);
-            callServiceTransact(19, bass);
-        }
-
-        // 10. Flush Hardware Mixer Buffer
+        // 9. Flush Hardware Mixer Buffer so changes take effect immediately
         applyAudioEffectByPlayEmptyTrack();
 
-        // 11. Broadcast Session Notification
+        // 10. Broadcast Session Notification
         try {
             Intent sessionIntent = new Intent("android.media.action.OPEN_AUDIO_EFFECT_CONTROL_SESSION");
             sessionIntent.putExtra("android.media.extra.AUDIO_SESSION", 0);
@@ -412,7 +369,7 @@ public class AudioController {
             Log.w(TAG, "Broadcast warning: " + e.getMessage());
         }
 
-        // 12. Save Preferences
+        // 11. Save Preferences
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY_ACTIVE_PRESET, presetId);
@@ -473,41 +430,54 @@ public class AudioController {
         }
     }
 
-    private static void callServiceTransact(int code, int param1) {
-        if (audioEffectsServiceBinder == null) return;
-        try {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            data.writeInterfaceToken("com.droidlogic.tvinput.services.IAudioEffectsService");
-            data.writeInt(param1);
-            audioEffectsServiceBinder.transact(code, data, reply, 0);
-            reply.recycle();
-            data.recycle();
-        } catch (Exception e) {
-            Log.w(TAG, "callServiceTransact (" + code + ") warning: " + e.getMessage());
-        }
-    }
-
+    /**
+     * Plays a rich multi-harmonic acoustic sample (Bass warmth, Mid voice, Upper presence, Shimmer)
+     * with stereo spatialization so the user can immediately hear EQ, dialogue clarity, and surround width.
+     */
     public static void playTestSample() {
         new Thread(() -> {
             try {
+                if (testAudioTrack != null) {
+                    try {
+                        testAudioTrack.stop();
+                        testAudioTrack.release();
+                    } catch (Exception ignored) {}
+                }
+
                 int sampleRate = 44100;
                 int durationSeconds = 3;
-                int numSamples = durationSeconds * sampleRate;
-                short[] buffer = new short[numSamples * 2];
+                int numFrames = durationSeconds * sampleRate;
+                short[] buffer = new short[numFrames * 2]; // Stereo
 
-                for (int i = 0; i < numSamples; i++) {
+                // Harmonic frequencies:
+                // 130.81 Hz (Warm Bass fundamental)
+                // 523.25 Hz (Mid vocal fundamental)
+                // 1046.50 Hz (Vocal articulation / presence)
+                // 4186.00 Hz (C8 high treble chime & sparkle)
+                for (int i = 0; i < numFrames; i++) {
                     double t = (double) i / sampleRate;
-                    double freq = (t < 1.0) ? 120.0 : ((t < 2.0) ? 1000.0 : 4000.0);
-                    double envelope = Math.sin(Math.PI * (t % 1.0));
-                    short sample = (short) (Math.sin(2.0 * Math.PI * freq * t) * envelope * 24000);
-                    buffer[i * 2] = sample;
-                    buffer[i * 2 + 1] = sample;
+                    // Envelope: smooth fade-in, rich sustain, gentle fade-out
+                    double envelope = Math.min(1.0, t * 10.0) * Math.max(0.0, 1.0 - (t / durationSeconds));
+
+                    double bassWave = Math.sin(2.0 * Math.PI * 130.81 * t);
+                    double voiceWave1 = Math.sin(2.0 * Math.PI * 523.25 * t);
+                    double voiceWave2 = Math.sin(2.0 * Math.PI * 1046.50 * t);
+                    double trebleWave = Math.sin(2.0 * Math.PI * 4186.00 * t);
+
+                    // Combine harmonics: Bass 35%, Vocal 35%, Presence 20%, Shimmer 10%
+                    double monoMix = 0.35 * bassWave + 0.35 * voiceWave1 + 0.20 * voiceWave2 + 0.10 * trebleWave;
+
+                    // Subtle stereo widening on treble shimmer
+                    double leftSample = monoMix + 0.05 * Math.sin(2.0 * Math.PI * 4186.00 * t + 0.5);
+                    double rightSample = monoMix - 0.05 * Math.sin(2.0 * Math.PI * 4186.00 * t + 0.5);
+
+                    buffer[i * 2] = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, leftSample * envelope * 26000));
+                    buffer[i * 2 + 1] = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, rightSample * envelope * 26000));
                 }
 
                 int minBufSize = AudioTrack.getMinBufferSize(sampleRate,
                         AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
-                AudioTrack track = new AudioTrack.Builder()
+                testAudioTrack = new AudioTrack.Builder()
                         .setAudioAttributes(new AudioAttributes.Builder()
                                 .setUsage(AudioAttributes.USAGE_MEDIA)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -521,11 +491,12 @@ public class AudioController {
                         .setTransferMode(AudioTrack.MODE_STATIC)
                         .build();
 
-                track.write(buffer, 0, buffer.length);
-                track.play();
-                Thread.sleep(durationSeconds * 1000 + 200);
-                track.stop();
-                track.release();
+                testAudioTrack.write(buffer, 0, buffer.length);
+                testAudioTrack.play();
+                Thread.sleep(durationSeconds * 1000 + 100);
+                testAudioTrack.stop();
+                testAudioTrack.release();
+                testAudioTrack = null;
             } catch (Exception e) {
                 Log.e(TAG, "Error playing sound test: " + e.getMessage());
             }
@@ -534,7 +505,10 @@ public class AudioController {
 
     public static String getActivePresetId(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(KEY_ACTIVE_PRESET, "crisp_default");
+        String id = prefs.getString(KEY_ACTIVE_PRESET, "hdmovie2");
+        if ("crisp_default".equals(id)) return "crisp";
+        if ("hdmove2".equals(id)) return "hdmovie2";
+        return id;
     }
 
     public static boolean getSavedNightMode(Context context) {
@@ -555,9 +529,11 @@ public class AudioController {
     public static int[] getSavedEqBands(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         int[] bands = new int[5];
-        for (int i = 0; i < 5; i++) {
-            bands[i] = prefs.getInt(KEY_EQ_PREFIX + i, 0);
-        }
+        bands[0] = prefs.getInt(KEY_EQ_PREFIX + "0", -2);
+        bands[1] = prefs.getInt(KEY_EQ_PREFIX + "1", 0);
+        bands[2] = prefs.getInt(KEY_EQ_PREFIX + "2", 3);
+        bands[3] = prefs.getInt(KEY_EQ_PREFIX + "3", 5);
+        bands[4] = prefs.getInt(KEY_EQ_PREFIX + "4", 2);
         return bands;
     }
 }
