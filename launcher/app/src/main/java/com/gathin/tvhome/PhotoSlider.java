@@ -4,14 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.LinearGradient;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Shader;
 import android.media.ExifInterface;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,70 +29,61 @@ import java.util.Set;
  * Photos preserve their natural upright portrait and landscape aspect ratios at full window height,
  * with square corners and seamless edge-to-edge layout.
  */
-public class PhotoSlider extends FrameLayout {
+public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListener, View.OnClickListener, Runnable {
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private final List<File> photoFiles = new ArrayList<>();
     private final List<Bitmap> loadedBitmaps = new ArrayList<>();
 
-    private FrameLayout container;
     private LinearLayout strip;
+    private float density;
 
     private float offset = 0f;
     private float singleSetWidth = 0f;
     private boolean isRunning = false;
     private boolean isFocused = false;
 
-    private final Runnable scrollRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!isRunning) return;
-            if (singleSetWidth > 0 && !isFocused) {
-                offset += 0.8f;
-                if (offset >= singleSetWidth) offset -= singleSetWidth;
-                strip.setTranslationX(-offset);
-            }
-            postOnAnimation(this);
+    private final Paint paint = new Paint();
+    private LinearGradient vertGrad, seamGrad;
+    private int lastW = 0, lastH = 0;
+
+    @Override
+    public void run() {
+        if (!isRunning) return;
+        if (singleSetWidth > 0 && !isFocused) {
+            offset += 0.8f;
+            if (offset >= singleSetWidth) offset -= singleSetWidth;
+            strip.setTranslationX(-offset);
         }
-    };
+        postOnAnimation(this);
+    }
 
     public PhotoSlider(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setFocusable(true);
-        setFocusableInTouchMode(true);
         setClipChildren(false);
+        setBackgroundColor(0xFF0E1116);
 
-        container = new FrameLayout(context);
-        container.setBackgroundColor(0xFF101318);
+        density = getResources().getDisplayMetrics().density;
+        strip = new LinearLayout(context);
+        addView(strip, new LayoutParams(-2, -1));
 
-        strip = new LinearLayout(context) {
-            @Override
-            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                super.onMeasure(MeasureSpec.makeMeasureSpec(1000000, MeasureSpec.UNSPECIFIED), heightMeasureSpec);
-            }
-        };
-        strip.setOrientation(LinearLayout.HORIZONTAL);
-        strip.setClipChildren(false);
-        container.addView(strip, new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        addView(container, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        setOnFocusChangeListener((v, hasFocus) -> {
-            isFocused = hasFocus;
-            if (hasFocus) {
-                animate().scaleX(1.01f).scaleY(1.01f).setDuration(180).start();
-            } else {
-                animate().scaleX(1f).scaleY(1f).setDuration(180).start();
-            }
-        });
-
-        setOnClickListener(v -> {
-            Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.example.tvfilebox");
-            if (intent != null) context.startActivity(intent);
-        });
+        setOnFocusChangeListener(this);
+        setOnClickListener(this);
 
         reloadPhotos();
+    }
+
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+        isFocused = hasFocus;
+        float s = hasFocus ? 1.01f : 1f;
+        animate().scaleX(s).scaleY(s).setDuration(180).start();
+    }
+
+    @Override
+    public void onClick(View v) {
+        Intent intent = getContext().getPackageManager().getLaunchIntentForPackage("com.example.tvfilebox");
+        if (intent != null) getContext().startActivity(intent);
     }
 
     public void reloadPhotos() {
@@ -99,63 +91,33 @@ public class PhotoSlider extends FrameLayout {
             List<File> found = new ArrayList<>();
             Set<String> seen = new HashSet<>();
 
-            // Priority 1: dedicated screensaver folder
-            File tvScreensaver = new File(Environment.getExternalStorageDirectory(), "tv_screensaver");
-            if (tvScreensaver.exists() && tvScreensaver.isDirectory()) {
-                scanDir(tvScreensaver, found, seen, 0);
-            }
-
-            // Priority 2: Pictures/tv_screensaver
-            if (found.isEmpty()) {
-                File picScreensaver = new File(new File(Environment.getExternalStorageDirectory(), "Pictures"), "tv_screensaver");
-                if (picScreensaver.exists() && picScreensaver.isDirectory()) {
-                    scanDir(picScreensaver, found, seen, 0);
+            File ext = Environment.getExternalStorageDirectory();
+            File[] searchDirs = {
+                new File(ext, "tv_screensaver"),
+                new File(ext, "Download")
+            };
+            for (File dir : searchDirs) {
+                if (dir.isDirectory()) {
+                    scanDir(dir, found, seen);
+                    if (!found.isEmpty()) break;
                 }
             }
 
-            // Priority 3: standard downloads
-            if (found.isEmpty()) {
-                File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                if (downloadDir == null || !downloadDir.exists()) {
-                    downloadDir = new File(Environment.getExternalStorageDirectory(), "Download");
-                }
-                if (downloadDir.exists() && downloadDir.isDirectory()) {
-                    scanDir(downloadDir, found, seen, 0);
-                }
-            }
-
-            // Priority 4: general pictures
-            if (found.isEmpty()) {
-                File picDir = new File(Environment.getExternalStorageDirectory(), "Pictures");
-                if (picDir.exists() && picDir.isDirectory()) {
-                    scanDir(picDir, found, seen, 0);
-                }
-            }
-
-            // Shuffle so every run has fresh pictures, capped to max 10 photos to keep total RAM under 15 MB
             if (found.size() > 10) {
                 Collections.shuffle(found);
                 found = found.subList(0, 10);
             }
 
-            // Enforce strict max resolution cap: max 480px height for lightweight RGB_565 loading
-            int targetH = Math.min(computeTargetHeight(), 480);
-
+            int targetH = getHeight() > 0 ? getHeight() : Math.round(288 * density);
+            if (targetH > 480) targetH = 480;
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
-                Bitmap b = decodeScaled(f.getAbsolutePath(), targetH);
+                Bitmap b = decodeScaled(f.getPath(), targetH);
                 if (b != null) bitmaps.add(b);
             }
 
-            List<File> finalFound = found;
-            handler.post(() -> {
-                for (Bitmap oldBmp : loadedBitmaps) {
-                    if (oldBmp != null && !oldBmp.isRecycled()) {
-                        oldBmp.recycle();
-                    }
-                }
-                photoFiles.clear();
-                photoFiles.addAll(finalFound);
+            post(() -> {
+                for (Bitmap b : loadedBitmaps) if (b != null) b.recycle();
                 loadedBitmaps.clear();
                 loadedBitmaps.addAll(bitmaps);
                 buildStrip();
@@ -163,21 +125,23 @@ public class PhotoSlider extends FrameLayout {
         }).start();
     }
 
-    private void scanDir(File dir, List<File> result, Set<String> seen, int depth) {
-        if (depth > 2) return;
+    private void scanDir(File dir, List<File> result, Set<String> seen) {
         File[] files = dir.listFiles();
         if (files == null) return;
         for (File f : files) {
-            if (f.isDirectory()) {
-                if (!f.getName().startsWith(".")) scanDir(f, result, seen, depth + 1);
-            } else {
-                String n = f.getName().toLowerCase();
-                if ((n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp"))
-                        && seen.add(f.getAbsolutePath())) {
+            if (!f.isDirectory()) {
+                String n = f.getName();
+                if ((n.endsWith(".jpg") || n.endsWith(".png")) && seen.add(f.getPath())) {
                     result.add(f);
                 }
             }
         }
+    }
+
+    @Override
+    protected void measureChildWithMargins(View child, int parentWidthMeasureSpec, int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
+        if (child == strip) parentWidthMeasureSpec = MeasureSpec.makeMeasureSpec(1000000, MeasureSpec.UNSPECIFIED);
+        super.measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed);
     }
 
     private void buildStrip() {
@@ -187,32 +151,27 @@ public class PhotoSlider extends FrameLayout {
             return;
         }
 
-        float density = getResources().getDisplayMetrics().density;
-        int targetH = computeTargetHeight();
-
+        int targetH = getHeight() > 0 ? getHeight() : Math.round(288 * density);
         float setW = 0f;
         for (Bitmap bmp : loadedBitmaps) {
             int h = bmp.getHeight() > 0 ? bmp.getHeight() : targetH;
-            int w = (bmp.getWidth() * targetH) / h;
-            setW += w;
+            setW += (bmp.getWidth() * targetH) / h;
         }
         singleSetWidth = setW;
 
-        int screenW = getResources().getDisplayMetrics().widthPixels;
-        int copies = Math.max(2, (int) Math.ceil((screenW * 2f) / (setW > 0 ? setW : screenW)) + 1);
-        if (copies * setW > 10000f && setW > 0) {
-            copies = Math.max(2, (int) (10000f / setW));
-        }
+        int copies = Math.max(2, (int) Math.ceil((getResources().getDisplayMetrics().widthPixels * 2f) / (setW > 0 ? setW : 1)) + 1);
+        if (copies * setW > 10000f && setW > 0) copies = Math.max(2, (int) (10000f / setW));
 
+        int minW = Math.round(40 * density);
         for (int c = 0; c < copies; c++) {
             for (Bitmap bmp : loadedBitmaps) {
                 int h = bmp.getHeight() > 0 ? bmp.getHeight() : targetH;
-                int w = Math.max(Math.round(40 * density), (bmp.getWidth() * targetH) / h);
+                int w = Math.max(minW, (bmp.getWidth() * targetH) / h);
 
                 ImageView iv = new ImageView(getContext());
                 iv.setImageBitmap(bmp);
                 iv.setScaleType(ImageView.ScaleType.FIT_XY);
-                strip.addView(iv, new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.MATCH_PARENT));
+                strip.addView(iv, new LinearLayout.LayoutParams(w, -1));
             }
         }
 
@@ -225,8 +184,7 @@ public class PhotoSlider extends FrameLayout {
         try {
             int rot = 0;
             try {
-                ExifInterface exif = new ExifInterface(path);
-                int o = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+                int o = new ExifInterface(path).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
                 if (o == 6) rot = 90;
                 else if (o == 8) rot = 270;
                 else if (o == 3) rot = 180;
@@ -236,10 +194,12 @@ public class PhotoSlider extends FrameLayout {
             opts.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(path, opts);
 
-            int srcH = (rot == 90 || rot == 270) ? opts.outWidth : opts.outHeight;
-            int srcW = (rot == 90 || rot == 270) ? opts.outHeight : opts.outWidth;
+            boolean swap = (rot == 90 || rot == 270);
+            int srcH = swap ? opts.outWidth : opts.outHeight;
+            int srcW = swap ? opts.outHeight : opts.outWidth;
             int inSampleSize = 1;
-            while ((srcH / inSampleSize) > (targetH * 1.25f) || (srcW / inSampleSize) > 720) {
+            int limitH = (targetH * 5) / 4;
+            while ((srcH / inSampleSize) > limitH || (srcW / inSampleSize) > 720) {
                 inSampleSize *= 2;
             }
             opts.inSampleSize = inSampleSize;
@@ -252,10 +212,8 @@ public class PhotoSlider extends FrameLayout {
                 Matrix m = new Matrix();
                 m.postRotate(rot);
                 Bitmap r = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
-                if (r != bmp) {
-                    bmp.recycle();
-                    bmp = r;
-                }
+                bmp.recycle();
+                return r;
             }
             return bmp;
         } catch (Throwable t) {
@@ -266,26 +224,55 @@ public class PhotoSlider extends FrameLayout {
     public void startLoop() {
         if (!isRunning) {
             isRunning = true;
-            removeCallbacks(scrollRunnable);
-            postOnAnimation(scrollRunnable);
+            removeCallbacks(this);
+            postOnAnimation(this);
         }
     }
 
     public void stopLoop() {
         isRunning = false;
-        removeCallbacks(scrollRunnable);
+        removeCallbacks(this);
     }
 
-    private int computeTargetHeight() {
-        int h = getHeight();
-        if (h <= 0 && getLayoutParams() != null) {
-            if (getLayoutParams().height == ViewGroup.LayoutParams.MATCH_PARENT) {
-                h = getResources().getDisplayMetrics().heightPixels;
-            } else if (getLayoutParams().height > 0) {
-                h = getLayoutParams().height;
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        int w = getWidth(), h = getHeight();
+        if (w <= 0 || h <= 0) return;
+        int vh = Math.round(24 * density);
+
+        if (w != lastW || h != lastH || seamGrad == null) {
+            lastW = w;
+            lastH = h;
+            Shader.TileMode m = Shader.TileMode.CLAMP;
+            vertGrad = new LinearGradient(0, 0, 0, vh, 0xFF0E1116, 0x000E1116, m);
+            seamGrad = new LinearGradient(0, 0, vh, 0, new int[]{0x000E1116, 0x660E1116, 0x000E1116}, null, m);
+        }
+
+        if (strip != null) {
+            float halfSw = vh * 0.5f;
+            float tx = strip.getTranslationX();
+            paint.setShader(seamGrad);
+            for (int i = 0, count = strip.getChildCount(); i < count; i++) {
+                View child = strip.getChildAt(i);
+                if (child == null) continue;
+                float cx = tx + child.getLeft();
+                if (cx >= -vh && cx <= w + vh) {
+                    canvas.save();
+                    canvas.translate(cx - halfSw, 0);
+                    canvas.drawRect(0, 0, vh, h, paint);
+                    canvas.restore();
+                }
             }
         }
-        return h > 0 ? h : Math.round(288 * getResources().getDisplayMetrics().density);
+
+        paint.setShader(vertGrad);
+        canvas.drawRect(0, 0, w, vh, paint);
+        canvas.save();
+        canvas.translate(0, h);
+        canvas.scale(1, -1);
+        canvas.drawRect(0, 0, w, vh, paint);
+        canvas.restore();
     }
 
     @Override

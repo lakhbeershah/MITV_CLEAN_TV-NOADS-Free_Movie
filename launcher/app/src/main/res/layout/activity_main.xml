@@ -180,37 +180,37 @@
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
+                    android:letterSpacing="0.05"
                     android:textAllCaps="true" />
 
                 <TextClock
                     android:id="@+id/date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="2dp"
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:format12Hour="@string/date_format_home"
                     android:format24Hour="@string/date_format_home"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="13sp"
+                    android:textColor="#A6FFFFFF"
+                    android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
+                    android:letterSpacing="0.04"
                     android:textAllCaps="true" />
 
                 <TextView
                     android:id="@+id/stats"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="2dp"
                     android:singleLine="true"
                     android:ellipsize="end"
-                    android:textColor="#A6FFFFFF"
-                    android:textSize="11sp"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="10sp"
                     android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.04"
+                    android:letterSpacing="0.03"
                     android:textAllCaps="true"
                     android:focusable="false"
                     android:visibility="gone" />
@@ -242,10 +242,10 @@
                     android:format12Hour="h:mm:ss a"
                     android:format24Hour="HH:mm:ss"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="40sp"
+                    android:textSize="36sp"
                     android:textStyle="bold"
                     android:fontFamily="@string/font_medium"
-                    android:letterSpacing="-0.02"
+                    android:letterSpacing="-0.01"
                     android:includeFontPadding="false" />
             </LinearLayout>
 
