@@ -52,6 +52,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
             offset += 0.8f;
             if (offset >= singleSetWidth) offset -= singleSetWidth;
             strip.setTranslationX(-offset);
+            invalidate();
         }
         postOnAnimation(this);
     }
@@ -246,7 +247,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
             lastH = h;
             Shader.TileMode m = Shader.TileMode.CLAMP;
             vertGrad = new LinearGradient(0, 0, 0, vh, 0xFF0E1116, 0x000E1116, m);
-            seamGrad = new LinearGradient(0, 0, vh, 0, new int[]{0x000E1116, 0x660E1116, 0x000E1116}, null, m);
+            seamGrad = new LinearGradient(0, 0, vh, 0, new int[]{0x000E1116, 0x380E1116, 0x000E1116}, null, m);
         }
 
         if (strip != null) {
