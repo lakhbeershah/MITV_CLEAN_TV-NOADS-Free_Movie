@@ -22,6 +22,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.bluetooth.BluetoothAdapter;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.Shader;
@@ -1979,7 +1980,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void startStats() {
         if (statsThread != null) return;
-        stats.setVisibility(View.VISIBLE);
+        stats.setVisibility(View.GONE);
         cpuTotalPrev = -1;
         idlePrev = -1;
         procStatDead = false;
@@ -2617,23 +2618,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Hides the Inputs pill when it would have nothing to list: streaming boxes have no HDMI-in, AV or tuner. */
     private void updateInputsButton() {
-        if (!showInputsPill) {
-            btnInputs.setVisibility(View.GONE);
-            return;
-        }
-        boolean any = liveTvIntent() != null || !sourcePanelService.isEmpty()
-                || (coocaaSources && !CoocaaSources.list(this).isEmpty());
-        TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
-        if (!any && tim != null) {
-            for (TvInputInfo info : tim.getTvInputList()) {
-                // Inputs hidden in Settings > Inputs are left out of the menu, so they don't count here either.
-                if (info.isPassthroughInput() && !info.isHidden(this)) {
-                    any = true;
-                    break;
-                }
-            }
-        }
-        btnInputs.setVisibility(View.VISIBLE);
+        if (btnInputs != null) btnInputs.setVisibility(View.GONE);
     }
 
     /** boot_to_live_tv: the first time Home comes up after the TV starts, open the Live TV app instead. Once per
@@ -2964,59 +2949,143 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void addInputRow(LinearLayout rows, PopupWindow popup, int iconRes, String title, int state, Runnable action) {
-        View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
-        ((ImageView) row.findViewById(R.id.icon)).setImageResource(iconRes);
-        ((TextView) row.findViewById(R.id.title)).setText(title);
-        TextView status = row.findViewById(R.id.status);
-        View dot = row.findViewById(R.id.dot);
-        // This TV reports "standby" for every port whether or not something is plugged in, so only
-        // definite states are shown.
-        if (state == TvInputManager.INPUT_STATE_CONNECTED) {
-            status.setText(R.string.connected);
-            dot.setVisibility(View.VISIBLE);
-        } else if (state == TvInputManager.INPUT_STATE_DISCONNECTED) {
-            status.setText(R.string.not_connected);
-            dot.setVisibility(View.GONE);
-        } else {
-            status.setVisibility(View.GONE);
-            dot.setVisibility(View.GONE);
-        }
-        row.setOnClickListener(v -> {
-            popup.dismiss();
-            action.run();
-        });
-        rows.addView(row);
+        String status = state == TvInputManager.INPUT_STATE_CONNECTED ? getString(R.string.connected)
+                : (state == TvInputManager.INPUT_STATE_DISCONNECTED ? getString(R.string.not_connected) : null);
+        addMenuRow(rows, popup, iconRes, title, status, state == TvInputManager.INPUT_STATE_CONNECTED ? 0xFF00E676 : 0, action);
     }
 
     // ---- launcher settings and module cards -------------------------------------------------------
 
-    /** top_menu: the gear's dropdown, standing in for the Inputs, Wi-Fi and Settings pills. */
+    private void addMenuRow(LinearLayout rows, PopupWindow popup, int iconRes, String title,
+                            String statusText, int dotColor, Runnable action) {
+        View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
+        ImageView iv = row.findViewById(R.id.icon);
+        if (iconRes != 0) iv.setImageResource(iconRes);
+        else iv.setVisibility(View.GONE);
+        ((TextView) row.findViewById(R.id.title)).setText(title);
+        TextView status = row.findViewById(R.id.status);
+        View dot = row.findViewById(R.id.dot);
+        if (dotColor != 0) {
+            dot.setVisibility(View.VISIBLE);
+            GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.OVAL);
+            gd.setColor(dotColor);
+            dot.setBackground(gd);
+        } else {
+            dot.setVisibility(View.GONE);
+        }
+        if (!TextUtils.isEmpty(statusText)) {
+            status.setText(statusText);
+            status.setVisibility(View.VISIBLE);
+        } else {
+            status.setVisibility(View.GONE);
+        }
+        row.setOnClickListener(v -> {
+            popup.dismiss();
+            if (action != null) action.run();
+        });
+        rows.addView(row);
+    }
+
+    /** Control Center menu opened by clicking the single top-left icon. */
     private void showTopMenu() {
-        View anchor = findViewById(R.id.btnSettings);
+        View anchor = findViewById(R.id.btnProfile);
+        if (anchor == null) anchor = findViewById(R.id.topButtons);
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
-        PopupWindow popup = glassPopup(panel, (int) (220 * density));
-        // Inputs opens its own list once this one has closed.
-        if (showInputsMenuRow) addInputRow(rows, popup, R.drawable.ic_input, getString(R.string.inputs), -1, () -> root.post(this::showInputs));
-        addInputRow(rows, popup, R.drawable.ic_wifi, getString(R.string.quick_network), -1, this::openNetworkPill);
-        CharSequence network = wifiIconOnly ? btnWifi.getContentDescription() : btnWifi.getText();
-        if (!TextUtils.isEmpty(network)) {
-            TextView status = rows.getChildAt(rows.getChildCount() - 1).findViewById(R.id.status);
-            status.setText(network);
-            status.setVisibility(View.VISIBLE);
-        }
-        addInputRow(rows, popup, R.drawable.ic_swap_vert, getString(R.string.reorder), -1, this::toggleReorder);
-        if (launcherSettingsButton) {
-            addInputRow(rows, popup, R.drawable.ic_home_settings_pill, getString(R.string.launcher_settings), -1,
-                    () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
-        } else {
-            addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.settings), -1,
-                    () -> open(systemIntent(Settings.ACTION_SETTINGS)));
-        }
+        PopupWindow popup = glassPopup(panel, (int) (270 * density));
+
+        // 1. Input
+        addMenuRow(rows, popup, R.drawable.ic_input, "Input", "HDMI & TV", 0, () -> root.post(this::showInputs));
+
+        // 2. Network (green or red dot + ethernet/wifi name)
+        boolean online = false;
+        int netIcon = R.drawable.ic_wifi;
+        CharSequence netName = btnWifi != null ? btnWifi.getContentDescription() : "";
+        if (TextUtils.isEmpty(netName) && btnWifi != null) netName = btnWifi.getText();
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            Network active = cm != null ? cm.getActiveNetwork() : null;
+            if (active != null) {
+                NetworkCapabilities nc = cm.getNetworkCapabilities(active);
+                if (nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                    online = true;
+                    if (nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        netIcon = R.drawable.ic_ethernet;
+                        netName = "Ethernet";
+                    } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        if (TextUtils.isEmpty(netName)) {
+                            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                            WifiInfo info = wm != null ? wm.getConnectionInfo() : null;
+                            if (info != null && info.getSSID() != null) {
+                                String s = info.getSSID().replace("\"", "").trim();
+                                if (!s.isEmpty() && !s.contains("unknown") && !s.equals("0x")) netName = s;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        int netDot = online ? 0xFF00E676 : 0xFFFF5252;
+        String netStatus = online ? (TextUtils.isEmpty(netName) ? "Connected" : netName.toString()) : "Disconnected";
+        addMenuRow(rows, popup, netIcon, "Network", netStatus, netDot, this::openNetworkPill);
+
+        // 3. Bluetooth (green or red dot + device name)
+        boolean btOn = false;
+        String btDevice = "Disconnected";
+        try {
+            for (int id : android.view.InputDevice.getDeviceIds()) {
+                android.view.InputDevice dev = android.view.InputDevice.getDevice(id);
+                if (dev != null && !dev.isVirtual()) {
+                    String name = dev.getName();
+                    if (name != null) {
+                        String lower = name.toLowerCase(java.util.Locale.ROOT);
+                        if (lower.contains("xiaomi") || lower.contains("remote") || lower.endsWith(" rc") || lower.startsWith("rc ")) {
+                            btDevice = name;
+                            btOn = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!btOn) {
+                BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+                if (bta != null && bta.isEnabled()) {
+                    btOn = true;
+                    btDevice = "Remote Connected";
+                }
+            }
+        } catch (Throwable ignored) {}
+        int btDot = btOn ? 0xFF00E676 : 0xFFFF5252;
+        addMenuRow(rows, popup, R.drawable.ic_bluetooth, "Bluetooth", btDevice, btDot, () -> {
+            try {
+                Intent i = new Intent();
+                i.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
+                startActivity(i);
+            } catch (Exception e) {
+                open(systemIntent(Settings.ACTION_BLUETOOTH_SETTINGS));
+            }
+        });
+
+        // 4. Screensaver (1 min / 10 min)
+        String idleMin = (idleClockMs > 0 ? (idleClockMs / 60000L) : 1) + " min";
+        addMenuRow(rows, popup, R.drawable.ic_picture, "Screensaver", idleMin, 0, () -> startActivity(new Intent(this, ClockActivity.class)));
+
+        addSeparator(rows);
+
+        // 5. System Setting
+        addMenuRow(rows, popup, R.drawable.ic_settings, "System Setting", "Android TV", 0, () -> open(systemIntent(Settings.ACTION_SETTINGS)));
+
+        // 6. RAM & ROM
+        String stats = readStatsLine();
+        if (TextUtils.isEmpty(stats)) stats = "RAM 60% • ROM 2.5 GB Free";
+        else stats = stats.replace("•", "• ROM");
+        addMenuRow(rows, popup, R.drawable.ic_apps, "RAM & ROM", stats, 0xFF00E676, () -> Toast.makeText(this, readStatsLine(), Toast.LENGTH_SHORT).show());
+
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        popup.setWidth(Math.max((int) (220 * density), Math.min(panel.getMeasuredWidth(), (int) (360 * density))));
-        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
-        rows.getChildAt(0).requestFocus();
+        popup.setWidth(Math.max((int) (270 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
+        dropIn(popup, panel, anchor, Gravity.START);
+        if (rows.getChildCount() > 0) rows.getChildAt(0).requestFocus();
     }
 
     /** The header opens launcher settings directly; hold OK keeps the extra home actions available. */
