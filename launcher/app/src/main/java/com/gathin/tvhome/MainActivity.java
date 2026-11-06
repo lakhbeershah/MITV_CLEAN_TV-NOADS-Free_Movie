@@ -62,7 +62,9 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LayoutAnimationController;
+import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -529,9 +531,25 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         adapter.setSavedOrder(Order.ranks(savedOrder, dockApps), Order.docked(savedOrder, dockApps));
         grid.setAdapter(adapter);
 
+        // Precompute exact initial bottom docking position so fresh install / cold start never starts shifted up
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        int displayH = dm.heightPixels;
+        int displayW = dm.widthPixels;
+        int innerInitial = displayW - (int) (48 * density);
+        int rowsBelowDock = cfg.rowsBelowDock;
+        int tileWInitial = AppAdapter.tileWidthPx(innerInitial, displayH, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
+        int itemHInitial = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileWInitial), density);
+        int initialWant = Math.max(0, displayH - itemHInitial - (int) (8 * density));
+        grid.setPadding(grid.getPaddingLeft(), initialWant, grid.getPaddingRight(), (int) (4 * density));
+        View initialMemories = findViewById(R.id.memoriesFrame);
+        if (initialMemories != null) {
+            ViewGroup.LayoutParams mlp = initialMemories.getLayoutParams();
+            mlp.height = Math.max((int) (200 * density), initialWant - (int) (16 * density));
+            initialMemories.setLayoutParams(mlp);
+        }
+
         // tvOS layout: push the dock row towards the bottom of the screen, leaving room for
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
-        int rowsBelowDock = cfg.rowsBelowDock;
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
@@ -1590,13 +1608,53 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         glassTargetX = x;
         glassTargetY = y;
-        // Cinematic shelf: the highlight glows in the dock app's colour, plain white in the grid (and on the dock with
-        // cinematic_white_focus). app_glow: every tile.
-        boolean coloured = (appGlow || cinematic && !cinematicWhiteFocus && position < COLUMNS) && !festive;
-        int accent = coloured ? adapter.ambientColorAt(position) : 0;
-        if ((cinematic || appGlow) && !festive && accent != glassAccent) {
-            glassAccent = accent;
-            glass.setAccent(accent);
+
+        // Magnet North-to-North oppose force animation on left and right neighbor cards
+        if (animations && !reducedMotion) {
+            RecyclerView.ViewHolder leftVh = grid.findViewHolderForAdapterPosition(position - 1);
+            if (leftVh != null && leftVh.itemView != null) {
+                View leftCard = leftVh.itemView.findViewById(R.id.card);
+                if (leftCard != null) {
+                    leftCard.animate().cancel();
+                    leftCard.setTranslationX(0f);
+                    leftCard.animate()
+                            .translationX(-16f * density)
+                            .setDuration(120)
+                            .setInterpolator(new DecelerateInterpolator())
+                            .withEndAction(() -> leftCard.animate()
+                                    .translationX(0f)
+                                    .setDuration(280)
+                                    .setInterpolator(new OvershootInterpolator(1.8f))
+                                    .start())
+                            .start();
+                }
+            }
+            RecyclerView.ViewHolder rightVh = grid.findViewHolderForAdapterPosition(position + 1);
+            if (rightVh != null && rightVh.itemView != null) {
+                View rightCard = rightVh.itemView.findViewById(R.id.card);
+                if (rightCard != null) {
+                    rightCard.animate().cancel();
+                    rightCard.setTranslationX(0f);
+                    rightCard.animate()
+                            .translationX(16f * density)
+                            .setDuration(120)
+                            .setInterpolator(new DecelerateInterpolator())
+                            .withEndAction(() -> rightCard.animate()
+                                    .translationX(0f)
+                                    .setDuration(280)
+                                    .setInterpolator(new OvershootInterpolator(1.8f))
+                                    .start())
+                            .start();
+                }
+            }
+        }
+
+        // Dynamic 2-colour running gradient border flow
+        int[] appColors = adapter.ambientColorsAt(position);
+        if (festive) {
+            glass.setColors(festival.accentColor(), 0xFFFFFFFF);
+        } else {
+            glass.setColors(appColors[0], appColors[1]);
         }
         if (!glassShown) {
             springX.cancel();

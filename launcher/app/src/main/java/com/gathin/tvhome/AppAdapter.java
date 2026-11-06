@@ -74,6 +74,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         final String name;
         /** Ambient glow colour; 0 until sampled from the banner, or the card's accent from the start. */
         int ambient;
+        int ambient2;
 
         Entry(String label, ComponentName component, Drawable banner, Drawable icon) {
             this(APP, label, component, banner, icon, null, 0);
@@ -608,15 +609,23 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** A vivid colour sampled from the app's banner (or icon), cached per entry; a card's accent when it set one. */
     int ambientColorAt(int position) {
-        if (position < 0 || position >= items.size()) return 0xFF444444;
-        Entry e = items.get(position);
-        if (e.ambient == 0) e.ambient = vividColor(e.banner != null ? e.banner : e.icon);
-        return e.ambient;
+        return ambientColorsAt(position)[0];
     }
 
-    private static int vividColor(Drawable live) {
-        if (live == null) return 0xFF444444;
-        // Draw a private copy: changing the bounds of the drawable an ImageView shows would blank the tile.
+    /** Returns two dynamic colours sampled from the banner/icon for running duo-tone gradient border. */
+    int[] ambientColorsAt(int position) {
+        if (position < 0 || position >= items.size()) return new int[]{0xFFFFFFFF, 0xFF444444};
+        Entry e = items.get(position);
+        if (e.ambient == 0) {
+            int[] c = vividColors(e.banner != null ? e.banner : e.icon);
+            e.ambient = c[0];
+            e.ambient2 = c[1];
+        }
+        return new int[]{e.ambient, e.ambient2 != 0 ? e.ambient2 : 0xFFFFFFFF};
+    }
+
+    private static int[] vividColors(Drawable live) {
+        if (live == null) return new int[]{0xFFFFFFFF, 0xFFFFFFFF};
         Drawable d = live.getConstantState() != null ? live.getConstantState().newDrawable().mutate() : live;
         Rect saved = new Rect(d.getBounds());
         int n = 12;
@@ -629,34 +638,67 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bmp.getPixels(px, 0, n, 0, 0, n, n);
         bmp.recycle();
         float[] hsv = new float[3];
-        int best = 0xFF444444;
-        float bestScore = -1f;
+        int best1 = 0;
+        float bestScore1 = -1f;
         long r = 0, g = 0, b = 0;
         for (int p : px) {
             int pr = (p >> 16) & 0xFF, pg = (p >> 8) & 0xFF, pb = p & 0xFF;
-            r += pr;
-            g += pg;
-            b += pb;
+            r += pr; g += pg; b += pb;
             int max = Math.max(pr, Math.max(pg, pb));
             int min = Math.min(pr, Math.min(pg, pb));
             float sat = max == 0 ? 0f : (max - min) / (float) max;
             float val = max / 255f;
-            float score = sat * Math.min(1f, val * 1.4f);   // saturated and not too dark
-            if (score > bestScore) {
-                bestScore = score;
-                best = p;
+            float score = sat * Math.min(1f, val * 1.4f);
+            if (score > bestScore1) {
+                bestScore1 = score;
+                best1 = p;
             }
         }
-        if (bestScore < 0.25f) {   // nearly monochrome banner (e.g. white): use its average, lifted
+        int c1;
+        if (bestScore1 < 0.25f) {
             int avg = Color.rgb((int) (r / (n * n)), (int) (g / (n * n)), (int) (b / (n * n)));
             Color.colorToHSV(avg, hsv);
-            hsv[2] = Math.max(hsv[2], 0.55f);
-            return Color.HSVToColor(hsv);
+            hsv[2] = Math.max(hsv[2], 0.65f);
+            c1 = Color.HSVToColor(hsv);
+        } else {
+            Color.colorToHSV(best1, hsv);
+            hsv[1] = Math.min(1f, hsv[1] * 1.15f);
+            hsv[2] = Math.max(0.6f, hsv[2]);
+            c1 = Color.HSVToColor(hsv);
         }
-        Color.colorToHSV(best, hsv);
-        hsv[1] = Math.min(1f, hsv[1] * 1.1f);
-        hsv[2] = Math.max(0.5f, hsv[2]);
-        return Color.HSVToColor(hsv);
+
+        // Secondary distinct colour: look for high hue contrast or bright white
+        float[] hsv1 = new float[3];
+        Color.colorToHSV(c1, hsv1);
+        int best2 = 0;
+        float bestScore2 = -1f;
+        for (int p : px) {
+            int pr = (p >> 16) & 0xFF, pg = (p >> 8) & 0xFF, pb = p & 0xFF;
+            int max = Math.max(pr, Math.max(pg, pb));
+            int min = Math.min(pr, Math.min(pg, pb));
+            float sat = max == 0 ? 0f : (max - min) / (float) max;
+            float val = max / 255f;
+            Color.colorToHSV(p, hsv);
+            float hueDiff = Math.abs(hsv[0] - hsv1[0]);
+            if (hueDiff > 180f) hueDiff = 360f - hueDiff;
+            float colorDist = (hueDiff / 180f) * 0.7f + Math.abs(val - hsv1[2]) * 0.3f;
+            if (colorDist > 0.30f && val > 0.35f) {
+                float score2 = colorDist * (sat + 0.3f);
+                if (score2 > bestScore2) {
+                    bestScore2 = score2;
+                    best2 = p;
+                }
+            }
+        }
+        int c2;
+        if (bestScore2 >= 0) {
+            Color.colorToHSV(best2, hsv);
+            hsv[2] = Math.max(0.7f, hsv[2]);
+            c2 = Color.HSVToColor(hsv);
+        } else {
+            c2 = 0xFFFFFFFF; // High contrast bright white
+        }
+        return new int[]{c1, c2};
     }
 
     /** Corner radius for a tile of this width: 16dp at the design width, proportionally less when smaller. */
@@ -714,6 +756,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             card.setOnFocusChangeListener((view, focused) -> {
                 view.animate().cancel();
+                if (focused) view.setTranslationX(0f);
                 banner.animate().cancel();
                 name.animate().cancel();
                 float scale = !animations ? 1f : FOCUS_SCALE;
@@ -721,6 +764,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (!animations) {
                     view.setScaleX(1f);
                     view.setScaleY(1f);
+                    view.setTranslationX(0f);
                     view.setTranslationY(0f);
                     view.setTranslationZ(0f);
                     banner.setScaleX(1f);
