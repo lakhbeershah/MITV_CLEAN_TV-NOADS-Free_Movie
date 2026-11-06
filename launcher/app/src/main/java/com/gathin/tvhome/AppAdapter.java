@@ -210,6 +210,29 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Tile names and bundled banners that replace the app's own (config.xml, app_labels and app_banners). */
     private final Map<String, String> appLabels, appBanners;
     private final List<Entry> items = new ArrayList<>();
+    private int focusedPosition = 0;
+
+    void setFocusedPosition(int pos, RecyclerView rv) {
+        if (focusedPosition == pos && rv != null) return;
+        focusedPosition = pos;
+        if (rv == null) return;
+        float spread = 20f * ctx.getResources().getDisplayMetrics().density;
+        int childCount = rv.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = rv.getChildAt(i);
+            int itemPos = rv.getChildAdapterPosition(child);
+            if (itemPos == RecyclerView.NO_POSITION) continue;
+            View card = child.findViewById(R.id.card);
+            if (card == null) continue;
+            float targetX = itemPos < focusedPosition ? -spread : (itemPos > focusedPosition ? spread : 0f);
+            if (animations && !reducedMotion) {
+                card.animate().translationX(targetX).setDuration(220)
+                        .setInterpolator(new OvershootInterpolator(1.2f)).start();
+            } else {
+                card.setTranslationX(targetX);
+            }
+        }
+    }
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
@@ -419,6 +442,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setFocusable(true);
         h.name.setText(e.name);
         h.name.setVisibility(View.GONE);
+        float density = ctx.getResources().getDisplayMetrics().density;
+        float spread = 20f * density;
+        float tx = position < focusedPosition ? -spread : (position > focusedPosition ? spread : 0f);
+        h.card.setTranslationX(tx);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
         h.card.setScaleY(focused && animations ? focusScale() : 1f);

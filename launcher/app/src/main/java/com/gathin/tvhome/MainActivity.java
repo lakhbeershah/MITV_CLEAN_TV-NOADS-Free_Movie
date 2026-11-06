@@ -1587,19 +1587,37 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (photoSlider != null) {
             photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
         }
-        int itemLeft = item.getLeft();
-        int itemRight = item.getRight();
-        int edgeMargin = (int) (80 * density);
-        int limitLeft = grid.getPaddingLeft() + edgeMargin;
-        int limitRight = grid.getWidth() - grid.getPaddingRight() - edgeMargin;
-        int dx = 0;
-        if (position == 0) {
-            dx = itemLeft - grid.getPaddingLeft();
-        } else if (itemLeft < limitLeft) {
-            dx = itemLeft - limitLeft;
-        } else if (itemRight > limitRight) {
-            dx = itemRight - limitRight;
+        // Spread out left-side apps to the left and right-side apps to the right
+        adapter.setFocusedPosition(position, grid);
+
+        // Center-Anchored Carousel Scrolling:
+        // Keeps the focused card at the exact horizontal center of the screen,
+        // unless at the start or end where no more apps can scroll.
+        int itemCenterX = item.getLeft() + item.getWidth() / 2;
+        int screenCenterX = grid.getWidth() / 2;
+        int desiredDx = itemCenterX - screenCenterX;
+        int dx = desiredDx;
+
+        RecyclerView.LayoutManager lm = grid.getLayoutManager();
+        if (lm != null) {
+            View firstChild = lm.findViewByPosition(0);
+            if (firstChild != null) {
+                int minScrollLeft = firstChild.getLeft() - grid.getPaddingLeft();
+                if (dx < minScrollLeft) {
+                    dx = minScrollLeft;
+                }
+            }
+            int lastPos = adapter.getItemCount() - 1;
+            View lastChild = lm.findViewByPosition(lastPos);
+            if (lastChild != null) {
+                int gridInnerRight = grid.getWidth() - grid.getPaddingRight();
+                int maxScrollRight = lastChild.getRight() - gridInnerRight;
+                if (dx > maxScrollRight) {
+                    dx = maxScrollRight;
+                }
+            }
         }
+
         if (dx != 0) {
             x -= dx;
             if (!animations || reducedMotion) grid.scrollBy(dx, 0);
@@ -1608,46 +1626,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         glassTargetX = x;
         glassTargetY = y;
-
-        // Magnet North-to-North oppose force animation on left and right neighbor cards
-        if (animations && !reducedMotion) {
-            RecyclerView.ViewHolder leftVh = grid.findViewHolderForAdapterPosition(position - 1);
-            if (leftVh != null && leftVh.itemView != null) {
-                View leftCard = leftVh.itemView.findViewById(R.id.card);
-                if (leftCard != null) {
-                    leftCard.animate().cancel();
-                    leftCard.setTranslationX(0f);
-                    leftCard.animate()
-                            .translationX(-16f * density)
-                            .setDuration(120)
-                            .setInterpolator(new DecelerateInterpolator())
-                            .withEndAction(() -> leftCard.animate()
-                                    .translationX(0f)
-                                    .setDuration(280)
-                                    .setInterpolator(new OvershootInterpolator(1.8f))
-                                    .start())
-                            .start();
-                }
-            }
-            RecyclerView.ViewHolder rightVh = grid.findViewHolderForAdapterPosition(position + 1);
-            if (rightVh != null && rightVh.itemView != null) {
-                View rightCard = rightVh.itemView.findViewById(R.id.card);
-                if (rightCard != null) {
-                    rightCard.animate().cancel();
-                    rightCard.setTranslationX(0f);
-                    rightCard.animate()
-                            .translationX(16f * density)
-                            .setDuration(120)
-                            .setInterpolator(new DecelerateInterpolator())
-                            .withEndAction(() -> rightCard.animate()
-                                    .translationX(0f)
-                                    .setDuration(280)
-                                    .setInterpolator(new OvershootInterpolator(1.8f))
-                                    .start())
-                            .start();
-                }
-            }
-        }
 
         // Dynamic 2-colour running gradient border flow
         int[] appColors = adapter.ambientColorsAt(position);
