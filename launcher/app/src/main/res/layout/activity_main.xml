@@ -359,7 +359,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingTop="540dp"
-            android:paddingBottom="4dp"
+            android:paddingBottom="2dp"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
             android:clipToPadding="false"
