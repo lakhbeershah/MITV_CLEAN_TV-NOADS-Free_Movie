@@ -474,44 +474,41 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         grid = findViewById(R.id.grid);
         rtlAppGrid = getResources().getBoolean(R.bool.rtl_app_grid);
         // Mirror only the app grid; the header and other locales keep their own layouts.
-        grid.setLayoutManager(new GridLayoutManager(this, COLUMNS) {
+        grid.setLayoutManager(new GridLayoutManager(this, 1, RecyclerView.HORIZONTAL, false) {
             @Override
             protected boolean isLayoutRTL() {
                 return rtlAppGrid;
             }
 
-            /**
-             * Every "bring this tile on screen" scroll lands here, both RecyclerView's own on focus and
-             * onTileFocused's. The stock version treats the grid's top padding as the visible top, but that
-             * padding only pushes the dock down the screen: grid rows scroll up into it. With the stock rule,
-             * Up into a row above the padding dragged that row down to the padding line, cut it off at the
-             * bottom of the screen and could scroll the focused tile out entirely, dropping focus into the
-             * top bar. Grid tiles now scroll just enough to show the rect between the grid's top edge and its
-             * bottom; dock tiles are left to onTileFocused, which parks the dock row on the padding line.
-             */
+            @Override
+            public boolean canScrollVertically() {
+                return false;
+            }
+
+            @Override
+            public boolean canScrollHorizontally() {
+                return true;
+            }
+
             @Override
             public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child,
                                                          @NonNull Rect rect, boolean immediate,
                                                          boolean focusedChildVisible) {
-                if (dockRow && getPosition(child) < COLUMNS) return false;
-                int top = child.getTop() + rect.top;
-                int bottom = top + rect.height();
-                // A row already fully on screen stays put, even inside the bottom padding (the last row
-                // rows_below_dock leaves visible ends there; nudging it up was the bug). A row that has to scroll
-                // in still stops at the padding line, clear of the screen edge, as before.
-                int limitBottom = getHeight() - getPaddingBottom();
-                int dy;
-                if (top < 0) dy = top;
-                else if (bottom <= getHeight()) dy = 0;
-                else dy = Math.min(top, bottom - limitBottom);
-                if (dy == 0) return false;
-                if (immediate || reducedMotion || !animations) parent.scrollBy(0, dy);
-                else parent.smoothScrollBy(0, dy);
+                int left = child.getLeft() + rect.left;
+                int right = left + rect.width();
+                int limitRight = getWidth() - getPaddingRight();
+                int dx;
+                if (left < getPaddingLeft()) dx = left - getPaddingLeft();
+                else if (right <= limitRight) dx = 0;
+                else dx = right - limitRight;
+                if (dx == 0) return false;
+                if (immediate || reducedMotion || !animations) parent.scrollBy(dx, 0);
+                else parent.smoothScrollBy(dx, 0);
                 return true;
             }
         });
         ((GridLayoutManager) grid.getLayoutManager()).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-            @Override public int getSpanSize(int position) { return adapter != null && adapter.isLibraryAt(position) ? COLUMNS : 1; }
+            @Override public int getSpanSize(int position) { return 1; }
         });
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
@@ -1601,30 +1598,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             springY.animateToFinalPosition(y - glassScrollShift);
         }
         View item = (View) card.getParent();
-        if (dockRow && position < COLUMNS) {
-            if (photoSlider != null) photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
-            // Dock: park it at the bottom of the screen and show the top shelf for this app.
-            int decoratedTop = item.getTop() - (int) (6 * density);
-            int dy = decoratedTop - grid.getPaddingTop();
-            // A 1px mismatch used to start a scroll on every dock move. Only scroll when the row is
-            // actually off; reduced motion does it in one jump so it does not fight the highlight.
-            boolean scroll = Math.abs(dy) > (int) (8 * density);
-            if (scroll) {
-                if (!animations || reducedMotion) grid.scrollBy(0, dy);
-                else grid.smoothScrollBy(0, dy);
-            }
-            showHero(position, scroll ? r.top - dy : r.top);
-        } else {
-            if (photoSlider != null) {
-                photoSlider.animate().translationY(-photoSlider.getHeight()).alpha(0f).setDuration(200).start();
-            }
-            // Below the dock (or in a plain grid) the glow follows the tile without the big name; letting it
-            // fade out left the grid on plain black.
-            showGlowOnly(position);
-            // Scroll just enough so the whole glass (not only the tile) is visible.
-            revealRect.set(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
-            grid.requestChildRectangleOnScreen(item, revealRect, reducedMotion);
+        if (photoSlider != null) {
+            photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
         }
+        int itemLeft = item.getLeft();
+        int itemRight = item.getRight();
+        int limitLeft = grid.getPaddingLeft();
+        int limitRight = grid.getWidth() - grid.getPaddingRight();
+        int dx = 0;
+        if (itemLeft < limitLeft) {
+            dx = itemLeft - limitLeft;
+        } else if (itemRight > limitRight) {
+            dx = itemRight - limitRight;
+        }
+        if (dx != 0) {
+            if (!animations || reducedMotion) grid.scrollBy(dx, 0);
+            else grid.smoothScrollBy(dx, 0);
+        }
+        showHero(position, r.top);
     }
 
     /** Refits the glass to the focused holder once the grid layout and tile dimensions settle. */
@@ -2157,36 +2148,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean onTileVerticalKey(int position, int keyCode) {
         int count = adapter.appCount();
-        int target;
-        // Horizontal: swallow the key at a row's ends so focus never wraps to the next row or
-        // escapes up into the top bar. Mid-row moves fall through to the default focus search.
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            boolean forward = rtlAppGrid ? keyCode == KeyEvent.KEYCODE_DPAD_LEFT : keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
-            if (forward && position == adapter.focusablePosition(count - 1) && adapter.isLibraryAt(count)) {
-                focusLibrary();
+        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+            if (position > 0) {
+                focusTile(position - 1);
+                grid.playSoundEffect(SoundEffectConstants.NAVIGATION_LEFT);
                 return true;
             }
-            // In the dock, the last app is the row's end: the empty slots after it take no focus.
-            int rowCount = position < COLUMNS ? Math.min(count, adapter.dockFilled()) : count;
-            return GridNavigation.atHorizontalEdge(position, rowCount, COLUMNS,
-                    rtlAppGrid, keyCode == KeyEvent.KEYCODE_DPAD_LEFT);
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            if (position < count - 1) {
+                focusTile(position + 1);
+                grid.playSoundEffect(SoundEffectConstants.NAVIGATION_RIGHT);
+                return true;
+            }
+            return true;
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
-            target = position - COLUMNS;
-        } else {
-            int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;
-            if (position >= lastRowStart) {
-                if (adapter.isLibraryAt(count)) focusLibrary();
+            View photoSlider = findViewById(R.id.photoSlider);
+            if (photoSlider != null) {
+                photoSlider.requestFocus();
+                grid.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
                 return true;
             }
-            target = Math.min(position + COLUMNS, count - 1);
+            return false;
         }
-        focusTile(target);
-        // The default focus search clicks for Left/Right; Up/Down are handled here, so click for them too.
-        grid.playSoundEffect(keyCode == KeyEvent.KEYCODE_DPAD_UP
-                ? SoundEffectConstants.NAVIGATION_UP : SoundEffectConstants.NAVIGATION_DOWN);
-        return true;
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            return true;
+        }
+        return false;
     }
 
     @Override public void onLibraryFocused() {

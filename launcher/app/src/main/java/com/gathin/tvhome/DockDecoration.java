@@ -70,7 +70,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent,
                                @NonNull RecyclerView.State state) {
         int pos = parent.getChildAdapterPosition(view);
-        if (pos >= 0 && pos < dockSize) {
+        if (pos >= 0) {
             outRect.top = (int) (9 * density);
             outRect.bottom = (int) (9 * density);
         }
@@ -83,7 +83,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         for (int i = 0; i < parent.getChildCount(); i++) {
             View child = parent.getChildAt(i);
             int pos = parent.getChildAdapterPosition(child);
-            if (pos < 0 || pos >= dockSize) continue;
+            if (pos < 0) continue;
             RecyclerView.ViewHolder vh = parent.getChildViewHolder(child);
             View card = vh instanceof AppAdapter.Holder ? ((AppAdapter.Holder) vh).card : child.findViewById(R.id.card);
             if (card == null) continue;
