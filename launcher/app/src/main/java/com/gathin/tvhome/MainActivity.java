@@ -543,7 +543,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int bottomRoom = (int) (-16 * density);
+            int bottomRoom = (int) (8 * density);
             int want = Math.max(shelfClearance, h - dockRow - gridRows - bottomRoom);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
@@ -602,7 +602,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (reducedMotion) {
                 Motion.reduce(s);
             } else {
-                s.setSpring(new SpringForce().setStiffness(340f).setDampingRatio(0.75f));
+                s.setSpring(new SpringForce().setStiffness(280f).setDampingRatio(0.55f));
             }
         }
 
@@ -1554,7 +1554,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float w = card.getWidth() * scale + 2 * pad;
         float h = card.getHeight() * scale + 2 * pad;
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (6f * density);
+        float y = r.exactCenterY() - h / 2f - (8f * density);
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
         if (lp.width != (int) w || lp.height != (int) h || card.getWidth() != glassCardW) {
@@ -1571,7 +1571,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         int itemLeft = item.getLeft();
         int itemRight = item.getRight();
-        int edgeMargin = (int) (70 * density);
+        int edgeMargin = (int) (80 * density);
         int limitLeft = grid.getPaddingLeft() + edgeMargin;
         int limitRight = grid.getWidth() - grid.getPaddingRight() - edgeMargin;
         int dx = 0;
@@ -1633,7 +1633,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (6f * density);
+        float y = r.exactCenterY() - h / 2f - (8f * density);
         if (!glassShown || Math.abs(glass.getTranslationX() - x) > 1f || Math.abs(glass.getTranslationY() - y) > 1f
                 || glass.getWidth() != w || glass.getHeight() != h) {
             springX.cancel();

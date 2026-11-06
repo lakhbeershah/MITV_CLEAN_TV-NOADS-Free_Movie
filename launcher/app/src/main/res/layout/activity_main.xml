@@ -169,7 +169,7 @@
             <!-- Cinema top scrim: soft gradient so top icons and clock are always crystal clear -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="130dp"
                 android:layout_gravity="top"
                 android:background="@drawable/top_bar_scrim" />
         </FrameLayout>
@@ -302,36 +302,36 @@
                     android:id="@+id/clock"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:format12Hour="h:mm a"
-                    android:format24Hour="HH:mm"
+                    android:format12Hour="h:mm:ss a"
+                    android:format24Hour="HH:mm:ss"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="28sp"
+                    android:textSize="36sp"
                     android:textStyle="bold"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="-0.01"
                     android:includeFontPadding="false"
                     android:shadowColor="#D9000000"
-                    android:shadowRadius="12"
+                    android:shadowRadius="14"
                     android:shadowDy="2" />
 
                 <TextClock
                     android:id="@+id/date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="4dp"
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:format12Hour="@string/date_format"
                     android:format24Hour="@string/date_format"
                     android:textColor="#F2FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.06"
                     android:textAllCaps="true"
                     android:shadowColor="#D9000000"
-                    android:shadowRadius="10"
-                    android:shadowDy="1" />
+                    android:shadowRadius="12"
+                    android:shadowDy="2" />
             </LinearLayout>
 
             <!-- Hidden: Unused views preserved to satisfy controller bindings -->

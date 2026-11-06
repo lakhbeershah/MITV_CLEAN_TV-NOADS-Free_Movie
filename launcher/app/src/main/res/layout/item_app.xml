@@ -2,8 +2,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp"
     android:paddingTop="8dp"
     android:paddingBottom="4dp"
     android:clipChildren="false"
@@ -54,16 +54,6 @@
     <TextView
         android:id="@+id/name"
         android:layout_width="160dp"
-        android:layout_height="22dp"
-        android:layout_gravity="center_horizontal|top"
-        android:layout_marginTop="85dp"
-        android:gravity="center"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:alpha="0"
-        android:translationY="-6dp"
-        android:textColor="#F2FFFFFF"
-        android:textSize="14sp"
-        android:fontFamily="@string/font_medium"
-        android:letterSpacing="0.02" />
+        android:layout_height="0dp"
+        android:visibility="gone" />
 </FrameLayout>

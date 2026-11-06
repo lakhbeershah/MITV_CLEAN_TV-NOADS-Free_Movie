@@ -91,7 +91,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    static final float FOCUS_SCALE = 1.18f;
+    static final float FOCUS_SCALE = 1.24f;
     /** Design size of a tile (dp); tiles shrink from here when the columns don't fit, see tileWidthPx. */
     static final float DESIGN_W_DP = 180f, DESIGN_H_DP = 101f;
 
@@ -129,8 +129,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static final float COMPACT_ITEM_EXTRA_DP = 4 + 4 + 4 + 20;
     static final float COMPACT_BOTTOM_ROOM_DP = 16;
 
-    /** item_app.xml: 8dp padding above and below, a 7dp gap and the 22dp name label under the tile. */
-    static final float ITEM_EXTRA_DP = 45;
+    /** item_app.xml: 8dp padding above and 4dp below, with app name hidden. */
+    static final float ITEM_EXTRA_DP = 16;
     /** DockDecoration's offsets above and below the dock row. */
     static final float DOCK_EXTRA_DP = 6 + 12;
     /** Room kept under the last row rows_below_dock asks for (MainActivity places the dock with the same). */
@@ -392,16 +392,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cardLp.height = h;
         card.setLayoutParams(cardLp);
         View name = v.findViewById(R.id.name);
-        ViewGroup.MarginLayoutParams nameLp = (ViewGroup.MarginLayoutParams) name.getLayoutParams();
-        nameLp.width = w;
-        nameLp.topMargin = h + Math.round((dockRow ? 7 : 4) * density);
-        if (!dockRow) {
-            // Compact spacing (COMPACT_ITEM_EXTRA_DP): 4dp item padding and a 20dp name instead of 8dp and 22dp.
-            nameLp.height = Math.round(20 * density);
-            int pad = Math.round(4 * density);
-            v.setPadding(v.getPaddingLeft(), pad, v.getPaddingRight(), pad);
+        if (name != null) {
+            name.setVisibility(View.GONE);
         }
-        name.setLayoutParams(nameLp);
         return new Holder(v, listener, animations, advancedEffects, reducedMotion, restNameAlpha, focusOvershoot);
     }
 
@@ -424,11 +417,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setVisibility(View.VISIBLE);
         h.card.setFocusable(true);
         h.name.setText(e.name);
-        // If dock_title is false, dock tiles show their name under the focused tile.
-        boolean hideDockName = dockRow && position < dockSize && dockTitle && restNameAlpha == 0f;
-        h.name.setVisibility(hideDockName ? View.INVISIBLE : View.VISIBLE);
+        h.name.setVisibility(View.GONE);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
-        h.name.setAlpha(focused ? 1f : restNameAlpha);
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
         h.card.setScaleY(focused && animations ? focusScale() : 1f);
         h.card.setTranslationY(focused && advancedEffects ? -4f * ctx.getResources().getDisplayMetrics().density : 0f);
@@ -613,7 +603,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     float focusScale() {
-        return !animations ? 1f : 1.18f;
+        return !animations ? 1f : FOCUS_SCALE;
     }
 
     /** A vivid colour sampled from the app's banner (or icon), cached per entry; a card's accent when it set one. */
@@ -753,19 +743,16 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if (focused) name.setTranslationY(density * 4f);
                 } else {
                     view.animate().scaleX(s).scaleY(s)
-                            .translationY(focused ? -6f * density : 0f)
-                            .translationZ(focused ? 16f * density : 0f)
-                            .setDuration(focused ? 240 : 180)
-                            .setInterpolator(focused ? new OvershootInterpolator(1.2f)
+                            .translationY(focused ? -8f * density : 0f)
+                            .translationZ(focused ? 20f * density : 0f)
+                            .setDuration(focused ? 260 : 180)
+                            .setInterpolator(focused ? new OvershootInterpolator(1.8f)
                                     : new DecelerateInterpolator())
                             .withLayer().start();
                     if (advancedEffects) {
-                        banner.animate().scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
+                        banner.animate().scaleX(focused ? 1.05f : 1f).scaleY(focused ? 1.05f : 1f)
                                 .setDuration(280).start();
                     }
-                    name.animate().alpha(focused ? 1f : restNameAlpha)
-                            .translationY(focused ? density * 6f : -density * 6f)
-                            .setDuration(220).start();
                 }
                 int pos = getBindingAdapterPosition();
                 if (focused && listener != null && pos != RecyclerView.NO_POSITION) {
