@@ -50,7 +50,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
     @Override
     public void run() {
         if (!isRunning) return;
-        if (singleSetWidth > 0 && !isFocused) {
+        if (singleSetWidth > 0) {
             offset += 0.8f;
             if (offset >= singleSetWidth) offset -= singleSetWidth;
             strip.setTranslationX(-offset);
@@ -62,7 +62,8 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
     public PhotoSlider(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        setFocusable(true);
+        setFocusable(false);
+        setFocusableInTouchMode(false);
         setClipChildren(false);
         setBackgroundColor(0xFF0E1116);
 
@@ -78,23 +79,15 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
         strip = new LinearLayout(context);
         addView(strip, new LayoutParams(-2, -1));
 
-        setOnFocusChangeListener(this);
-        setOnClickListener(this);
-
         reloadPhotos();
     }
 
     @Override
     public void onFocusChange(View v, boolean hasFocus) {
-        isFocused = hasFocus;
-        float s = hasFocus ? 1.01f : 1f;
-        animate().scaleX(s).scaleY(s).setDuration(180).start();
     }
 
     @Override
     public void onClick(View v) {
-        Intent intent = getContext().getPackageManager().getLaunchIntentForPackage("com.example.tvfilebox");
-        if (intent != null) getContext().startActivity(intent);
     }
 
     public void reloadPhotos() {

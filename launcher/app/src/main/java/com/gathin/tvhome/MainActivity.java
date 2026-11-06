@@ -565,7 +565,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             View memoriesFrame = findViewById(R.id.memoriesFrame);
             if (memoriesFrame != null) {
                 ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
-                int targetH = Math.max((int) (200 * density), want - (int) (8 * density));
+                int targetH = Math.max((int) (200 * density), want - (int) (16 * density));
                 if (mlp.height != targetH) {
                     mlp.height = targetH;
                     memoriesFrame.setLayoutParams(mlp);
@@ -581,6 +581,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             @Override
             public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
                 if (!glassShown) return;
+                if (dx != 0) {
+                    glassTargetX -= dx;
+                    glass.setTranslationX(glass.getTranslationX() - dx);
+                }
                 glassTargetY -= dy;
                 glassScrollShift -= dy;
                 glass.setTranslationY(glass.getTranslationY() - dy);
@@ -712,7 +716,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
                 // Back to the dock tile Up came from, not wherever the focus finder lands.
-                focusTile(lastFocused % COLUMNS);
+                focusTile(lastFocused);
                 return true;
             }
             int firstButton = btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : firstTopButton().getId();
@@ -728,8 +732,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
+        if (btnProfile != null) btnProfile.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnBluetooth, btnScreensaver, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnBluetooth, btnScreensaver, btnReorder, btnLibraryTop, btnSettings, btnProfile}) {
                 if (button == null) continue;
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
@@ -2165,9 +2170,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return true;
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            View photoSlider = findViewById(R.id.photoSlider);
-            if (photoSlider != null) {
-                photoSlider.requestFocus();
+            View btnProfile = findViewById(R.id.btnProfile);
+            if (btnProfile != null && btnProfile.getVisibility() == View.VISIBLE) {
+                btnProfile.requestFocus();
                 grid.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
                 return true;
             }

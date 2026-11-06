@@ -71,59 +71,28 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
                                @NonNull RecyclerView.State state) {
         int pos = parent.getChildAdapterPosition(view);
         if (pos >= 0) {
-            outRect.top = (int) (9 * density);
-            outRect.bottom = (int) (9 * density);
+            outRect.top = (int) (6 * density);
+            outRect.bottom = (int) (6 * density);
         }
     }
 
     @Override
     public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-        boolean any = false;
-        int cardWidth = 0;
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            View child = parent.getChildAt(i);
-            int pos = parent.getChildAdapterPosition(child);
-            if (pos < 0) continue;
-            RecyclerView.ViewHolder vh = parent.getChildViewHolder(child);
-            View card = vh instanceof AppAdapter.Holder ? ((AppAdapter.Holder) vh).card : child.findViewById(R.id.card);
-            if (card == null) continue;
-            float l = child.getLeft() + card.getLeft();
-            float t = child.getTop() + card.getTop() + child.getTranslationY();
-            float r = l + card.getWidth();
-            float b = t + card.getHeight();
-            cardWidth = card.getWidth();
-            if (!any) {
-                rect.set(l, t, r, b);
-                any = true;
-            } else {
-                rect.union(l, t, r, b);
-            }
-        }
-        if (!any) return;
-        float pad = 14 * density;
-        // The band can only draw inside the grid, and the first and last dock tiles sit 12dp in from its
-        // edges: a full 14dp at the sides sliced the rounded ends flat (#454). Keep the sides, with the
-        // 1dp edge line, inside the grid; the top and bottom have room.
-        // 22dp at the sides (the grid's 10dp padding makes room): a focused first or last tile grows about 7dp
-        // outwards and still keeps about the band's top margin from its rounded end.
-        float sidePad = 22 * density;
-        float side = Math.max(0f, Math.min(sidePad, Math.min(rect.left, parent.getWidth() - rect.right) - density));
-        float radius = AppAdapter.cornerRadius(cardWidth, density);
-        if (evenPadding) {
-            // The same padding on all four sides, so the band's corners are concentric with the tiles' everywhere.
-            int inner = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
-            float room = Math.min(rect.top, Math.min(rect.left, parent.getWidth() - rect.right)) - density;
-            float even = evenPaddingPx(inner, dockSize, cardWidth, room);
-            rect.inset(-even, -even);
-            radius = radiusPx(radius, even);
-        } else {
-            // dock_even_padding off: the band as before, with its fixed 26 dp corners.
-            rect.inset(-side, -pad);
-            radius = 26 * density;
-        }
-        rect.bottom += namesRoom;
+        if (parent.getChildCount() == 0) return;
+        View child = parent.getChildAt(0);
+        RecyclerView.ViewHolder vh = parent.getChildViewHolder(child);
+        View card = vh instanceof AppAdapter.Holder ? ((AppAdapter.Holder) vh).card : child.findViewById(R.id.card);
+        if (card == null) return;
+
+        float l = parent.getPaddingLeft();
+        float r = parent.getWidth() - parent.getPaddingRight();
+        float t = child.getTop() + card.getTop() + child.getTranslationY() - (5 * density);
+        float b = t + card.getHeight() + namesRoom + (10 * density);
+
+        rect.set(l, t, r, b);
+        float radius = 20 * density;
+
         if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
-            // The pills' glass (pill_bg: white, 18% fading to 8%), a little fainter over this much larger area.
             band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, 0x24FFFFFF, 0x0DFFFFFF,
                     Shader.TileMode.CLAMP));
             shaderTop = rect.top;

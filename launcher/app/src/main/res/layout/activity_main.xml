@@ -146,21 +146,43 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingTop="3dp"
         android:clipChildren="false"
         android:clipToPadding="false">
 
-        <!-- Top Bar: 3 symmetrical aligned zones across the screen -->
+        <!-- Full-screen Panoramic Photo Slider (Top of screen down to apps dock) -->
+        <FrameLayout
+            android:id="@+id/memoriesFrame"
+            android:layout_width="match_parent"
+            android:layout_height="370dp"
+            android:layout_gravity="top">
+
+            <com.gathin.tvhome.PhotoSlider
+                android:id="@+id/photoSlider"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="false"
+                android:clickable="false" />
+
+            <!-- Cinema top scrim: soft gradient so top icons and clock are always crystal clear -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:layout_gravity="top"
+                android:background="@drawable/top_bar_scrim" />
+        </FrameLayout>
+
+        <!-- Top Bar: Overlaid ON TOP of the scrolling photo reel -->
         <RelativeLayout
             android:id="@+id/topBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
+            android:layout_gravity="top"
+            android:layout_marginTop="16dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
             android:clipChildren="false"
             android:clipToPadding="false">
 
@@ -180,7 +202,7 @@
                     style="@style/TopButtonIcon"
                     android:contentDescription="Control Center"
                     android:drawableStart="@drawable/ic_profile"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnWifi"
@@ -188,7 +210,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/wifi"
                     android:drawableStart="@drawable/ic_wifi"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnBluetooth"
@@ -196,7 +218,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/bluetooth"
                     android:drawableStart="@drawable/ic_bluetooth"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnInputs"
@@ -204,7 +226,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnSettings"
@@ -212,7 +234,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/settings"
                     android:drawableStart="@drawable/ic_settings"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnScreensaver"
@@ -220,7 +242,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/dream_name"
                     android:drawableStart="@drawable/ic_picture"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnReorder"
@@ -228,7 +250,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/reorder"
                     android:drawableStart="@drawable/ic_swap_vert"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
 
                 <TextView
                     android:id="@+id/btnLibraryTop"
@@ -236,7 +258,7 @@
                     android:visibility="gone"
                     android:contentDescription="@string/app_library"
                     android:drawableStart="@drawable/ic_apps"
-                    android:nextFocusDown="@+id/photoSlider" />
+                    android:nextFocusDown="@+id/grid" />
             </LinearLayout>
 
             <!-- Center Zone: RAM & Storage Minimalist Utility Pill -->
@@ -283,25 +305,33 @@
                     android:format12Hour="h:mm a"
                     android:format24Hour="HH:mm"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="26sp"
-                    android:fontFamily="@string/font_regular"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@string/font_medium"
                     android:letterSpacing="-0.01"
-                    android:includeFontPadding="false" />
+                    android:includeFontPadding="false"
+                    android:shadowColor="#D9000000"
+                    android:shadowRadius="12"
+                    android:shadowDy="2" />
 
                 <TextClock
                     android:id="@+id/date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
+                    android:layout_marginTop="2dp"
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:format12Hour="@string/date_format"
                     android:format24Hour="@string/date_format"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="10sp"
+                    android:textColor="#F2FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
                     android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.05"
-                    android:textAllCaps="true" />
+                    android:letterSpacing="0.06"
+                    android:textAllCaps="true"
+                    android:shadowColor="#D9000000"
+                    android:shadowRadius="10"
+                    android:shadowDy="1" />
             </LinearLayout>
 
             <!-- Hidden: Unused views preserved to satisfy controller bindings -->
@@ -323,67 +353,33 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <!-- FrameLayout: Memories photo slider section and My Apps dock -->
-        <FrameLayout
+        <!-- Bottom Apps Tray Section -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/grid"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="4dp"
+            android:layout_height="match_parent"
+            android:paddingTop="390dp"
+            android:paddingBottom="14dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:clipToPadding="false"
             android:clipChildren="false"
-            android:clipToPadding="false">
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            android:descendantFocusability="afterDescendants" />
 
-            <!-- Middle Section: Memories -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:orientation="vertical"
-                android:clipChildren="false"
-                android:clipToPadding="false">
+        <TextView
+            android:id="@+id/titleMemories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/titleMemories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone" />
-
-                <!-- Panoramic Viewport Frame: full width to screen and full height to dock -->
-                <FrameLayout
-                    android:id="@+id/memoriesFrame"
-                    android:layout_width="match_parent"
-                    android:layout_height="296dp">
-
-                    <com.gathin.tvhome.PhotoSlider
-                        android:id="@+id/photoSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:nextFocusUp="@+id/btnProfile"
-                        android:nextFocusDown="@+id/grid" />
-                </FrameLayout>
-            </LinearLayout>
-
-            <!-- Bottom Section Title: My Apps (hidden so picture spans full vertical height) -->
-            <TextView
-                android:id="@+id/titleMyApps"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/grid"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingTop="302dp"
-                android:paddingBottom="14dp"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:clipToPadding="false"
-                android:clipChildren="false"
-                android:overScrollMode="never"
-                android:scrollbars="none"
-                android:descendantFocusability="afterDescendants" />
-        </FrameLayout>
-    </LinearLayout>
+        <TextView
+            android:id="@+id/titleMyApps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <!-- The single floating glass highlight that springs between tiles. -->
     <com.gathin.tvhome.GlassView

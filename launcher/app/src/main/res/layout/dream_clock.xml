@@ -55,13 +55,14 @@
             android:layout_marginTop="6dp"
             android:format12Hour="@string/date_format_home"
             android:format24Hour="@string/date_format_home"
-            android:textColor="#E6FFFFFF"
-            android:textSize="16sp"
+            android:textColor="#F2FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
             android:fontFamily="@string/font_medium"
             android:letterSpacing="0.08"
             android:textAllCaps="true"
             android:shadowColor="#D9000000"
-            android:shadowRadius="10"
-            android:shadowDy="2" />
+            android:shadowRadius="14"
+            android:shadowDy="3" />
     </LinearLayout>
 </FrameLayout>
