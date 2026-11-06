@@ -17,9 +17,10 @@
 
     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
-        <!-- Top Dock (First 4 apps) -->
-        <item>org.smarttube.stable</item>
+        <!-- Dock 5 apps matching mockup -->
         <item>com.phlox.tvwebbrowser</item>
+        <item>com.bunty.audiosetup</item>
+        <item>com.liskovsoft.smartyoutubetv2.tv</item>
         <item>in.startv.hotstar</item>
         <item>com.mitv.tvhome.mitvplus</item>
         <!-- Next Line (Grid Row 1) -->

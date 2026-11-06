@@ -564,6 +564,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
             }
+            View titleMyApps = findViewById(R.id.titleMyApps);
+            if (titleMyApps != null) {
+                FrameLayout.LayoutParams tlp = (FrameLayout.LayoutParams) titleMyApps.getLayoutParams();
+                int targetTop = Math.max(0, want - (int) (22 * density));
+                if (tlp.topMargin != targetTop) {
+                    tlp.topMargin = targetTop;
+                    titleMyApps.setLayoutParams(tlp);
+                }
+            }
             // Cold start or column count > 4: the first focus can run before the grid has its final width or
             // padding, leaving the glass at the XML design size until a key is pressed.
             grid.post(this::refitGlass);
@@ -607,6 +616,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         btnInputs = findViewById(R.id.btnInputs);
         View btnSettings = findViewById(R.id.btnSettings);
+        View btnProfile = findViewById(R.id.btnProfile);
+        if (btnProfile != null) {
+            btnProfile.setOnClickListener(v -> showTopMenu());
+        }
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
         btnWifi.setOnLongClickListener(v -> {
@@ -2002,30 +2015,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** One quiet line, e.g. "CPU 8%  ·  Memory 430 MB free  ·  Storage 3.1 GB free". Runs off the main thread. */
     private static void appendStat(StringBuilder line, String part) {
-        if (line.length() > 0) line.append("  ·  ");
+        if (line.length() > 0) line.append(" • ");
         line.append(part);
     }
 
     private String readStatsLine() {
-        int cpu = cpuPercent();
-        if (cpu < 0) {
-            try {
-                Thread.sleep(200);             // second sample, so the first line already has a CPU figure
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return "";
-            }
-            cpu = cpuPercent();
-        }
-        // Android 8 and later hide /proc/stat from apps on many TVs: then the line leaves CPU out rather than
-        // showing a dash that never fills in.
         StringBuilder line = new StringBuilder();
-        if (cpu >= 0) line.append(getString(R.string.stats_cpu, cpu));
         long[] mem = memUsedOfTotalMb();
-        if (mem != null) appendStat(line, getString(R.string.stats_memory, mem[0], mem[1]));
+        if (mem != null) {
+            long used = mem[0];
+            long total = mem[1];
+            int pct = total > 0 ? (int) (used * 100 / total) : 0;
+            line.append("RAM ").append(pct).append("%");
+        }
         String free = formatGb(getResources(), Environment.getDataDirectory().getFreeSpace());
-        if (!free.isEmpty()) appendStat(line, getString(R.string.stats_storage, free));
-        return StatsText.forLocale(line.toString(), getResources().getConfiguration().getLocales().get(0));
+        if (!free.isEmpty()) appendStat(line, free + " Free");
+        return line.toString();
     }
 
     // -1: need another sample. -2: this source cannot be read (Android 9 hides /proc/stat from apps).
@@ -2628,7 +2633,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 }
             }
         }
-        btnInputs.setVisibility(any ? View.VISIBLE : View.GONE);
+        btnInputs.setVisibility(View.VISIBLE);
     }
 
     /** boot_to_live_tv: the first time Home comes up after the TV starts, open the Live TV app instead. Once per

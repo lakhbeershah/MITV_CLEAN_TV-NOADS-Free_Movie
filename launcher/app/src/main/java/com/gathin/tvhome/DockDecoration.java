@@ -18,6 +18,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final float density;
     private final Paint band = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint shelfLine = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
 
     /** Extra band below the tiles for their names (always_show_names), in px. */
@@ -47,6 +48,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         edge.setStyle(Paint.Style.STROKE);
         edge.setStrokeWidth(density);
         edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
+        shelfLine.setStyle(Paint.Style.STROKE);
+        shelfLine.setStrokeWidth(1.5f * density);
     }
 
     /** Concentric corners: the band's radius is the tiles' radius plus the band's padding around them. */
@@ -128,5 +131,10 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         }
         c.drawRoundRect(rect, radius, radius, band);
         c.drawRoundRect(rect, radius, radius, edge);
+        shelfLine.setShader(new LinearGradient(rect.left, 0, rect.right, 0,
+                new int[]{0x802B92FF, 0x8038A0FF, 0xCCFF8C00, 0x99FF5500},
+                new float[]{0f, 0.5f, 0.85f, 1f},
+                Shader.TileMode.CLAMP));
+        c.drawLine(rect.left + radius * 0.4f, rect.bottom, rect.right - radius * 0.4f, rect.bottom, shelfLine);
     }
 }

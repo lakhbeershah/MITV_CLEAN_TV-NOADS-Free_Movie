@@ -7,12 +7,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
+import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.Shader;
 import android.media.ExifInterface;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -65,6 +67,14 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
         setBackgroundColor(0xFF0E1116);
 
         density = getResources().getDisplayMetrics().density;
+        setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), 18 * density);
+            }
+        });
+        setClipToOutline(true);
+
         strip = new LinearLayout(context);
         addView(strip, new LayoutParams(-2, -1));
 
