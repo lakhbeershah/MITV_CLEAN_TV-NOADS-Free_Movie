@@ -353,14 +353,6 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <!-- Bottom Apps Tray Moving Gradient Background -->
-        <com.gathin.tvhome.AppSectionBackgroundView
-            android:id="@+id/appSectionBg"
-            android:layout_width="match_parent"
-            android:layout_height="220dp"
-            android:layout_gravity="bottom"
-            android:importantForAccessibility="no" />
-
         <!-- Bottom Apps Tray Section -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/grid"

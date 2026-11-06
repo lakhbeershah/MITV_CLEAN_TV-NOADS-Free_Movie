@@ -75,7 +75,6 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         /** Ambient glow colour; 0 until sampled from the banner, or the card's accent from the start. */
         int ambient;
         int ambient2;
-        int[] palette;
 
         Entry(String label, ComponentName component, Drawable banner, Drawable icon) {
             this(APP, label, component, banner, icon, null, 0);
@@ -105,7 +104,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int design = Math.round(DESIGN_W_DP * density);
         if (innerWidthPx <= 0 || columns <= 0) return design;
         int cell = innerWidthPx / columns;
-        int fit = (int) ((cell - 12 * density) / 1.10f);
+        int fit = (int) ((cell - 12 * density) / FOCUS_SCALE);
         return Math.max(Math.round(80 * density), Math.min(design, fit));
     }
 
@@ -131,8 +130,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static final float COMPACT_ITEM_EXTRA_DP = 4 + 4 + 4 + 20;
     static final float COMPACT_BOTTOM_ROOM_DP = 16;
 
-    /** item_app.xml: 8dp padding above and below, a 7dp gap and the 22dp name label under the tile. */
-    static final float ITEM_EXTRA_DP = 45;
+    /** item_app.xml: 8dp padding above and 4dp below, with app name hidden. */
+    static final float ITEM_EXTRA_DP = 16;
     /** DockDecoration's offsets above and below the dock row. */
     static final float DOCK_EXTRA_DP = 6 + 12;
     /** Room kept under the last row rows_below_dock asks for (MainActivity places the dock with the same). */
@@ -642,24 +641,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** Returns two dynamic colours sampled from the banner/icon for running duo-tone gradient border. */
     int[] ambientColorsAt(int position) {
-        int[] p = allColorsAt(position);
-        return new int[]{p[0], p.length > 1 ? p[1] : 0xFFFFFFFF};
-    }
-
-    /** Returns all prominent colors present in the icon along with vivid contrast accents. */
-    int[] allColorsAt(int position) {
-        if (position < 0 || position >= items.size()) return new int[]{0xFFFFFFFF, 0xFF444444, 0xFF888888};
+        if (position < 0 || position >= items.size()) return new int[]{0xFFFFFFFF, 0xFF444444};
         Entry e = items.get(position);
-        if (e.palette == null) {
-            e.palette = vividColors(e.banner != null ? e.banner : e.icon);
-            e.ambient = e.palette[0];
-            e.ambient2 = e.palette.length > 1 ? e.palette[1] : 0xFFFFFFFF;
+        if (e.ambient == 0) {
+            int[] c = vividColors(e.banner != null ? e.banner : e.icon);
+            e.ambient = c[0];
+            e.ambient2 = c[1];
         }
-        return e.palette;
+        return new int[]{e.ambient, e.ambient2 != 0 ? e.ambient2 : 0xFFFFFFFF};
     }
 
     private static int[] vividColors(Drawable live) {
-        if (live == null) return new int[]{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
+        if (live == null) return new int[]{0xFFFFFFFF, 0xFFFFFFFF};
         Drawable d = live.getConstantState() != null ? live.getConstantState().newDrawable().mutate() : live;
         Rect saved = new Rect(d.getBounds());
         int n = 12;
@@ -701,13 +694,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             c1 = Color.HSVToColor(hsv);
         }
 
-        // Secondary and tertiary distinct colours in one pass
+        // Secondary distinct colour: look for high hue contrast or bright white
         float[] hsv1 = new float[3];
         Color.colorToHSV(c1, hsv1);
         int best2 = 0;
         float bestScore2 = -1f;
-        int best3 = 0;
-        float bestScore3 = -1f;
         for (int p : px) {
             int pr = (p >> 16) & 0xFF, pg = (p >> 8) & 0xFF, pb = p & 0xFF;
             int max = Math.max(pr, Math.max(pg, pb));
@@ -721,19 +712,20 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (colorDist > 0.30f && val > 0.35f) {
                 float score2 = colorDist * (sat + 0.3f);
                 if (score2 > bestScore2) {
-                    bestScore3 = bestScore2;
-                    best3 = best2;
                     bestScore2 = score2;
                     best2 = p;
-                } else if (score2 > bestScore3) {
-                    bestScore3 = score2;
-                    best3 = p;
                 }
             }
         }
-        int c2 = bestScore2 >= 0 ? best2 : 0xFFFFFFFF;
-        int c3 = bestScore3 >= 0 ? best3 : c1;
-        return new int[]{c1, c2, c3};
+        int c2;
+        if (bestScore2 >= 0) {
+            Color.colorToHSV(best2, hsv);
+            hsv[2] = Math.max(0.7f, hsv[2]);
+            c2 = Color.HSVToColor(hsv);
+        } else {
+            c2 = 0xFFFFFFFF; // High contrast bright white
+        }
+        return new int[]{c1, c2};
     }
 
     /** Corner radius for a tile of this width: 16dp at the design width, proportionally less when smaller. */
