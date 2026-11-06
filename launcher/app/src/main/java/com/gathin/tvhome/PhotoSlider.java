@@ -70,7 +70,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
         setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), 18 * density);
+                outline.setRect(0, 0, view.getWidth(), view.getHeight());
             }
         });
         setClipToOutline(true);

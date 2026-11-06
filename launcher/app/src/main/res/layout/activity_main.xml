@@ -347,13 +347,11 @@
                     android:layout_height="wrap_content"
                     android:visibility="gone" />
 
-                <!-- Panoramic Viewport Frame: fills height from top to app dock -->
+                <!-- Panoramic Viewport Frame: full width to screen and full height to dock -->
                 <FrameLayout
                     android:id="@+id/memoriesFrame"
                     android:layout_width="match_parent"
-                    android:layout_height="296dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginEnd="24dp">
+                    android:layout_height="296dp">
 
                     <com.gathin.tvhome.PhotoSlider
                         android:id="@+id/photoSlider"
@@ -361,37 +359,6 @@
                         android:layout_height="match_parent"
                         android:nextFocusUp="@+id/btnProfile"
                         android:nextFocusDown="@+id/grid" />
-
-                    <!-- Memories Overlay Badge -->
-                    <TextView
-                        android:id="@+id/memoriesBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginEnd="16dp"
-                        android:layout_marginBottom="12dp"
-                        android:text="Our Family Moments"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12.5sp"
-                        android:fontFamily="@string/font_medium"
-                        android:shadowColor="#D9000000"
-                        android:shadowRadius="10"
-                        android:shadowDy="2" />
-
-                    <!-- Carousel Indicator Cue -->
-                    <TextView
-                        android:id="@+id/carouselIndicator"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_gravity="center_vertical|end"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/pill_bg"
-                        android:gravity="center"
-                        android:text="›"
-                        android:textColor="#D9FFFFFF"
-                        android:textSize="22sp"
-                        android:fontFamily="@string/font_medium"
-                        android:focusable="false" />
                 </FrameLayout>
             </LinearLayout>
 
