@@ -97,6 +97,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
 
             File ext = Environment.getExternalStorageDirectory();
             File[] searchDirs = {
+                new File(ext, "tv_screensaver_2"),
                 new File(ext, "tv_screensaver"),
                 new File(ext, "Download")
             };
@@ -112,8 +113,8 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
                 found = found.subList(0, 10);
             }
 
-            int targetH = getHeight() > 0 ? getHeight() : Math.round(288 * density);
-            if (targetH > 480) targetH = 480;
+            int targetH = getHeight() > 0 ? getHeight() : Math.round(720 * density);
+            if (targetH > 720) targetH = 720;
             List<Bitmap> bitmaps = new ArrayList<>();
             for (File f : found) {
                 Bitmap b = decodeScaled(f.getPath(), targetH);
@@ -203,7 +204,7 @@ public class PhotoSlider extends FrameLayout implements View.OnFocusChangeListen
             int srcW = swap ? opts.outHeight : opts.outWidth;
             int inSampleSize = 1;
             int limitH = (targetH * 5) / 4;
-            while ((srcH / inSampleSize) > limitH || (srcW / inSampleSize) > 720) {
+            while ((srcH / inSampleSize) > limitH || (srcW / inSampleSize) > 1280) {
                 inSampleSize *= 2;
             }
             opts.inSampleSize = inSampleSize;

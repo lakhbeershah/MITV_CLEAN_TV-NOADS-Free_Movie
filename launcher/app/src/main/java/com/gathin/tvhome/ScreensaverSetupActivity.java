@@ -59,7 +59,12 @@ public class ScreensaverSetupActivity extends Activity {
     }
 
     private void refreshStatus() {
-        File dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver");
+        File dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
+        String folderName = "tv_screensaver_2";
+        if (!dir.exists() || !dir.isDirectory()) {
+            dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver");
+            folderName = "tv_screensaver";
+        }
         int count = 0;
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles();
@@ -69,7 +74,7 @@ public class ScreensaverSetupActivity extends Activity {
                 }
             }
         }
-        setupStatus.setText("Source: " + (count > 0 ? "/sdcard/tv_screensaver (" + count + " photos)" : "Downloads")
-                + " • 720x480 RGB_565 (RAM < 15MB)");
+        setupStatus.setText("Source: " + (count > 0 ? "/sdcard/" + folderName + " (" + count + " photos)" : "Downloads")
+                + " • 720p Native RGB_565 (RAM < 15MB)");
     }
 }
