@@ -601,12 +601,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         for (SpringAnimation s : new SpringAnimation[]{springX, springY}) {
             if (reducedMotion) {
                 Motion.reduce(s);
-            } else if (!focusOvershoot) {
-                // Critically damped: glides straight onto the tile without swinging past it.
-                s.setSpring(new SpringForce().setStiffness(advancedEffects ? 520f : 440f).setDampingRatio(1f));
             } else {
-                s.setSpring(new SpringForce().setStiffness(advancedEffects ? 320f : 260f)
-                        .setDampingRatio(advancedEffects ? 0.76f : 0.58f));
+                s.setSpring(new SpringForce().setStiffness(340f).setDampingRatio(0.75f));
             }
         }
 
@@ -1553,12 +1549,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         Rect r = tileRect;
         r.set(0, 0, card.getWidth(), card.getHeight());
         root.offsetDescendantRectToMyCoords(card, r);
-        float pad = 6f * density;        // matches GlassView's glow inset
+        float pad = 10f * density;        // matches GlassView's glow inset (10f)
         float scale = adapter.focusScale();
         float w = card.getWidth() * scale + 2 * pad;
         float h = card.getHeight() * scale + 2 * pad;
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (advancedEffects ? 4f * density : 0f);
+        float y = r.exactCenterY() - h / 2f - (6f * density);
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
         if (lp.width != (int) w || lp.height != (int) h || card.getWidth() != glassCardW) {
@@ -1575,10 +1571,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         int itemLeft = item.getLeft();
         int itemRight = item.getRight();
-        int limitLeft = grid.getPaddingLeft();
-        int limitRight = grid.getWidth() - grid.getPaddingRight();
+        int edgeMargin = (int) (70 * density);
+        int limitLeft = grid.getPaddingLeft() + edgeMargin;
+        int limitRight = grid.getWidth() - grid.getPaddingRight() - edgeMargin;
         int dx = 0;
-        if (itemLeft < limitLeft) {
+        if (position == 0) {
+            dx = itemLeft - grid.getPaddingLeft();
+        } else if (itemLeft < limitLeft) {
             dx = itemLeft - limitLeft;
         } else if (itemRight > limitRight) {
             dx = itemRight - limitRight;
@@ -1629,12 +1628,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         Rect r = tileRect;
         r.set(0, 0, card.getWidth(), card.getHeight());
         root.offsetDescendantRectToMyCoords(card, r);
-        float pad = 6f * density;
+        float pad = 10f * density;
         float scale = adapter.focusScale();
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (advancedEffects ? 4f * density : 0f);
+        float y = r.exactCenterY() - h / 2f - (6f * density);
         if (!glassShown || Math.abs(glass.getTranslationX() - x) > 1f || Math.abs(glass.getTranslationY() - y) > 1f
                 || glass.getWidth() != w || glass.getHeight() != h) {
             springX.cancel();
