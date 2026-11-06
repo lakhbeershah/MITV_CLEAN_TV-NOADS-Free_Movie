@@ -104,7 +104,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int design = Math.round(DESIGN_W_DP * density);
         if (innerWidthPx <= 0 || columns <= 0) return design;
         int cell = innerWidthPx / columns;
-        int fit = (int) ((cell - 12 * density) / FOCUS_SCALE);
+        int fit = (int) ((cell - 12 * density) / 1.10f);
         return Math.max(Math.round(80 * density), Math.min(design, fit));
     }
 
@@ -130,8 +130,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static final float COMPACT_ITEM_EXTRA_DP = 4 + 4 + 4 + 20;
     static final float COMPACT_BOTTOM_ROOM_DP = 16;
 
-    /** item_app.xml: 8dp padding above and 4dp below, with app name hidden. */
-    static final float ITEM_EXTRA_DP = 16;
+    /** item_app.xml: 8dp padding above and below, a 7dp gap and the 22dp name label under the tile. */
+    static final float ITEM_EXTRA_DP = 45;
     /** DockDecoration's offsets above and below the dock row. */
     static final float DOCK_EXTRA_DP = 6 + 12;
     /** Room kept under the last row rows_below_dock asks for (MainActivity places the dock with the same). */
