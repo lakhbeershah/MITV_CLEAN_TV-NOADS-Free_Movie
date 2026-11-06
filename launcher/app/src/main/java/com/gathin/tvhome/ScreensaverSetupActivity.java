@@ -54,7 +54,11 @@ public class ScreensaverSetupActivity extends Activity {
             }
         });
 
-        findViewById(R.id.btnRescan).setOnClickListener(v -> refreshStatus());
+        findViewById(R.id.btnRescan).setOnClickListener(v -> {
+            PhotoSlider.resetPlaylist(this);
+            refreshStatus();
+            Toast.makeText(this, "Playlist reshuffled", Toast.LENGTH_SHORT).show();
+        });
         refreshStatus();
     }
 
