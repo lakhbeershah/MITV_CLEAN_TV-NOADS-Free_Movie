@@ -148,6 +148,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private FrameLayout root;
     private WallpaperPlayer wallpaperPlayer;
     private GlassView glass;
+    private AppSectionBackgroundView appSectionBg;
     private View ambient;
     private TextView heroName;
     /** The top shelf: heroName, plus the cinematic shelf's "Last opened" line and dock position dots. */
@@ -411,6 +412,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
         if (festive) glass.setAccent(festival.accentColor());
+        appSectionBg = findViewById(R.id.appSectionBg);
         ambient = findViewById(R.id.ambient);
         // The glow is one bitmap, so its alpha can be applied while drawing it. Otherwise every frame of
         // a fade renders it into a full-screen offscreen buffer first.
@@ -870,6 +872,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             registerReceiver(timeReceiver, timeFilter);
         }
         updateClockVisibility();
+        if (appSectionBg != null) appSectionBg.startFlow();
         tileRefresh.onStart();
     }
 
@@ -1120,6 +1123,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         unregisterReceiver(timeReceiver);
         handler.removeCallbacks(clockCheck);
         stopped = true;
+        if (appSectionBg != null) appSectionBg.stopFlow();
         tileRefresh.onStop();
     }
 
@@ -1633,6 +1637,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             glass.setColors(festival.accentColor(), 0xFFFFFFFF);
         } else {
             glass.setColors(appColors[0], appColors[1]);
+        }
+        if (appSectionBg != null) {
+            appSectionBg.setAppColors(adapter.allColorsAt(position));
         }
         if (!glassShown) {
             springX.cancel();
