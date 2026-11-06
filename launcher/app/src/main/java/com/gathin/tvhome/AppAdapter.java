@@ -216,7 +216,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (focusedPosition == pos && rv != null) return;
         focusedPosition = pos;
         if (rv == null) return;
-        float spread = 20f * ctx.getResources().getDisplayMetrics().density;
+        float spread = 26f * ctx.getResources().getDisplayMetrics().density;
         int childCount = rv.getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = rv.getChildAt(i);
@@ -443,7 +443,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.name.setText(e.name);
         h.name.setVisibility(View.GONE);
         float density = ctx.getResources().getDisplayMetrics().density;
-        float spread = 20f * density;
+        float spread = 26f * density;
         float tx = position < focusedPosition ? -spread : (position > focusedPosition ? spread : 0f);
         h.card.setTranslationX(tx);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
