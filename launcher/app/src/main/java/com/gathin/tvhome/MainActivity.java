@@ -494,17 +494,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child,
                                                          @NonNull Rect rect, boolean immediate,
                                                          boolean focusedChildVisible) {
-                int left = child.getLeft() + rect.left;
-                int right = left + rect.width();
-                int limitRight = getWidth() - getPaddingRight();
-                int dx;
-                if (left < getPaddingLeft()) dx = left - getPaddingLeft();
-                else if (right <= limitRight) dx = 0;
-                else dx = right - limitRight;
-                if (dx == 0) return false;
-                if (immediate || reducedMotion || !animations) parent.scrollBy(dx, 0);
-                else parent.smoothScrollBy(dx, 0);
-                return true;
+                return false;
             }
         });
         ((GridLayoutManager) grid.getLayoutManager()).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
@@ -581,13 +571,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             @Override
             public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
                 if (!glassShown) return;
-                if (dx != 0) {
-                    glassTargetX -= dx;
-                    glass.setTranslationX(glass.getTranslationX() - dx);
-                }
                 glassTargetY -= dy;
                 glassScrollShift -= dy;
                 glass.setTranslationY(glass.getTranslationY() - dy);
+            }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    refitGlass();
+                }
             }
         });
 
@@ -1575,6 +1568,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale);
         }
         glassCardW = card.getWidth();
+        View item = (View) card.getParent();
+        if (photoSlider != null) {
+            photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
+        }
+        int itemLeft = item.getLeft();
+        int itemRight = item.getRight();
+        int limitLeft = grid.getPaddingLeft();
+        int limitRight = grid.getWidth() - grid.getPaddingRight();
+        int dx = 0;
+        if (itemLeft < limitLeft) {
+            dx = itemLeft - limitLeft;
+        } else if (itemRight > limitRight) {
+            dx = itemRight - limitRight;
+        }
+        if (dx != 0) {
+            x -= dx;
+            if (!animations || reducedMotion) grid.scrollBy(dx, 0);
+            else grid.smoothScrollBy(dx, 0);
+        }
+
         glassTargetX = x;
         glassTargetY = y;
         // Cinematic shelf: the highlight glows in the dock app's colour, plain white in the grid (and on the dock with
@@ -1602,24 +1615,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             springX.animateToFinalPosition(x);
             springY.animateToFinalPosition(y - glassScrollShift);
         }
-        View item = (View) card.getParent();
-        if (photoSlider != null) {
-            photoSlider.animate().translationY(0f).alpha(1f).setDuration(220).start();
-        }
-        int itemLeft = item.getLeft();
-        int itemRight = item.getRight();
-        int limitLeft = grid.getPaddingLeft();
-        int limitRight = grid.getWidth() - grid.getPaddingRight();
-        int dx = 0;
-        if (itemLeft < limitLeft) {
-            dx = itemLeft - limitLeft;
-        } else if (itemRight > limitRight) {
-            dx = itemRight - limitRight;
-        }
-        if (dx != 0) {
-            if (!animations || reducedMotion) grid.scrollBy(dx, 0);
-            else grid.smoothScrollBy(dx, 0);
-        }
         showHero(position, r.top);
     }
 
@@ -1630,12 +1625,32 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
         View card = vh == null ? null : vh.itemView.findViewById(R.id.card);
         if (card == null || card.getWidth() <= 0 || !card.isFocused()) return;
+        Rect r = tileRect;
+        r.set(0, 0, card.getWidth(), card.getHeight());
+        root.offsetDescendantRectToMyCoords(card, r);
         float pad = 6f * density;
         float scale = adapter.focusScale();
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
-        if (!glassShown || card.getWidth() != glassCardW || glass.getWidth() != w || glass.getHeight() != h) {
-            onTileFocused(pos, card);
+        float x = r.exactCenterX() - w / 2f;
+        float y = r.exactCenterY() - h / 2f - (advancedEffects ? 4f * density : 0f);
+        if (!glassShown || Math.abs(glass.getTranslationX() - x) > 1f || Math.abs(glass.getTranslationY() - y) > 1f
+                || glass.getWidth() != w || glass.getHeight() != h) {
+            springX.cancel();
+            springY.cancel();
+            glass.setTranslationX(x);
+            glass.setTranslationY(y);
+            glassTargetX = x;
+            glassTargetY = y;
+            ViewGroup.LayoutParams lp = glass.getLayoutParams();
+            if (lp.width != w || lp.height != h) {
+                lp.width = w;
+                lp.height = h;
+                glass.setLayoutParams(lp);
+                glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale);
+            }
+            glassShown = true;
+            glass.setAlpha(1f);
         }
     }
 
