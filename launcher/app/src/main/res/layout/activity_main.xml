@@ -345,19 +345,13 @@
                     android:id="@+id/titleMemories"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginBottom="4dp"
-                    android:text="Memories"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="13sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.02" />
+                    android:visibility="gone" />
 
-                <!-- Panoramic Viewport Frame -->
+                <!-- Panoramic Viewport Frame: fills height from top to app dock -->
                 <FrameLayout
                     android:id="@+id/memoriesFrame"
                     android:layout_width="match_parent"
-                    android:layout_height="250dp"
+                    android:layout_height="296dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginEnd="24dp">
 
@@ -401,19 +395,12 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- Bottom Section Title: My Apps -->
+            <!-- Bottom Section Title: My Apps (hidden so picture spans full vertical height) -->
             <TextView
                 android:id="@+id/titleMyApps"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|start"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="280dp"
-                android:text="My Apps"
-                android:textColor="#B3FFFFFF"
-                android:textSize="13sp"
-                android:fontFamily="@string/font_medium"
-                android:letterSpacing="0.02" />
+                android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/grid"

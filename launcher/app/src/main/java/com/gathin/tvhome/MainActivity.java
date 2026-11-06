@@ -565,13 +565,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
             }
-            View titleMyApps = findViewById(R.id.titleMyApps);
-            if (titleMyApps != null) {
-                FrameLayout.LayoutParams tlp = (FrameLayout.LayoutParams) titleMyApps.getLayoutParams();
-                int targetTop = Math.max(0, want - (int) (22 * density));
-                if (tlp.topMargin != targetTop) {
-                    tlp.topMargin = targetTop;
-                    titleMyApps.setLayoutParams(tlp);
+            View memoriesFrame = findViewById(R.id.memoriesFrame);
+            if (memoriesFrame != null) {
+                ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
+                int targetH = Math.max((int) (200 * density), want - (int) (8 * density));
+                if (mlp.height != targetH) {
+                    mlp.height = targetH;
+                    memoriesFrame.setLayoutParams(mlp);
                 }
             }
             // Cold start or column count > 4: the first focus can run before the grid has its final width or
