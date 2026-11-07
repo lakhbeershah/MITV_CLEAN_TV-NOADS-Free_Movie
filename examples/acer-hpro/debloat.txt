@@ -19,6 +19,12 @@ com.google.android.videos
 com.google.android.youtube.tvmusic
 com.apps.esticker
 com.apps.esticker3
+com.spocky.projengmenu
+com.android.settings.intelligence
+flar2.homebutton
+com.apps.factory.ui
+com.realtek.factorytools
+com.google.android.apps.initsetup
 
 # KEPT by user request - DO NOT DISABLE:
 # com.apps.tvmanager                     # Acer TV Manager (cleaner & optimizer)
