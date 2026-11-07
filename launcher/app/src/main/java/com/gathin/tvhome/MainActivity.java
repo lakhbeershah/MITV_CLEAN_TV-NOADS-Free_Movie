@@ -197,6 +197,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private List<RaceWeekend.Race> raceCalendar;
     private View racePanel;
     private PhotoSlider photoSlider;
+    private TextView photoSyncBadge;
     private TextView raceKicker, raceHeadline, raceSessions;
     /** config.xml show_stats, overridable by a theme. Off: the line is gone and nothing is read. */
     private boolean showStats;
@@ -363,6 +364,43 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     };
 
+    private final Runnable hideMemoriesBadge = new Runnable() {
+        @Override
+        public void run() {
+            if (photoSyncBadge != null) {
+                photoSyncBadge.animate()
+                        .alpha(0f)
+                        .setDuration(500)
+                        .withEndAction(() -> photoSyncBadge.setVisibility(View.GONE))
+                        .start();
+            }
+        }
+    };
+
+    public void showNewMemoriesBadge(int count) {
+        if (photoSyncBadge == null) return;
+        String text = count == 1 ? "✨ 1 New Memory" : "✨ " + count + " New Memories";
+        photoSyncBadge.setText(text);
+        photoSyncBadge.setAlpha(0f);
+        photoSyncBadge.setVisibility(View.VISIBLE);
+        photoSyncBadge.animate().alpha(1f).setDuration(400).start();
+        handler.removeCallbacks(hideMemoriesBadge);
+        handler.postDelayed(hideMemoriesBadge, 60_000L);
+    }
+
+    private final BroadcastReceiver testMemoriesReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            if (PhotoSyncEngine.ACTION_TEST_MEMORIES.equals(intent.getAction())) {
+                int count = intent.getIntExtra("count", 10);
+                showNewMemoriesBadge(count);
+            } else if (PhotoSyncEngine.ACTION_TRIGGER_SYNC.equals(intent.getAction())) {
+                PhotoSyncEngine.forceSync(context);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -455,6 +493,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         shamsiDate = findViewById(R.id.shamsiDate);
         stats = findViewById(R.id.stats);
         photoSlider = findViewById(R.id.photoSlider);
+        photoSyncBadge = findViewById(R.id.photoSyncBadge);
+        PhotoSyncEngine.setSyncListener(this::showNewMemoriesBadge);
+        IntentFilter memoriesFilter = new IntentFilter(PhotoSyncEngine.ACTION_TEST_MEMORIES);
+        memoriesFilter.addAction(PhotoSyncEngine.ACTION_TRIGGER_SYNC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(testMemoriesReceiver, memoriesFilter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(testMemoriesReceiver, memoriesFilter);
+        }
         raceCalendar = cfg.raceCalendar;
         racePanel = findViewById(R.id.racePanel);
         raceKicker = findViewById(R.id.raceKicker);
@@ -938,6 +985,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 handler.postDelayed(this::playPetalShower, 450);
             }
         }
+        PhotoSyncEngine.checkOnStartup(this);
     }
 
     /** Launcher settings' change count (Config.SETTINGS_REVISION_KEY); onResume rebuilds Home when it moved. */
@@ -1162,6 +1210,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        try {
+            unregisterReceiver(testMemoriesReceiver);
+        } catch (Throwable ignored) {}
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);

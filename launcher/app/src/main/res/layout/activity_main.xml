@@ -332,6 +332,27 @@
                     android:shadowColor="#D9000000"
                     android:shadowRadius="12"
                     android:shadowDy="2" />
+
+                <TextView
+                    android:id="@+id/photoSyncBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/badge_memories_pill"
+                    android:paddingStart="12dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="4dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@string/font_medium"
+                    android:includeFontPadding="false"
+                    android:visibility="gone"
+                    android:shadowColor="#D9000000"
+                    android:shadowRadius="10"
+                    android:shadowDy="2"
+                    android:text="✨ 10 New Memories" />
             </LinearLayout>
 
             <!-- Hidden: Unused views preserved to satisfy controller bindings -->
