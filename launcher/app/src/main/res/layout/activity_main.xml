@@ -166,6 +166,16 @@
                 android:focusable="false"
                 android:clickable="false" />
 
+            <View
+                android:id="@+id/wallpaperDimmingScrim"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#FF000000"
+                android:alpha="0"
+                android:focusable="false"
+                android:clickable="false"
+                android:importantForAccessibility="no" />
+
             <!-- Cinema top scrim: soft gradient so top icons and clock are always crystal clear -->
             <View
                 android:layout_width="match_parent"

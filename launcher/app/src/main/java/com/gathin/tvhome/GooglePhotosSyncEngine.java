@@ -70,6 +70,10 @@ public class GooglePhotosSyncEngine {
     }
 
     public static void startSync(Context context, String albumUrl, String quality, SyncListener listener) {
+        startSync(context, albumUrl, quality, null, listener);
+    }
+
+    public static void startSync(Context context, String albumUrl, String quality, String albumSubfolder, SyncListener listener) {
         new Thread(() -> {
             try {
                 if (albumUrl == null || albumUrl.trim().isEmpty()) {
@@ -102,7 +106,10 @@ public class GooglePhotosSyncEngine {
                 }
 
                 // 4. Prepare local directory
-                File targetDir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
+                File baseDir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
+                File targetDir = (albumSubfolder != null && !albumSubfolder.trim().isEmpty() && !"all".equalsIgnoreCase(albumSubfolder))
+                        ? new File(baseDir, albumSubfolder.trim())
+                        : baseDir;
                 if (!targetDir.exists()) {
                     targetDir.mkdirs();
                 }

@@ -417,7 +417,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         applyViewInputsHandler(cfg.handleViewInputs);
         settingsKeycodes = cfg.settingsKeycodes;
         settingsKeyPanel = cfg.settingsKeyPanel;
-        COLUMNS = cfg.columns;
+        COLUMNS = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("custom_columns", cfg.columns);
         animations = cfg.animations;
         advancedEffects = cfg.animations && cfg.advancedEffects;
         reducedMotion = cfg.reducedMotion;
@@ -495,6 +495,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         shamsiDate = findViewById(R.id.shamsiDate);
         stats = findViewById(R.id.stats);
         photoSlider = findViewById(R.id.photoSlider);
+        View wallpaperDimmingScrim = findViewById(R.id.wallpaperDimmingScrim);
+        if (wallpaperDimmingScrim != null) {
+            int dimPercent = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("wallpaper_dimming_percent", 0);
+            wallpaperDimmingScrim.setAlpha(dimPercent / 100f);
+        }
         photoSyncBadge = findViewById(R.id.photoSyncBadge);
         PhotoSyncEngine.setSyncListener(this::showNewMemoriesBadge);
         PhotoSyncEngine.startPeriodicSync(this);
@@ -607,7 +612,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
             int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
             int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
-            int tileH = AppAdapter.tileHeightPx(tileW);
+            String tileScale = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getString("tile_scale", "standard");
+        if ("compact".equals(tileScale)) tileW = Math.round(tileW * 0.88f);
+        else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
+
+        int tileH = AppAdapter.tileHeightPx(tileW);
             int itemH = tileH + Math.round((8 + 1) * density);
             int dockRow = itemH;   // item height without DockDecoration offsets
             int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
@@ -860,6 +869,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         Config cfg = Config.load(this);
         int rowsBelowDock = cfg.rowsBelowDock;
         int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
+        String tileScale = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getString("tile_scale", "standard");
+        if ("compact".equals(tileScale)) tileW = Math.round(tileW * 0.88f);
+        else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
+
         int tileH = AppAdapter.tileHeightPx(tileW);
         int dockRow = tileH + Math.round((8 + 1) * density);
         int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
@@ -881,6 +894,65 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         grid.requestLayout();
         grid.post(this::refitGlass);
+    }
+
+    public void setCustomColumns(int cols) {
+        if (cols < 3 || cols > 8) return;
+        COLUMNS = cols;
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit().putInt("custom_columns", cols).apply();
+        if (grid != null) {
+            grid.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, COLUMNS));
+            recalculateBottomDock();
+            if (adapter != null) adapter.notifyDataSetChanged();
+        }
+    }
+
+    public void setCustomTileScale(String scale) {
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit().putString("tile_scale", scale).apply();
+        recalculateBottomDock();
+        if (adapter != null) adapter.notifyDataSetChanged();
+    }
+
+    public void setCustomCornerRadiusDp(int radiusDp) {
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit().putInt("dock_corner_radius", radiusDp).apply();
+        if (adapter != null) adapter.notifyDataSetChanged();
+    }
+
+    public void setCustomDimmingPercent(int percent) {
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit().putInt("wallpaper_dimming_percent", percent).apply();
+        View scrim = findViewById(R.id.wallpaperDimmingScrim);
+        if (scrim != null) {
+            scrim.setAlpha(percent / 100f);
+        }
+    }
+
+    public int getCustomColumns() {
+        return COLUMNS;
+    }
+
+    public String getCustomTileScale() {
+        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getString("tile_scale", "standard");
+    }
+
+    public int getCustomCornerRadiusDp() {
+        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("dock_corner_radius", 20);
+    }
+
+    public int getCustomDimmingPercent() {
+        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("wallpaper_dimming_percent", 0);
+    }
+
+    public void refreshApps() {
+        reloadApps(false);
+    }
+
+    @Override
+    public void onHiddenAppsClicked() {
+        HiddenAppsManager.showHiddenAppsWindow(this, findViewById(R.id.root), () -> reloadApps(false));
     }
 
     /**

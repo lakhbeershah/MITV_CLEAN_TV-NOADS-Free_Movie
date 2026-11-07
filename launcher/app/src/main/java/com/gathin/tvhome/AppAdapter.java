@@ -59,6 +59,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         /** Hold OK on a tile: the activity shows the tile menu (move, remove from Home, app info). */
         void onTileLongPress(int position, View card);
         void onLibraryUp();
+        void onHiddenAppsClicked();
     }
 
     static final class Entry {
@@ -267,6 +268,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      * so focus follows it); hidden_apps wins over a card, and a card's package in dock_apps takes that slot.
      */
     void reload(List<Cards.Card> cards, List<ResolveInfo> leanback) {
+        Set<String> userHidden = HiddenAppsManager.getHiddenApps(ctx);
+        if (userHidden != null && !userHidden.isEmpty()) {
+            hidden.addAll(userHidden);
+        }
         PackageManager pm = ctx.getPackageManager();
         // The LEANBACK query is shared with the module-card check (MainActivity); copy it before adding
         // library apps so the caller's list stays as it was.
@@ -337,6 +342,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             fresh.add(new Entry(Entry.HOME_SETTINGS, ctx.getString(R.string.home_settings),
                     new ComponentName(ctx, HomeSettingsActivity.class), null,
                     ctx.getDrawable(R.drawable.ic_home_settings), null, 0));
+        }
+        if (userHidden != null && !userHidden.isEmpty()) {
+            fresh.add(new Entry("Hidden Apps",
+                    new ComponentName(ctx, "com.gathin.tvhome.HiddenAppsShortcut"),
+                    null, ctx.getDrawable(R.drawable.ic_lock)));
         }
         docked = 0;
         while (docked < fresh.size() && isDocked(fresh.get(docked))) docked++;
@@ -453,6 +463,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setTranslationZ(focused && advancedEffects ? 8f * ctx.getResources().getDisplayMetrics().density : 0f);
         h.banner.setScaleX(focused && advancedEffects ? 1.035f : 1f);
         h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
+        int customRadiusDp = ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getInt("dock_corner_radius", 14);
+        if (h.cardBackground instanceof android.graphics.drawable.GradientDrawable) {
+            ((android.graphics.drawable.GradientDrawable) h.cardBackground).setCornerRadius(customRadiusDp * density);
+        }
+        h.card.setClipToOutline(true);
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
@@ -488,6 +503,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
     private void launch(Entry e) {
+        if ("com.gathin.tvhome.HiddenAppsShortcut".equals(e.component.getClassName())) {
+            listener.onHiddenAppsClicked();
+            return;
+        }
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));

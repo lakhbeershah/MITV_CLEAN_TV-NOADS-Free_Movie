@@ -184,8 +184,22 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
             // Only draw if within or overlapping view boundaries
             if (screenX + item.displayW > 0 && screenX < w) {
                 if (item.bitmap != null && !item.bitmap.isRecycled()) {
-                    destRect.set(screenX, 0, screenX + item.displayW, targetH);
-                    canvas.drawBitmap(item.bitmap, null, destRect, bitmapPaint);
+                    boolean kenBurns = getContext().getSharedPreferences("screensaver_prefs", Context.MODE_PRIVATE)
+                            .getBoolean("ken_burns_enabled", false);
+                    if (kenBurns) {
+                        float cx = screenX + item.displayW * 0.5f;
+                        float cy = targetH * 0.5f;
+                        float t = (System.currentTimeMillis() % 30000L) / 30000f;
+                        float scale = 1.0f + 0.045f * (float) Math.sin((t + (i % 5) * 0.2f) * Math.PI * 2);
+                        canvas.save();
+                        canvas.scale(scale, scale, cx, cy);
+                        destRect.set(screenX, 0, screenX + item.displayW, targetH);
+                        canvas.drawBitmap(item.bitmap, null, destRect, bitmapPaint);
+                        canvas.restore();
+                    } else {
+                        destRect.set(screenX, 0, screenX + item.displayW, targetH);
+                        canvas.drawBitmap(item.bitmap, null, destRect, bitmapPaint);
+                    }
                 }
 
                 // Draw seam shadow between adjacent photos
@@ -317,19 +331,27 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
         Set<String> seen = new HashSet<>();
 
         File ext = Environment.getExternalStorageDirectory();
-        File[] searchDirs = {
-            new File(ext, "tv_screensaver_2"),
-            new File(ext, "tv_screensaver"),
-            new File(ext, "Download")
-        };
-        for (File dir : searchDirs) {
-            if (dir.isDirectory()) {
-                scanDir(dir, found, seen);
-                if (!found.isEmpty()) break;
+        SharedPreferences screensaverSp = ctx.getSharedPreferences("screensaver_prefs", Context.MODE_PRIVATE);
+        String selectedAlbum = screensaverSp.getString("selected_album", "all");
+
+        File primaryDir = new File(ext, "tv_screensaver_2");
+        if (!"all".equalsIgnoreCase(selectedAlbum) && !selectedAlbum.trim().isEmpty()) {
+            File specificDir = new File(primaryDir, selectedAlbum.trim());
+            if (specificDir.isDirectory()) {
+                scanDirRecursively(specificDir, found, seen);
             }
         }
 
-        Log.i("PhotoSlider", "initPlaylist: found " + found.size() + " photos across searchDirs");
+        if (found.isEmpty() && primaryDir.isDirectory()) {
+            scanDirRecursively(primaryDir, found, seen);
+        }
+
+        if (found.isEmpty()) {
+            File fallback = new File(ext, "tv_screensaver");
+            if (fallback.isDirectory()) scanDirRecursively(fallback, found, seen);
+        }
+
+        Log.i("PhotoSlider", "initPlaylist: found " + found.size() + " photos (album=" + selectedAlbum + ")");
 
         if (found.isEmpty()) {
             sPlaylist = new ArrayList<>();
@@ -418,11 +440,13 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
         } catch (Throwable ignored) {}
     }
 
-    private static void scanDir(File dir, List<File> result, Set<String> seen) {
+    private static void scanDirRecursively(File dir, List<File> result, Set<String> seen) {
         File[] files = dir.listFiles();
         if (files == null) return;
         for (File f : files) {
-            if (!f.isDirectory()) {
+            if (f.isDirectory()) {
+                scanDirRecursively(f, result, seen);
+            } else {
                 String n = f.getName().toLowerCase();
                 if ((n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png")) && seen.add(f.getPath())) {
                     result.add(f);
