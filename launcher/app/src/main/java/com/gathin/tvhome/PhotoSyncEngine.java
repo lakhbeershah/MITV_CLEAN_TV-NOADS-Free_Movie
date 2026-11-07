@@ -59,8 +59,8 @@ public class PhotoSyncEngine {
     private static final String ALBUM_ID = "AF1QipOT9wqQWjoIsoRjmBabVrI7Ik4HSEE3ADEfI6BMyHrj1hXyQ7p2ipOEaJl8MidnVA";
     private static final String AUTH_KEY = "V2M1RzNfb21ETDljZG1WN1g3Y1ZyUHp0SnZqSHB3";
 
-    // Check interval: every 2 hours
-    private static final long CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000L;
+    // Check interval: every 15 minutes
+    private static final long CHECK_INTERVAL_MS = 15 * 60 * 1000L;
 
     public interface SyncListener {
         void onNewMemoriesAdded(int count);
@@ -75,7 +75,28 @@ public class PhotoSyncEngine {
         sActiveListener = listener;
     }
 
+    private static Context sAppContext = null;
+    private static final Runnable sPeriodicRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (sAppContext != null) {
+                checkAndSync(sAppContext, true);
+            }
+            sMainHandler.postDelayed(this, CHECK_INTERVAL_MS);
+        }
+    };
+
+    public static void startPeriodicSync(Context context) {
+        if (context == null) return;
+        sAppContext = context.getApplicationContext();
+        sMainHandler.removeCallbacks(sPeriodicRunnable);
+        sMainHandler.postDelayed(sPeriodicRunnable, CHECK_INTERVAL_MS);
+    }
+
     public static void checkOnStartup(Context context) {
+        if (context != null) {
+            sAppContext = context.getApplicationContext();
+        }
         checkAndSync(context, false);
     }
 

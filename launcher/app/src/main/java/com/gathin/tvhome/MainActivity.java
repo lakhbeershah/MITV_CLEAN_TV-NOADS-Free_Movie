@@ -495,6 +495,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         photoSlider = findViewById(R.id.photoSlider);
         photoSyncBadge = findViewById(R.id.photoSyncBadge);
         PhotoSyncEngine.setSyncListener(this::showNewMemoriesBadge);
+        PhotoSyncEngine.startPeriodicSync(this);
         IntentFilter memoriesFilter = new IntentFilter(PhotoSyncEngine.ACTION_TEST_MEMORIES);
         memoriesFilter.addAction(PhotoSyncEngine.ACTION_TRIGGER_SYNC);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
