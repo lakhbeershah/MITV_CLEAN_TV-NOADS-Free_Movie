@@ -457,21 +457,21 @@ public class ControlCenterManager {
             try {
                 QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
                 Bitmap bmp = qr.toBitmap(8, 2);
-                showQrDialog("📱 Virtual Web Remote", "Scan with any phone to open the TV touch remote:\n" + url, bmp);
+                showQrDialog("📱 Virtual Web Remote", "Scan with phone to open TV touch remote:\n" + url + "\n\n⚠️ Note: Phone must be on the same Wi-Fi network\n(Turn off Mobile Data / 5G)", bmp);
             } catch (Exception e) {
                 Toast.makeText(activity, "Web Remote active at: " + url, Toast.LENGTH_LONG).show();
             }
         } else {
             String ip = getDeviceIp();
             String url = "http://" + ip + ":" + WebRemoteServer.PORT + "/";
-            new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            AlertDialog dialog = new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle("Virtual Web Remote")
-                    .setMessage("Server active on " + url + "\n\nChoose an action:")
+                    .setMessage("Server active on " + url + "\n\nEnsure your phone is on the same Wi-Fi router (not mobile data).")
                     .setPositiveButton("Show QR Code", (d, w) -> {
                         try {
                             QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
                             Bitmap bmp = qr.toBitmap(8, 2);
-                            showQrDialog("📱 Virtual Web Remote", "Scan to open remote:\n" + url, bmp);
+                            showQrDialog("📱 Virtual Web Remote", "Scan with phone:\n" + url + "\n\n(Must be on same Wi-Fi router as TV)", bmp);
                         } catch (Exception ignored) {}
                     })
                     .setNegativeButton("Stop Remote", (d, w) -> {
@@ -479,22 +479,35 @@ public class ControlCenterManager {
                         updateWebRemoteButton();
                         Toast.makeText(activity, "Web Remote stopped", Toast.LENGTH_SHORT).show();
                     })
-                    .show();
+                    .setNeutralButton("Cancel", (d, w) -> d.dismiss())
+                    .create();
+            dialog.setCanceledOnTouchOutside(true);
+            dialog.show();
         }
     }
 
     private String getDeviceIp() {
+        String ethIp = null;
+        String wlanIp = null;
+        String fallbackIp = null;
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();
+                String name = intf.getName().toLowerCase(Locale.ROOT);
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
-                        return inetAddress.getHostAddress();
+                        String ip = inetAddress.getHostAddress();
+                        if (name.contains("eth")) ethIp = ip;
+                        else if (name.contains("wlan")) wlanIp = ip;
+                        else if (fallbackIp == null) fallbackIp = ip;
                     }
                 }
             }
         } catch (Exception ignored) {}
+        if (ethIp != null) return ethIp;
+        if (wlanIp != null) return wlanIp;
+        if (fallbackIp != null) return fallbackIp;
         return "192.168.1.43";
     }
 
@@ -502,7 +515,7 @@ public class ControlCenterManager {
         LinearLayout layout = new LinearLayout(activity);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setGravity(Gravity.CENTER_HORIZONTAL);
-        int pad = (int) (20 * density);
+        int pad = (int) (18 * density);
         layout.setPadding(pad, pad, pad, pad);
         layout.setBackgroundColor(0xFF1E242E);
 
@@ -521,11 +534,13 @@ public class ControlCenterManager {
         sub.setGravity(Gravity.CENTER_HORIZONTAL);
         layout.addView(sub);
 
-        new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        AlertDialog dialog = new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(title)
                 .setView(layout)
-                .setPositiveButton("Done", null)
-                .show();
+                .setPositiveButton("Done", (d, w) -> d.dismiss())
+                .create();
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
     }
 
     // =========================================================================

@@ -901,11 +901,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         COLUMNS = cols;
         getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
                 .edit().putInt("custom_columns", cols).apply();
-        if (grid != null) {
-            grid.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, COLUMNS));
-            recalculateBottomDock();
-            if (adapter != null) adapter.notifyDataSetChanged();
+        if (adapter != null) {
+            adapter.setDockSize(cols);
         }
+        recalculateBottomDock();
     }
 
     public void setCustomTileScale(String scale) {

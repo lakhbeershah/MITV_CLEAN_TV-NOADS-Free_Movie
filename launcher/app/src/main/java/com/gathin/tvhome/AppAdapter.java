@@ -177,7 +177,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Reorder mode: no empty dock slots, so every position holds a tile that can move. */
     private boolean reordering;
     private final TileListener listener;
-    private final int dockSize;
+    private int dockSize;
     /** config dock_row: false makes the dock apps the first tiles of one plain grid (names shown, no empty slots). */
     private final boolean dockRow;
     /** config always_show_names: the alpha of an unfocused tile's name (0 hides it). */
@@ -261,6 +261,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
+    }
+
+    public void setDockSize(int size) {
+        this.dockSize = size;
+        notifyDataSetChanged();
     }
 
     /**
@@ -468,6 +473,26 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ((android.graphics.drawable.GradientDrawable) h.cardBackground).setCornerRadius(customRadiusDp * density);
         }
         h.card.setClipToOutline(true);
+
+        // Dynamic tile sizing based on dockSize (columns) and tile_scale
+        View rv = (View) h.card.getParent();
+        if (rv != null && rv.getParent() instanceof View) {
+            View rvParent = (View) rv.getParent();
+            int pWidth = rvParent.getWidth() > 0 ? rvParent.getWidth() : ctx.getResources().getDisplayMetrics().widthPixels;
+            int inner = pWidth - rvParent.getPaddingLeft() - rvParent.getPaddingRight();
+            int pH = rvParent.getHeight() > 0 ? rvParent.getHeight() : ctx.getResources().getDisplayMetrics().heightPixels;
+            int w = tileWidthPx(inner, pH, dockSize, rowsBelowDock, dockTitle, dockRow, density);
+            String tileScale = ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getString("tile_scale", "standard");
+            if ("compact".equals(tileScale)) w = Math.round(w * 0.88f);
+            else if ("spacious".equals(tileScale)) w = Math.round(w * 1.12f);
+            int th = tileHeightPx(w);
+            if (h.card.getLayoutParams().width != w || h.card.getLayoutParams().height != th) {
+                h.card.getLayoutParams().width = w;
+                h.card.getLayoutParams().height = th;
+                h.card.requestLayout();
+            }
+        }
+
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
