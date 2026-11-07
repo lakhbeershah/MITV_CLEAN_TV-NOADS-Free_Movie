@@ -56,6 +56,7 @@ public class HomeKeyService extends AccessibilityService {
     private BroadcastReceiver unlockReceiver;
     /** The stock launcher's HOME activities (stock_home_redirect), disabled ones included. */
     private final Set<String> stockHome = new HashSet<>();
+    private final Set<String> stockPackages = new HashSet<>();
     /** Stops key filtering while a game controller is connected; null unless gamepad_passthrough and key_filter, or before the unlock. */
     private GamepadPassthrough gamepads;
 
@@ -112,10 +113,16 @@ public class HomeKeyService extends AccessibilityService {
         appScancodes = RemoteKeys.parseAppScancodes(config.appKeys);
         RemoteKeys.applyKeyFilter(this, config.keyFilter);
         stockHome.clear();
+        stockPackages.clear();
         if (!config.stockHomeRedirect.isEmpty()) {
-            Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(config.stockHomeRedirect);
-            for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DISABLED_COMPONENTS)) {
-                stockHome.add(ri.activityInfo.name);
+            for (String pkg : config.stockHomeRedirect.split("[,;\\s]+")) {
+                pkg = pkg.trim();
+                if (pkg.isEmpty()) continue;
+                stockPackages.add(pkg);
+                Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(pkg);
+                for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DISABLED_COMPONENTS)) {
+                    stockHome.add(ri.activityInfo.name);
+                }
             }
         }
         // home_key_service.xml subscribes to no events, so the redirect asks for window changes only when it is on.
@@ -188,7 +195,10 @@ public class HomeKeyService extends AccessibilityService {
         // stock_home_redirect: the firmware turned the stock launcher back on and its home screen came up.
         if (stockHome.isEmpty() || event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
         CharSequence cls = event.getClassName();
-        if (cls != null && stockHome.contains(cls.toString())) openHome();
+        CharSequence pkg = event.getPackageName();
+        if ((cls != null && stockHome.contains(cls.toString())) || (pkg != null && stockPackages.contains(pkg.toString()))) {
+            openHome();
+        }
     }
 
     /** How long after boot the first bind still counts as "at boot" for probeAtBoot. */
@@ -215,7 +225,7 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     /** Lets the system see the key, so a long press still does what the firmware gives it. */
-    private static final long HOME_KEY_DELAY_MS = 250;
+    private static final long HOME_KEY_DELAY_MS = 100;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     /** stock_home_redirect on the Home key: when the stock home is already on screen (it came up at boot, before
