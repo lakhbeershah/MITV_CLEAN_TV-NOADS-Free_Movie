@@ -1,138 +1,88 @@
-# 📺 Clean Xiaomi TV — Ultra-Debloated, Ad-Free & Free Movie Setup
+# 📺 Clean Acer TV — Ultra-Debloated, Ad-Free & Free Movie Setup
 
-> **Transform your slow, ad-ridden Xiaomi Android TV into a blazing-fast, Apple TV-style home screen with zero ads, free live TV, and 1-click movie streaming!**
+> **Transform your Acer H Pro Google TV into a blazing-fast, Apple TV-style home screen with zero ads, 1-click movie streaming, and zero black-screen risk.**
 
-Tested on **Xiaomi Mi TV (MiTV-AXSO0 / Mi TV 4A & 4C Pro)**, Android TV 9 (Pie), Amlogic SoC. Works on all modern Xiaomi / Redmi Android TVs.
+Customized for **Acer H Pro Google TV** (Indkal Technologies / MediaTek SoC), running Google TV (Android 11 / 14).
 
 ---
 
-## 🌟 What This Project Does For Your TV
+## 🌟 What This Project Does For Your Acer TV
 
-| Before (Stock Xiaomi TV) | After (This Setup) |
+| Before (Stock Acer Google TV) | After (This Setup) |
 |---|---|
-| ❌ Slow, laggy PatchWall launcher with banner ads | ✅ **Apple TV-style minimalist glass home screen** |
-| ❌ Video ads on YouTube and popups on movie sites | ✅ **100% Ad-Free YouTube (SmartTube) + AdGuard DNS** |
-| ❌ Only ~180 MB free RAM (stuttering & app crashes) | ✅ **Over 410 MB free RAM (smooth animations, no lag)** |
-| ❌ 25+ hidden background bloatware services | ✅ **All bloat disabled safely (100% reversible)** |
-| ❌ Useless "Mi" button opening laggy PatchWall | ✅ **Mi button: Tap = SmartTube, Hold = Free Movies (hdmovie2)** |
-| ❌ Random generic greetings | ✅ **Custom "Radhe Radhe" + Automatic Diwali & Holi festive themes** |
+| ❌ Laggy Google TV launcher with sponsored video trailers | ✅ **Apple TV-style minimalist frosted glass home screen** |
+| ❌ Popups and malicious redirect tabs on movie sites | ✅ **AdGuard DNS + TV Bro ad-filtering** |
+| ❌ Video ads on YouTube | ✅ **100% Ad-Free YouTube (SmartTube) mapped to YouTube button** |
+| ❌ Heavy Google recommendation engines eating RAM | ✅ **Over 400 MB free RAM (smooth 60fps animations)** |
+| ❌ Random generic greetings | ✅ **Personalized "RADHE RADHE, BUNTY JI" + Automatic Diwali & Holi festive themes** |
+| ❌ Unused Netflix button | ✅ **Netflix button: 1-click opens TV Bro searching hdmovie2 for free movies** |
+| ❌ Risk of breaking casting / cleaner | ✅ **FastCast, Acer TV Manager, System Upgrade & Google Mic 100% preserved** |
 
 ---
 
 ## 📦 Essential Apps Included in This Repo (`apps/`)
 
-All APKs are bundled directly inside the [`apps/`](apps/) folder so anyone can install them on their TV in one click:
-
 1. **SmartTube (`SmartTube.apk`):**
-   * The ultimate ad-free YouTube app for TV.
-   * Auto-skips sponsors, intros, and ads.
-   * Configured as your TV's **100% default YouTube** (voice search routes directly into SmartTube).
+   * Ad-free YouTube for TV with SponsorBlock.
+   * Auto-mapped to the physical **YouTube** button on your remote.
 2. **TV Bro (`TVBro.apk`):**
-   * Built-in ad-blocker designed specifically for TV remotes.
-   * Seamless movie streaming on sites like `hdmovie2` without spam redirects.
-3. **Xiaomi TV+ (`XiaomiTVPlus.apk`):**
-   * 100+ free live streaming channels (news, movies, lifestyle) with zero subscription.
-4. **Send Files to TV (`SendFilesToTV.apk`):**
-   * Easily send APKs, wallpapers, and videos directly from your smartphone or PC to your TV.
+   * TV browser with built-in popup blocker.
+   * Auto-mapped to the physical **Netflix** button on your remote for instant **`hdmovie2`** streaming.
+3. **Send Files to TV (`SendFilesToTV.apk`):**
+   * Send APKs, videos, and files directly from your phone to your TV.
+4. **TVFileBox (`TVFileBox.apk`):**
+   * Built for TV remotes with photo view pane, D-pad navigation, 90-degree photo rotation, and auto-save.
 5. **Audio Setup (`AudioSetup.apk`):**
-   * Built specifically for Xiaomi TV speakers with clean D-Pad remote navigation.
-   * **6 Sound Profiles:** 🎙️ Crisp Dialogue, 🍿 Cinema & Movie, 🌙 Late Night, 🎵 Music & Bhajans, 🏏 Sports Live, ⚖️ Flat.
-   * **Custom 5-Band Equalizer:** Adjust 100Hz, 500Hz, 1.5kHz, 5kHz, 10kHz with remote Left/Right keys.
-   * **Master Enhancements:** Dialogue Boost (Night Mode), DRC Limiter, and Virtual Surround toggles.
-   * **Real-Time Sound Test:** Built-in acoustic preview chord so you can hear changes instantly.
-   * Auto-restores your favorite profile across TV reboots.
+   * Built specifically for TV speakers with clean D-Pad remote navigation, 6 Sound Profiles, and Custom 5-Band Equalizer.
 
 ---
 
-## 🎮 Remote Control Superpowers
+## 🎮 Remote Control Shortcuts (Acer Remote)
 
-Your Xiaomi Bluetooth Remote is supercharged:
-* **Tap "Mi" Button:** Instantly launches **SmartTube** (YouTube without ads).
-* **Hold "Mi" Button (~0.5 second):** Automatically opens **TV Bro** with Google search for **`hdmovie2`** ready to watch free movies.
-* **Mic Button:** Say *"Play Arijit Singh songs on YouTube"* $\rightarrow$ Plays directly in SmartTube!
-
----
-
-## 🎨 Clean & Modern Minimalist Look
-
-* **Designer Typography:** Bold Outfit Semi-Bold (weight 600) clock and dock app titles.
-* **Top Status Icons:** Circular frosted glass icon buttons for **Inputs**, **Wi-Fi**, **Bluetooth**, and **Settings** (no text clutter).
-* **Live System Health:** Real-time **CPU %**, **Free RAM**, and **Free Storage** displayed cleanly under the clock.
-* **Hindu Festival Engine:**
-  * Daily: **`RADHE RADHE, BUNTY JI`**
-  * Diwali season (Dhanteras through Bhai Dooj): **`RADHE RADHE, BUNTY JI | HAPPY DIWALI`** with festive diya gold accents.
-  * Holi days: **`RADHE RADHE, BUNTY JI | HAPPY HOLI`**.
-  * Zero Islamic or Hijri calendar clutter (`shamsi_date = false`).
+* **YouTube Button:** Instantly launches **SmartTube** (YouTube without ads).
+* **Netflix Button:** Instantly opens **TV Bro** searching for **`hdmovie2`** for free movies.
+* **Mic Button:** Voice search with **Google Assistant / Gemini** (routes directly into SmartTube).
+* **Home Button:** Snaps directly to the Apple TV launcher with **0.0-second delay**.
+* **Settings & Inputs Buttons:** Native Acer hardware menus stay 100% functional.
 
 ---
 
-## 🚀 Easy 3-Step Setup Guide (For Anyone)
+## 🚀 Easy 2-Phase Safe Setup Guide
 
-### **Step 1: Turn on Network Debugging on your TV**
-1. On your TV, go to **Settings** $\rightarrow$ **Device Preferences** $\rightarrow$ **About**.
-2. Scroll to **Build** and click the remote **OK** button **7 times** until it says *"You are now a developer!"*.
-3. Go back to **Device Preferences** $\rightarrow$ **Developer Options**:
+### **Step 1: Enable Network Debugging on your Acer TV**
+1. On your Acer TV, go to **Settings** $\rightarrow$ **Device Preferences / System** $\rightarrow$ **About**.
+2. Scroll to **Android TV OS Build** and press the remote **OK** button **7 times** until it says *"You are now a developer!"*.
+3. Go back to **Developer Options**:
    * Turn **ON** **USB Debugging**.
-   * Turn **ON** **Network/ADB Debugging**.
-4. Check your TV's IP address under **Settings** $\rightarrow$ **Network & Internet** (e.g. `192.168.1.45`).
+   * Turn **ON** **Wireless / Network Debugging**.
+4. Check your TV's IP address under **Settings** $\rightarrow$ **Network & Internet** (e.g., `192.168.1.55`).
 
 ---
 
-### **Step 2: Run the Setup on your Computer**
-Open PowerShell on your Windows PC in this repository folder:
+### **Step 2: Connect and Install (Run from PC)**
 
 ```powershell
-# 1. Connect to your TV
+# 1. Set your TV IP address
 $env:TV_HOST = "<your-tv-ip>"
 
-# 2. Debloat the TV (Disable PatchWall, Prime Video & telemetry)
-powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost <your-tv-ip> examples\xiaomi-mitv-axso0\debloat.txt
+# 2. Install the Apple TV Launcher (with RADHE RADHE, BUNTY JI & System Stats)
+powershell -ExecutionPolicy Bypass -File launcher\build-and-install.ps1 -TvHost <your-tv-ip> -StockLauncher com.google.android.apps.tv.launcherx -InputKeyService -HomeKeyService
 
-# 3. Install the Custom Apple TV Launcher
-powershell -ExecutionPolicy Bypass -File launcher\build-and-install.ps1 -TvHost <your-tv-ip> -StockLauncher none -InputKeyService
-
-# 4. Install all Included Apps (SmartTube, TV Bro, Xiaomi TV+, Send Files to TV)
+# 3. Install essential apps (SmartTube, TV Bro, Send Files to TV)
 powershell -ExecutionPolicy Bypass -File tools\install-apps.ps1 -TvHost <your-tv-ip>
-```
 
----
+# 4. Debloat Google TV ads (Keeps FastCast, TV Manager, OTA & Voice Assistant intact)
+powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost <your-tv-ip> examples\acer-hpro\debloat.txt
 
-### **Step 3: Enable System Ad-Blocking & Audio Boost**
-Run these 3 commands to enable AdGuard DNS, dialogue boost, and RAM auto-cleaning:
-
-```powershell
-# Block all website & app ads system-wide via AdGuard DNS:
-python tools\tv.py "settings put global private_dns_mode hostname && settings put global private_dns_specifier dns.adguard.com"
-
-# Prevent background apps from hoarding your RAM:
+# 5. Turn on AdGuard Ad-Blocking & RAM Optimization
+powershell -ExecutionPolicy Bypass -File tools\toggle-adguard.ps1 -TvHost <your-tv-ip> -Mode on
 python tools\tv.py "settings put global background_process_limit 3"
-
-# Boost movie dialogue clarity and balance loud sound effects:
-python tools\tv.py "settings put system sound_effect_night_mode 1 && settings put global drc_mode 1"
 ```
 
-**That's it!** Grab your TV remote, press **Home**, and enjoy your brand new, lightning-fast TV!
-
 ---
 
-## ❓ Frequently Asked Questions (FAQ)
-
-#### **Is this safe? Does it void my warranty?**
-* **100% Safe.** We **never uninstall** or delete system files, and we **never root** the TV. 
-* Everything is disabled using Android's native `pm disable-user` command.
-* To restore your TV back to original factory condition at any time, simply run:
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File tools\restore.ps1 -TvHost <your-tv-ip> examples\xiaomi-mitv-axso0\debloat.txt
-  ```
-
-#### **Will Miracast and Screen Mirroring still work?**
-* **Yes!** Standard Miracast (Windows `Win + K`, Samsung Smart View, and Android casting) is preserved via `com.xiaomi.mitv.smartshare`.
-
-#### **Why does hdmovie2 play better now?**
-* AdGuard Private DNS blocks the aggressive popup servers and malicious redirect tabs automatically.
-
----
-
-## 👤 Author
-Customized and maintained by **[Lakhbeer Shah (Bunty Ji)](https://github.com/lakhbeershah)**.
-Based on the open-source CleanYourTV framework. Released under the MIT License.
+## 🛡️ 1-Click Restore to Today's State
+To instantly revert your Acer TV back to its exact state today without losing any apps or data:
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\restore.ps1 -TvHost <your-tv-ip> examples\acer-hpro\debloat.txt
+```

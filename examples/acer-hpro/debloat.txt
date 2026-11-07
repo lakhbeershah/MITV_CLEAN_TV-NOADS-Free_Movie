@@ -1,0 +1,42 @@
+# Acer H Pro Google TV (R4G / MOKA / Realtek RTD2851M)
+# Verified on TV IP 192.168.1.33
+# Safe: 100% reversible via tools\restore.ps1
+
+# Google TV Home Ads & Telemetry
+com.google.android.feedback
+com.google.android.tv.feedbackconsent
+com.google.android.apps.tv.dreamx
+
+# Google Setup Wizard: Must be disabled so Home does not fall to RecoveryActivity
+com.google.android.tungsten.setupwraith
+
+# Stock Google TV Ad-Launcher (build-and-install.ps1 disables this after tvhome is verified)
+com.google.android.apps.tv.launcherx
+
+# Unused stock preloaded bloat
+com.google.android.play.games
+com.google.android.videos
+com.google.android.youtube.tvmusic
+com.apps.esticker
+com.apps.esticker3
+
+# KEPT by user request - DO NOT DISABLE:
+# com.apps.tvmanager                     # Acer TV Manager (cleaner & optimizer)
+# com.apps.ota                           # Acer System Upgrade OTA
+# com.apps.authota                       # Acer OTA authentication service
+# com.realsil.ota                        # Realtek OTA updater
+# com.apps.scast                         # FastCast Screen Mirroring receiver
+# com.creative.fastscreen.tv             # FastCast TV helper
+# com.google.android.katniss             # Google Assistant / Gemini remote mic
+# com.realtek.tv                         # Acer TV Live / HDMI Inputs
+# com.realtek.dtv                        # Digital TV Tuner / Inputs
+# com.apps.smartkey                      # Remote smart keys handler
+# com.realtek.keyinterceptserver         # Acer remote key interceptor
+# in.startv.hotstar                      # JioHotstar
+# com.jio.media.stb.ondemand             # JioCinema
+# com.mxtech.videoplayer.television      # MX Player
+# com.hinditv.live                       # Hindi TV
+# ca.dstudio.atvlauncher.pro             # ATV Launcher Pro
+# org.smarttube.stable                   # SmartTube
+# com.phlox.tvwebbrowser                 # TV Bro
+# com.yablio.sendfilestotv               # Send Files to TV

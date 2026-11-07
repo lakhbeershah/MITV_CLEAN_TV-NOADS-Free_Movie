@@ -17,15 +17,11 @@
 
     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
-        <!-- Dock 5 apps matching mockup -->
+        <item>org.smarttube.stable</item>
         <item>com.phlox.tvwebbrowser</item>
-        <item>com.bunty.audiosetup</item>
-        <item>com.liskovsoft.smartyoutubetv2.tv</item>
+        <item>com.example.tvfilebox</item>
         <item>in.startv.hotstar</item>
-        <item>com.mitv.tvhome.mitvplus</item>
-        <!-- Next Line (Grid Row 1) -->
         <item>com.yablio.sendfilestotv</item>
-        <item>com.xiaomi.mitv.smartshare</item>
         <item>com.android.vending</item>
     </string-array>
     <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
@@ -182,10 +178,34 @@
          still opens on a tap; "hold:scan:490:..." works for scancodes. A key with only a hold entry does nothing
          on a tap. A listed app that is not installed leaves the button doing nothing. Leave empty to omit. -->
     <string-array name="app_keys" translatable="false">
-        <item>189:org.smarttube.stable</item>
+        <!-- 1. YouTube Button -> SmartTube -->
+        <item>KEYCODE_YOUTUBE:org.smarttube.stable</item>
+        <item>288:org.smarttube.stable</item>
+        <item>KEYCODE_BUTTON_5:org.smarttube.stable</item>
         <item>192:org.smarttube.stable</item>
-        <item>hold:189:https://www.google.com/search?q=hdmovie2</item>
-        <item>hold:192:https://www.google.com/search?q=hdmovie2</item>
+        <item>580:org.smarttube.stable</item>
+        <item>scan:485:org.smarttube.stable</item>
+        <item>scan:580:org.smarttube.stable</item>
+
+        <!-- 2. Netflix Button -> NetMirror App -->
+        <item>KEYCODE_NETFLIX:app.netmirror.newtv</item>
+        <item>287:app.netmirror.newtv</item>
+        <item>KEYCODE_BUTTON_3:app.netmirror.newtv</item>
+        <item>190:app.netmirror.newtv</item>
+        <item>scan:490:app.netmirror.newtv</item>
+        <item>scan:581:app.netmirror.newtv</item>
+
+        <!-- 3. Prime Video Button -> hdmovie2 link -->
+        <item>KEYCODE_BUTTON_4:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>191:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>195:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>KEYCODE_PROG_BLUE:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>scan:491:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>scan:582:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>KEYCODE_FEATURED_APP_1:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>KEYCODE_FEATURED_APP_2:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>KEYCODE_FEATURED_APP_3:https://www.google.co.in/search?q=hdmovie2</item>
+        <item>KEYCODE_FEATURED_APP_4:https://www.google.co.in/search?q=hdmovie2</item>
     </string-array>
 
     <!-- Package of the stock launcher, for TVs whose firmware turns it back on after it was disabled. XGIMI's

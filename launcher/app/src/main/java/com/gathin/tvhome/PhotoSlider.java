@@ -15,6 +15,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.io.File;
@@ -328,6 +329,8 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
             }
         }
 
+        Log.i("PhotoSlider", "initPlaylist: found " + found.size() + " photos across searchDirs");
+
         if (found.isEmpty()) {
             sPlaylist = new ArrayList<>();
             sPlaylistIndex = 0;
@@ -465,6 +468,7 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
             }
             return bmp;
         } catch (Throwable t) {
+            Log.e("PhotoSlider", "Error decoding photo: " + path, t);
             return null;
         }
     }
