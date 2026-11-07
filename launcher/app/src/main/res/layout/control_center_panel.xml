@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ccRoot"
+    android:layout_width="440dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/glass_panel"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:elevation="16dp">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:id="@+id/ccHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:id="@+id/ccTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:fontFamily="@string/font_medium"
+            android:text="CONTROL CENTER"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/ccBtnClose"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/cc_pill_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="✕"
+            android:textColor="#D9FFFFFF"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ======================================================== -->
+            <!-- 1. MAIN VIEW: Master Control Center                     -->
+            <!-- ======================================================== -->
+            <LinearLayout
+                android:id="@+id/ccViewMain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Section: Quick Status & Tools -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡ QUICK STATUS &amp; TOOLS"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Row 1: Wi-Fi & Remote -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnWifi"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="🟢 Wi-Fi: ..."
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/ccBtnRemote"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="🟢 Remote: Connected"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <!-- Row 2: RAM & ROM -->
+                <TextView
+                    android:id="@+id/ccBtnRamRom"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="💾 RAM: 58% • ROM: 2.4 GB Free"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Row 3: Inputs & System Settings -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnInputs"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="📺 TV / HDMI Inputs"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSettings"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="⚙️ System Settings"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Section Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#20FFFFFF"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Section 2: Screensaver & Google Photos Tile -->
+                <LinearLayout
+                    android:id="@+id/ccBtnOpenScreensaver"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="14dp"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🖼️"
+                        android:textSize="22sp"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SCREENSAVER &amp; GOOGLE PHOTOS"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/ccMainScreensaverSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sync cloud album • 720p/1080p • Zero repeats"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="→"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Section 3: Home App Margin & Glow Tile -->
+                <LinearLayout
+                    android:id="@+id/ccBtnOpenMargin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/ccBtnOpenMargin"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="14dp"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📐"
+                        android:textSize="22sp"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="HOME APP MARGIN &amp; GLOW"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/ccMainMarginSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Calibrate bottom clearance • Live Preview"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="→"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+            <!-- ======================================================== -->
+            <!-- 2. SUB-VIEW: Screensaver & Google Photos Downloader     -->
+            <!-- ======================================================== -->
+            <LinearLayout
+                android:id="@+id/ccViewScreensaver"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Dynamic Google Photos Album Link -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GOOGLE PHOTOS ALBUM LINK"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/ccTxtAlbumLink"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:ellipsize="middle"
+                    android:text="https://photos.app.goo.gl/3i5BsLCPZA4d1S218"
+                    android:textColor="#80D8FF"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Quality Selection -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DOWNLOAD RESOLUTION"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnQuality720"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="720p Native (1:1 Glass)"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnQuality1080"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="1080p FHD"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Sync Now Action & Progress -->
+                <TextView
+                    android:id="@+id/ccBtnSyncNow"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="☁️ Sync Photos Now"
+                    android:textColor="#FF00E676"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/ccTxtSyncStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="579 photos in /sdcard/tv_screensaver_2 • Ready"
+                    android:textColor="#A0FFFFFF"
+                    android:textSize="11sp"
+                    android:layout_marginBottom="12dp" />
+
+                <ProgressBar
+                    android:id="@+id/ccSyncProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Auto-Sync Frequency -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AUTO-SYNC SCHEDULE"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnAutoSyncOff"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Off"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnAutoSync1h"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="1 Hr"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnAutoSync6h"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="6 Hrs"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnAutoSync24h"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Daily"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Screensaver Timeout -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SCREENSAVER IDLE TIMEOUT"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnTime1"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="1m"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnTime2"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="2m"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnTime5"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="5m"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnTime10"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="10m"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnTimeOff"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Off"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Deck Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnReshuffle"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="🎲 Reshuffle"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnTestScreensaver"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="▶ Preview"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Back to Main Menu Button -->
+                <TextView
+                    android:id="@+id/ccBtnBackScreensaver"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/ccBtnBackScreensaver"
+                    android:gravity="center"
+                    android:text="← Back to Control Center"
+                    android:textColor="#80D8FF"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+
+            <!-- ======================================================== -->
+            <!-- 3. SUB-VIEW: Home App Margin & Glow Calibrator           -->
+            <!-- ======================================================== -->
+            <LinearLayout
+                android:id="@+id/ccViewMargin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="BOTTOM FOCUS GLOW CLEARANCE"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Adjust value below to preview the Home app dock clearance live in real time behind this panel."
+                    android:textColor="#A0FFFFFF"
+                    android:textSize="11sp"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Stepper Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnMarginMinus"
+                        android:layout_width="56dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:nextFocusRight="@+id/ccBtnMarginPlus"
+                        android:nextFocusDown="@+id/ccBtnSaveMargin"
+                        android:gravity="center"
+                        android:text="−"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/ccTxtMarginValue"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="11 dp"
+                        android:textColor="#FF00E676"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/ccBtnMarginPlus"
+                        android:layout_width="56dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:nextFocusLeft="@+id/ccBtnMarginMinus"
+                        android:nextFocusDown="@+id/ccBtnRevertMargin"
+                        android:gravity="center"
+                        android:text="+"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Actions: Save & Revert -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnSaveMargin"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:nextFocusUp="@+id/ccBtnMarginMinus"
+                        android:nextFocusRight="@+id/ccBtnRevertMargin"
+                        android:nextFocusDown="@+id/ccBtnBackMargin"
+                        android:gravity="center"
+                        android:text="💾 Save"
+                        android:textColor="#FF00E676"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/ccBtnRevertMargin"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:nextFocusUp="@+id/ccBtnMarginPlus"
+                        android:nextFocusLeft="@+id/ccBtnSaveMargin"
+                        android:nextFocusDown="@+id/ccBtnBackMargin"
+                        android:gravity="center"
+                        android:text="↩️ Revert"
+                        android:textColor="#FFFF5252"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Back to Main Menu Button -->
+                <TextView
+                    android:id="@+id/ccBtnBackMargin"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/ccBtnSaveMargin"
+                    android:nextFocusDown="@+id/ccBtnBackMargin"
+                    android:gravity="center"
+                    android:text="← Back to Control Center"
+                    android:textColor="#80D8FF"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

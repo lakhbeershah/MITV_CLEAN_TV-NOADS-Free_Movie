@@ -249,6 +249,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private List<Cards.Card> cards = Collections.emptyList();
     /** The grid has been laid out and focused since the last resume; the card prompt waits for this. */
     private boolean tilesReady;
+    private int customBottomRoomDp = 11;
     private boolean settingsRecreationPending;
     private Dialog cardPrompt;
     /** Set when a decision could not be saved: no more prompts until the next resume, instead of asking in a loop. */
@@ -436,6 +437,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sourcePanelService = cfg.sourcePanelService;
         sourcePanelAction = cfg.sourcePanelAction;
         sourcePanelExtra = cfg.sourcePanelExtra;
+        customBottomRoomDp = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("bottom_room_dp", 11);
         coocaaSources = cfg.coocaaSources;
 
         root = findViewById(R.id.root);
@@ -588,7 +590,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int tileWInitial = AppAdapter.tileWidthPx(innerInitial, displayH, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
         int tileHInitial = AppAdapter.tileHeightPx(tileWInitial);
         int itemHInitial = tileHInitial + Math.round((8 + 1) * density);
-        int bottomRoomInitial = Math.round(11f * density);
+        int bottomRoomInitial = Math.round(customBottomRoomDp * density);
         int initialWant = Math.max(0, displayH - itemHInitial - bottomRoomInitial);
         grid.setPadding(grid.getPaddingLeft(), initialWant, grid.getPaddingRight(), 0);
         View initialMemories = findViewById(R.id.memoriesFrame);
@@ -612,7 +614,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int bottomRoom = Math.round(11f * density);
+            int bottomRoom = Math.round(customBottomRoomDp * density);
             int want = Math.max(shelfClearance, h - dockRow - gridRows - bottomRoom);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
@@ -679,7 +681,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View btnSettings = findViewById(R.id.btnSettings);
         View btnProfile = findViewById(R.id.btnProfile);
         if (btnProfile != null) {
-            btnProfile.setOnClickListener(v -> showTopMenu());
+            btnProfile.setOnClickListener(v -> showControlCenter());
         }
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
@@ -833,6 +835,52 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         // Not after recreate(): the launch intent survives it and would open the settings again.
         if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent())) openInputsIfAsked(getIntent());
+    }
+
+    public int getCustomBottomRoomDp() {
+        return customBottomRoomDp;
+    }
+
+    public void setCustomBottomRoomDp(int dp, boolean save) {
+        this.customBottomRoomDp = dp;
+        if (save) {
+            getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                    .edit().putInt("bottom_room_dp", dp).apply();
+        }
+        recalculateBottomDock();
+    }
+
+    public void recalculateBottomDock() {
+        if (grid == null) return;
+        int h = grid.getHeight();
+        if (h <= 0) h = getResources().getDisplayMetrics().heightPixels;
+        int inner = grid.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
+        if (inner <= 0) inner = getResources().getDisplayMetrics().widthPixels - (int) (48 * density);
+
+        Config cfg = Config.load(this);
+        int rowsBelowDock = cfg.rowsBelowDock;
+        int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
+        int tileH = AppAdapter.tileHeightPx(tileW);
+        int dockRow = tileH + Math.round((8 + 1) * density);
+        int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
+        int shelfClearance = cfg.appLibrary && hero != null ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
+        int bottomRoom = Math.round(customBottomRoomDp * density);
+        int want = Math.max(shelfClearance, h - dockRow - gridRows - bottomRoom);
+        if (this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
+        if (!this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
+
+        grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), 0);
+        View memoriesFrame = findViewById(R.id.memoriesFrame);
+        if (memoriesFrame != null) {
+            ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
+            int targetH = Math.max((int) (200 * density), want - (int) (16 * density));
+            if (mlp.height != targetH) {
+                mlp.height = targetH;
+                memoriesFrame.setLayoutParams(mlp);
+            }
+        }
+        grid.requestLayout();
+        grid.post(this::refitGlass);
     }
 
     /**
@@ -2122,7 +2170,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         line.append(part);
     }
 
-    private String readStatsLine() {
+    String readStatsLine() {
         StringBuilder line = new StringBuilder();
         long[] mem = memUsedOfTotalMb();
         if (mem != null) {
@@ -2705,7 +2753,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** The network pill opens the VPN app when one is configured and installed, otherwise Wi-Fi settings. */
-    private void openNetworkPill() {
+    void openNetworkPill() {
         Intent i = vpnApp.isEmpty() ? null : getPackageManager().getLeanbackLaunchIntentForPackage(vpnApp);
         if (i == null && !vpnApp.isEmpty()) i = getPackageManager().getLaunchIntentForPackage(vpnApp);
         open(i != null ? i : systemIntent(Settings.ACTION_WIFI_SETTINGS));
@@ -2844,7 +2892,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Dropdown menu under the Inputs pill: HDMI ports (with connection state), AV and Live TV. */
-    private void showInputs() {
+    void showInputs() {
         // A configured source panel and no Live TV row to offer next to it: the panel is the whole menu.
         // The BYINTEK U4 needs this, as its TvInputManager lists three HDMI ports and an AV input it doesn't have.
         List<CoocaaSources.Source> coocaa = coocaaSources ? CoocaaSources.list(this) : Collections.emptyList();
@@ -3086,6 +3134,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (action != null) action.run();
         });
         rows.addView(row);
+    }
+
+    void showControlCenter() {
+        View anchor = findViewById(R.id.btnProfile);
+        if (anchor == null) anchor = findViewById(R.id.topButtons);
+        new ControlCenterManager(this, anchor).show();
     }
 
     /** Control Center menu opened by clicking the single top-left icon. */
