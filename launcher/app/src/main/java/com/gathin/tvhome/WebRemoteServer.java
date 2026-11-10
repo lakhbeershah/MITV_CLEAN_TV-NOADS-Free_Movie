@@ -209,11 +209,28 @@ public class WebRemoteServer {
 
     private static void handleClient(Activity activity, Socket client) {
         new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
-                 OutputStream os = client.getOutputStream()) {
+            try {
+                java.io.InputStream rawIn = client.getInputStream();
+                java.io.PushbackInputStream pbis = new java.io.PushbackInputStream(rawIn, 16);
+                int firstByte = pbis.read();
+                if (firstByte == 0x16) {
+                    Log.w(TAG, "HTTPS/TLS handshake detected from " + client.getRemoteSocketAddress() + " - Web Remote only supports plain HTTP! Please use http:// not https://");
+                    try { client.close(); } catch (Exception ignored) {}
+                    return;
+                }
+                if (firstByte != -1) {
+                    pbis.unread(firstByte);
+                }
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(pbis, StandardCharsets.UTF_8));
+                OutputStream os = client.getOutputStream();
 
                 String requestLine = reader.readLine();
-                if (requestLine == null) return;
+                Log.i(TAG, "Request: " + requestLine + " from " + client.getRemoteSocketAddress());
+                if (requestLine == null) {
+                    try { client.close(); } catch (Exception ignored) {}
+                    return;
+                }
 
                 String corsHeaders = "Access-Control-Allow-Origin: *\r\n" +
                         "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
