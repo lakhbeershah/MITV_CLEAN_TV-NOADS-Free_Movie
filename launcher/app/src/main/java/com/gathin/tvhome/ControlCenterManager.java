@@ -518,24 +518,26 @@ public class ControlCenterManager {
             updateWebRemoteButton();
             String ip = getDeviceIp();
             String url = "http://" + ip + ":" + WebRemoteServer.PORT + "/";
+            String urlAlt = "http://" + ip + ":" + WebRemoteServer.PORT_ALT + "/";
             try {
                 QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
                 Bitmap bmp = qr.toBitmap(8, 2);
-                showQrDialog("📱 Virtual Web Remote", "Scan with phone to open TV touch remote:\n" + url + "\n\n⚠️ Note: Phone must be on the same Wi-Fi network\n(Turn off Mobile Data / 5G)", bmp);
+                showQrDialog("📱 Virtual Web Remote", "Scan with phone to open TV remote:\n" + url + "\n(Alt: " + urlAlt + ")\n\n⚠️ Important:\n1. Phone MUST be on Excitel_2.0 (same as TV)\n2. Turn OFF Mobile Data (4G/5G) on phone", bmp);
             } catch (Exception e) {
                 Toast.makeText(activity, "Web Remote active at: " + url, Toast.LENGTH_LONG).show();
             }
         } else {
             String ip = getDeviceIp();
             String url = "http://" + ip + ":" + WebRemoteServer.PORT + "/";
+            String urlAlt = "http://" + ip + ":" + WebRemoteServer.PORT_ALT + "/";
             AlertDialog dialog = new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle("Virtual Web Remote")
-                    .setMessage("Server active on " + url + "\n\nEnsure your phone is on the same Wi-Fi router (not mobile data).")
+                    .setMessage("Server active on:\n• " + url + "\n• " + urlAlt + "\n\n⚠️ Important:\n1. Connect phone to Excitel_2.0\n2. Turn OFF Mobile Data / 5G\n3. In iOS/Android, allow Local Network")
                     .setPositiveButton("Show QR Code", (d, w) -> {
                         try {
                             QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
                             Bitmap bmp = qr.toBitmap(8, 2);
-                            showQrDialog("📱 Virtual Web Remote", "Scan with phone:\n" + url + "\n\n(Must be on same Wi-Fi router as TV)", bmp);
+                            showQrDialog("📱 Virtual Web Remote", "Scan with phone:\n" + url + "\n(Alt: " + urlAlt + ")\n\n(Must be on Excitel_2.0 with Mobile Data OFF)", bmp);
                         } catch (Exception ignored) {}
                     })
                     .setNegativeButton("Stop Remote", (d, w) -> {
