@@ -42,6 +42,8 @@
             android:gravity="center"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
+            android:focusable="false"
+            android:clickable="false"
             android:text="RAM 58% • 2.4 GB Free"
             android:textColor="#FF00E676"
             android:textSize="10.5sp"
@@ -667,51 +669,7 @@
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
-                <!-- Download Quality Selector -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DOWNLOAD RESOLUTION"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:id="@+id/ccBtnQuality720"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="720p Native (1:1 Glass)"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnQuality1080"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="1080p FHD"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp" />
-                </LinearLayout>
 
                 <!-- Sync Now Action & Progress -->
                 <TextView

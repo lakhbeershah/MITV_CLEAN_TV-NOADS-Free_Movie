@@ -164,10 +164,7 @@ public class GooglePhotosSyncEngine {
 
                 Log.d(TAG, "New photos to download: " + toDownload.size() + ", already present: " + (albumPhotos.size() - toDownload.size()));
 
-                String targetQuality = quality;
-                if (targetQuality == null || "auto".equalsIgnoreCase(targetQuality) || targetQuality.trim().isEmpty()) {
-                    targetQuality = getSystemDisplayResolution(context);
-                }
+                String targetQuality = getSystemDisplayResolution(context);
                 String qualityParam = "1080p".equalsIgnoreCase(targetQuality) ? "=w1920-h1080-no" : "=w1280-h720-no";
                 int downloadedCount = 0;
                 int failedCount = 0;

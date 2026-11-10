@@ -109,7 +109,6 @@ public class ControlCenterManager {
     private SharedPreferences ssPrefs;
     private SharedPreferences customPrefs;
     private TextView txtAlbumLink;
-    private TextView btnQuality720, btnQuality1080;
     private TextView btnSyncNow;
     private TextView txtSyncStatus;
     private ProgressBar syncProgress;
@@ -315,12 +314,14 @@ public class ControlCenterManager {
             }
         });
 
-        // RAM & ROM Monitor in Header
+        // RAM & ROM Monitor in Header (purely informational, not focusable/clickable)
         if (txtRamRom != null) {
             String stats = activity.readDetailedStatsLine();
             if (TextUtils.isEmpty(stats)) stats = "RAM 58% • ROM 2.4 GB Free";
             txtRamRom.setText(stats);
-            txtRamRom.setOnClickListener(v -> Toast.makeText(activity, activity.readDetailedStatsLine(), Toast.LENGTH_SHORT).show());
+            txtRamRom.setFocusable(false);
+            txtRamRom.setClickable(false);
+            txtRamRom.setOnClickListener(null);
         }
 
         // TV / HDMI Inputs
@@ -690,8 +691,6 @@ public class ControlCenterManager {
 
     private void setupScreensaverView(View root) {
         txtAlbumLink = root.findViewById(R.id.ccTxtAlbumLink);
-        btnQuality720 = root.findViewById(R.id.ccBtnQuality720);
-        btnQuality1080 = root.findViewById(R.id.ccBtnQuality1080);
         btnSyncNow = root.findViewById(R.id.ccBtnSyncNow);
         txtSyncStatus = root.findViewById(R.id.ccTxtSyncStatus);
         syncProgress = root.findViewById(R.id.ccSyncProgress);
@@ -708,28 +707,6 @@ public class ControlCenterManager {
         if (btnQrPaste != null) {
             btnQrPaste.setOnClickListener(v -> showQrPhotoLinkDialog());
         }
-
-        // Quality selection (auto system-specific default)
-        String sysRes = GooglePhotosSyncEngine.getSystemDisplayResolution(activity);
-        String currentQuality = syncPrefs.getString(GooglePhotosSyncEngine.KEY_QUALITY, sysRes);
-        btnQuality720.setText("720p HD" + ("720p".equals(sysRes) ? " (Display)" : ""));
-        btnQuality1080.setText("1080p FHD" + ("1080p".equals(sysRes) ? " (Display)" : ""));
-        btnQuality720.setSelected("720p".equals(currentQuality));
-        btnQuality1080.setSelected("1080p".equals(currentQuality));
-
-        btnQuality720.setOnClickListener(v -> {
-            btnQuality720.setSelected(true);
-            btnQuality1080.setSelected(false);
-            syncPrefs.edit().putString(GooglePhotosSyncEngine.KEY_QUALITY, "720p").apply();
-            Toast.makeText(activity, "Target: 720p Native (1:1 Glass Mapping)", Toast.LENGTH_SHORT).show();
-        });
-
-        btnQuality1080.setOnClickListener(v -> {
-            btnQuality720.setSelected(false);
-            btnQuality1080.setSelected(true);
-            syncPrefs.edit().putString(GooglePhotosSyncEngine.KEY_QUALITY, "1080p").apply();
-            Toast.makeText(activity, "Target: 1080p Full HD", Toast.LENGTH_SHORT).show();
-        });
 
         // Sync Now button
         btnSyncNow.setOnClickListener(v -> triggerSync());
@@ -908,7 +885,7 @@ public class ControlCenterManager {
 
     private void triggerSyncForAlbum(String subfolder) {
         String url = txtAlbumLink.getText().toString();
-        String quality = btnQuality1080.isSelected() ? "1080p" : "720p";
+        String quality = GooglePhotosSyncEngine.getSystemDisplayResolution(activity);
 
         btnSyncNow.setEnabled(false);
         syncProgress.setVisibility(View.VISIBLE);
