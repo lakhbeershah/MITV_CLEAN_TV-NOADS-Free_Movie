@@ -195,16 +195,6 @@
                         android:textSize="11sp"
                         android:fontFamily="@string/font_medium"
                         android:letterSpacing="0.08" />
-
-                    <TextView
-                        android:id="@+id/ccTxtSleepStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="end"
-                        android:text="Off"
-                        android:textColor="#A0FFFFFF"
-                        android:textSize="10sp" />
                 </LinearLayout>
 
                 <LinearLayout

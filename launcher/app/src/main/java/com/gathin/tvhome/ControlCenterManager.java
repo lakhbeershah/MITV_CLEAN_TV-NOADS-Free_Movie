@@ -118,7 +118,6 @@ public class ControlCenterManager {
 
     // Convenience & System Toggles
     private ImageView btnWebRemote;
-    private TextView txtSleepStatus;
     private TextView[] sleepBtns;
     private TextView[] soundBtns;
     private TextView[] dnsBtns;
@@ -339,7 +338,6 @@ public class ControlCenterManager {
 
     private void setupConvenienceAndToggles(View root) {
         // Sleep Timer Presets (11)
-        txtSleepStatus = root.findViewById(R.id.ccTxtSleepStatus);
         sleepBtns = new TextView[]{
                 root.findViewById(R.id.ccBtnSleepOff),
                 root.findViewById(R.id.ccBtnSleep15),
@@ -412,9 +410,6 @@ public class ControlCenterManager {
         int rem = SleepTimerManager.getRemainingMinutes();
         int[] sleepMins = {0, 15, 30, 45, 60, 90};
 
-        if (txtSleepStatus != null) {
-            txtSleepStatus.setText(sel > 0 ? rem + "m left" : "Off");
-        }
 
         if (sleepBtns != null) {
             for (int i = 0; i < sleepBtns.length; i++) {
