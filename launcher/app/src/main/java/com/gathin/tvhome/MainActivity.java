@@ -1876,7 +1876,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             else grid.smoothScrollBy(dx, 0);
         }
 
-        glassTargetX = x;
+        float finalX = x - dx;
+        glassTargetX = finalX;
         glassTargetY = y;
 
         // Dynamic 2-colour running gradient border flow
@@ -1889,7 +1890,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (!glassShown) {
             springX.cancel();
             springY.cancel();
-            glass.setTranslationX(x);
+            glass.setTranslationX(finalX);
             glass.setTranslationY(y);
             if (animations && !reducedMotion) glass.animate().alpha(1f).setDuration(180).start();
             else glass.setAlpha(1f);
@@ -1897,10 +1898,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         } else if (!animations) {
             springX.cancel();
             springY.cancel();
-            glass.setTranslationX(x);
+            glass.setTranslationX(finalX);
             glass.setTranslationY(y);
         } else {
-            springX.animateToFinalPosition(x);
+            springX.animateToFinalPosition(finalX);
             springY.animateToFinalPosition(y - glassScrollShift);
         }
         showHero(position, r.top);
@@ -1909,6 +1910,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Refits the glass to the focused holder once the grid layout and tile dimensions settle. */
     private void refitGlass() {
         if (isDestroyed() || adapter.appCount() == 0 || libraryFocusPending) return;
+        if (grid.getScrollState() != RecyclerView.SCROLL_STATE_IDLE) return;
         int pos = Math.max(0, Math.min(lastFocused, adapter.appCount() - 1));
         RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
         View card = vh == null ? null : vh.itemView.findViewById(R.id.card);
