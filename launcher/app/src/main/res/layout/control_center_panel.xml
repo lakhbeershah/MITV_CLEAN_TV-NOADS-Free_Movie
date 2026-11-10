@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:background="@drawable/glass_panel"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
     android:elevation="16dp">
 
     <!-- Header -->
@@ -13,7 +16,7 @@
         android:id="@+id/ccHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:id="@+id/ccTitle"
@@ -76,86 +79,86 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="10dp">
 
-                    <!-- 1. Wi-Fi / Ethernet -->
+                    <!-- 1. System Settings (First) -->
                     <ImageView
-                        android:id="@+id/ccBtnWifi"
+                        android:id="@+id/ccBtnSettings"
                         android:layout_width="0dp"
-                        android:layout_height="46dp"
+                        android:layout_height="42dp"
                         android:layout_weight="1"
                         android:layout_marginStart="0dp"
                         android:layout_marginEnd="3dp"
                         android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:padding="11dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_wifi"
-                        android:contentDescription="Network Status" />
-
-                    <!-- 2. Bluetooth Remote -->
-                    <ImageView
-                        android:id="@+id/ccBtnRemote"
-                        android:layout_width="0dp"
-                        android:layout_height="46dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:background="@drawable/cc_circle_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:padding="11dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_bluetooth"
-                        android:contentDescription="Bluetooth Remote" />
-
-                    <!-- 3. TV / HDMI Inputs -->
-                    <ImageView
-                        android:id="@+id/ccBtnInputs"
-                        android:layout_width="0dp"
-                        android:layout_height="46dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:background="@drawable/cc_circle_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:padding="11dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_input"
-                        android:tint="#FFFFFFFF"
-                        android:contentDescription="TV / HDMI Inputs" />
-
-                    <!-- 4. System Settings -->
-                    <ImageView
-                        android:id="@+id/ccBtnSettings"
-                        android:layout_width="0dp"
-                        android:layout_height="46dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:background="@drawable/cc_circle_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:padding="11dp"
+                        android:padding="10dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_settings"
                         android:tint="#FFFFFFFF"
                         android:contentDescription="System Settings" />
 
-                    <!-- 5. Wi-Fi QR Share -->
+                    <!-- 2. Wi-Fi / Ethernet -->
                     <ImageView
-                        android:id="@+id/ccBtnShareWifiQr"
+                        android:id="@+id/ccBtnWifi"
                         android:layout_width="0dp"
-                        android:layout_height="46dp"
+                        android:layout_height="42dp"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:layout_marginEnd="3dp"
                         android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:padding="11dp"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_wifi"
+                        android:contentDescription="Network Status" />
+
+                    <!-- 3. Bluetooth Remote -->
+                    <ImageView
+                        android:id="@+id/ccBtnRemote"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_bluetooth"
+                        android:contentDescription="Bluetooth Remote" />
+
+                    <!-- 4. TV / HDMI Inputs -->
+                    <ImageView
+                        android:id="@+id/ccBtnInputs"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_input"
+                        android:tint="#FFFFFFFF"
+                        android:contentDescription="TV / HDMI Inputs" />
+
+                    <!-- 5. Wi-Fi QR Share -->
+                    <ImageView
+                        android:id="@+id/ccBtnShareWifiQr"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="10dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_qr_code"
                         android:tint="#FFFFFFFF"
@@ -165,14 +168,14 @@
                     <ImageView
                         android:id="@+id/ccBtnWebRemote"
                         android:layout_width="0dp"
-                        android:layout_height="46dp"
+                        android:layout_height="42dp"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:layout_marginEnd="0dp"
                         android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:padding="11dp"
+                        android:padding="10dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_remote"
                         android:tint="#FFFFFFFF"
@@ -185,7 +188,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="2dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -201,12 +204,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnSleepOff"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -219,7 +222,7 @@
                     <TextView
                         android:id="@+id/ccBtnSleep15"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -233,7 +236,7 @@
                     <TextView
                         android:id="@+id/ccBtnSleep30"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -247,7 +250,7 @@
                     <TextView
                         android:id="@+id/ccBtnSleep45"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -261,7 +264,7 @@
                     <TextView
                         android:id="@+id/ccBtnSleep60"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -275,7 +278,7 @@
                     <TextView
                         android:id="@+id/ccBtnSleep90"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -296,18 +299,18 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnSoundStandard"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -320,7 +323,7 @@
                     <TextView
                         android:id="@+id/ccBtnSoundVoice"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -334,7 +337,7 @@
                     <TextView
                         android:id="@+id/ccBtnSoundCinema"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -348,7 +351,7 @@
                     <TextView
                         android:id="@+id/ccBtnSoundMusic"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -362,7 +365,7 @@
                     <TextView
                         android:id="@+id/ccBtnSoundNight"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -383,18 +386,18 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnDnsOff"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -407,7 +410,7 @@
                     <TextView
                         android:id="@+id/ccBtnDnsAdguard"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1.2"
                         android:layout_marginStart="3dp"
                         android:background="@drawable/cc_pill_bg"
@@ -421,7 +424,7 @@
                     <TextView
                         android:id="@+id/ccBtnDnsCloudflare"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1.2"
                         android:layout_marginStart="3dp"
                         android:background="@drawable/cc_pill_bg"
@@ -435,7 +438,7 @@
                     <TextView
                         android:id="@+id/ccBtnDnsGoogle"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="30dp"
                         android:layout_weight="1.1"
                         android:layout_marginStart="3dp"
                         android:background="@drawable/cc_pill_bg"
@@ -452,7 +455,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#20FFFFFF"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <!-- Section 2: Screensaver & Google Photos Tile -->
                 <LinearLayout
@@ -464,15 +467,18 @@
                     android:focusable="true"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="13dp"
-                    android:layout_marginBottom="8dp">
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingBottom="7dp"
+                    android:layout_marginBottom="5dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🖼️"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
+                        android:textSize="17sp"
+                        android:layout_marginEnd="10dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -485,7 +491,7 @@
                             android:layout_height="wrap_content"
                             android:text="SCREENSAVER &amp; GOOGLE PHOTOS"
                             android:textColor="#FFFFFFFF"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -494,8 +500,8 @@
                             android:layout_height="wrap_content"
                             android:text="Cloud Sync • Multi-Album • Ken Burns Motion"
                             android:textColor="#99FFFFFF"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp" />
+                            android:textSize="10sp"
+                            android:layout_marginTop="1dp" />
                     </LinearLayout>
 
                     <TextView
@@ -503,7 +509,7 @@
                         android:layout_height="wrap_content"
                         android:text="→"
                         android:textColor="#88FFFFFF"
-                        android:textSize="16sp" />
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <!-- Section 3: Home App Layout & Apps Studio Tile -->
@@ -517,15 +523,18 @@
                     android:nextFocusDown="@+id/ccBtnOpenMargin"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="13dp"
-                    android:layout_marginBottom="6dp">
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingBottom="7dp"
+                    android:layout_marginBottom="2dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📐"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
+                        android:textSize="17sp"
+                        android:layout_marginEnd="10dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -538,7 +547,7 @@
                             android:layout_height="wrap_content"
                             android:text="HOME LAYOUT &amp; APPS STUDIO"
                             android:textColor="#FFFFFFFF"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -547,8 +556,8 @@
                             android:layout_height="wrap_content"
                             android:text="Columns • Tile Size • Corner Radius • Hidden Apps"
                             android:textColor="#99FFFFFF"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp" />
+                            android:textSize="10sp"
+                            android:layout_marginTop="1dp" />
                     </LinearLayout>
 
                     <TextView
@@ -556,7 +565,7 @@
                         android:layout_height="wrap_content"
                         android:text="→"
                         android:textColor="#88FFFFFF"
-                        android:textSize="16sp" />
+                        android:textSize="14sp" />
                 </LinearLayout>
 
             </LinearLayout>

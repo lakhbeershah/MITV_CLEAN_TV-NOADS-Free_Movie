@@ -199,9 +199,9 @@ public class ControlCenterManager {
         panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
 
-        // Focus first actionable button
-        View wifiBtn = panel.findViewById(R.id.ccBtnWifi);
-        if (wifiBtn != null) wifiBtn.requestFocus();
+        // Focus first actionable button (Settings is first)
+        View settingsBtn = panel.findViewById(R.id.ccBtnSettings);
+        if (settingsBtn != null) settingsBtn.requestFocus();
     }
 
     private void initViews(View root) {
@@ -706,8 +706,8 @@ public class ControlCenterManager {
                 } else if (lastOpenedSubView == viewMargin && panel.findViewById(R.id.ccBtnOpenMargin) != null) {
                     panel.findViewById(R.id.ccBtnOpenMargin).requestFocus();
                 } else {
-                    View wifi = panel.findViewById(R.id.ccBtnWifi);
-                    if (wifi != null) wifi.requestFocus();
+                    View settings = panel.findViewById(R.id.ccBtnSettings);
+                    if (settings != null) settings.requestFocus();
                 }
             }
         });
