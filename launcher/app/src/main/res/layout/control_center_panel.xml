@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.gathin.tvhome.ControlCenterRootView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ccRoot"
     android:layout_width="480dp"
     android:layout_height="wrap_content"
@@ -586,7 +586,7 @@
                 <TextView
                     android:id="@+id/ccTxtAlbumLink"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="36dp"
                     android:background="@drawable/cc_card_bg"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
@@ -597,14 +597,14 @@
                     android:textSize="12sp"
                     android:focusable="false"
                     android:clickable="false"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="6dp" />
 
-                <!-- Action buttons for album link -->
+                <!-- Action buttons for album link & sync (3 pills in 1 row) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:id="@+id/ccBtnEditAlbumLink2"
@@ -617,8 +617,8 @@
                         android:clickable="true"
                         android:text="✏️ Edit Link"
                         android:textColor="#FFFFFF"
-                        android:textSize="12sp"
-                        android:layout_marginEnd="6dp" />
+                        android:textSize="11.5sp"
+                        android:layout_marginEnd="3dp" />
 
                     <TextView
                         android:id="@+id/ccBtnQrPasteLink"
@@ -629,28 +629,27 @@
                         android:gravity="center"
                         android:focusable="true"
                         android:clickable="true"
-                        android:text="📲 Phone QR Paste"
+                        android:text="📲 Phone QR"
                         android:textColor="#80D8FF"
-                        android:textSize="12sp"
-                        android:layout_marginStart="6dp" />
+                        android:textSize="11.5sp"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSyncNow"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:gravity="center"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:text="☁️ Sync Now"
+                        android:textColor="#FF00E676"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="3dp" />
                 </LinearLayout>
-
-
-
-                <!-- Sync Now Action & Progress -->
-                <TextView
-                    android:id="@+id/ccBtnSyncNow"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:background="@drawable/cc_card_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:text="☁️ Sync Photos Now"
-                    android:textColor="#FF00E676"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/ccTxtSyncStatus"
@@ -659,8 +658,8 @@
                     android:gravity="center"
                     android:text="591 photos in /sdcard/tv_screensaver_2 • Zero repeats"
                     android:textColor="#A0FFFFFF"
-                    android:textSize="11sp"
-                    android:layout_marginBottom="10dp" />
+                    android:textSize="10.5sp"
+                    android:layout_marginBottom="6dp" />
 
                 <ProgressBar
                     android:id="@+id/ccSyncProgress"
@@ -939,20 +938,6 @@
                         android:textColor="#FFFFFFFF"
                         android:textSize="12sp" />
                 </LinearLayout>
-
-                <!-- Back to Main Menu Button -->
-                <TextView
-                    android:id="@+id/ccBtnBackScreensaver"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="@drawable/cc_pill_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:nextFocusDown="@+id/ccBtnBackScreensaver"
-                    android:gravity="center"
-                    android:text="← Back to Control Center"
-                    android:textColor="#80D8FF"
-                    android:textSize="13sp" />
             </LinearLayout>
 
 
@@ -990,43 +975,43 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnMarginMinus"
-                        android:layout_width="52dp"
-                        android:layout_height="44dp"
+                        android:layout_width="48dp"
+                        android:layout_height="36dp"
                         android:background="@drawable/cc_card_bg"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:text="−"
                         android:textColor="#FFFFFFFF"
-                        android:textSize="20sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/ccTxtMarginValue"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="16 px"
                         android:textColor="#FF00E676"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/ccBtnMarginPlus"
-                        android:layout_width="52dp"
-                        android:layout_height="44dp"
+                        android:layout_width="48dp"
+                        android:layout_height="36dp"
                         android:background="@drawable/cc_card_bg"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:text="+"
                         android:textColor="#FFFFFFFF"
-                        android:textSize="20sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -1039,50 +1024,50 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnColsMinus"
-                        android:layout_width="52dp"
-                        android:layout_height="40dp"
+                        android:layout_width="48dp"
+                        android:layout_height="34dp"
                         android:background="@drawable/cc_card_bg"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:text="−"
                         android:textColor="#FFFFFFFF"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/ccTxtColsValue"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="34dp"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="5 Columns"
+                        android:text="7 Columns"
                         android:textColor="#80D8FF"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/ccBtnColsPlus"
-                        android:layout_width="52dp"
-                        android:layout_height="40dp"
+                        android:layout_width="48dp"
+                        android:layout_height="34dp"
                         android:background="@drawable/cc_card_bg"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:text="+"
                         android:textColor="#FFFFFFFF"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -1095,18 +1080,18 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnTileScaleCompact"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -1119,7 +1104,7 @@
                     <TextView
                         android:id="@+id/ccBtnTileScaleStandard"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1133,7 +1118,7 @@
                     <TextView
                         android:id="@+id/ccBtnTileScaleSpacious"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1154,18 +1139,18 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnRadius0"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -1178,7 +1163,7 @@
                     <TextView
                         android:id="@+id/ccBtnRadius14"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1192,7 +1177,7 @@
                     <TextView
                         android:id="@+id/ccBtnRadius20"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1206,7 +1191,7 @@
                     <TextView
                         android:id="@+id/ccBtnRadius28"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1227,18 +1212,18 @@
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/ccBtnDim0"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:background="@drawable/cc_pill_bg"
                         android:clickable="true"
@@ -1251,7 +1236,7 @@
                     <TextView
                         android:id="@+id/ccBtnDim25"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1265,7 +1250,7 @@
                     <TextView
                         android:id="@+id/ccBtnDim50"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1279,7 +1264,7 @@
                     <TextView
                         android:id="@+id/ccBtnDim75"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
                         android:background="@drawable/cc_pill_bg"
@@ -1291,54 +1276,45 @@
                         android:textSize="11sp" />
                 </LinearLayout>
 
-                <!-- 6. Hidden Apps Button -->
-                <TextView
-                    android:id="@+id/ccBtnManageHiddenApps"
+                <!-- 6. Hidden Apps & Reset Defaults (Side-by-side pills) -->
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:background="@drawable/cc_card_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:nextFocusDown="@+id/ccBtnResetHome"
-                    android:gravity="center"
-                    android:text="🔒 Manage Hidden Apps"
-                    android:textColor="#80D8FF"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="4dp">
 
-                <!-- 7. Reset Home Defaults Button -->
-                <TextView
-                    android:id="@+id/ccBtnResetHome"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:background="@drawable/cc_card_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:nextFocusUp="@+id/ccBtnManageHiddenApps"
-                    android:nextFocusDown="@+id/ccBtnBackMargin"
-                    android:gravity="center"
-                    android:text="🔄 Reset Home to Defaults"
-                    android:textColor="#FFFF5252"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="12dp" />
+                    <TextView
+                        android:id="@+id/ccBtnManageHiddenApps"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="🔒 Hidden Apps"
+                        android:textColor="#80D8FF"
+                        android:textSize="12sp" />
 
-                <!-- Back to Main Menu Button -->
-                <TextView
-                    android:id="@+id/ccBtnBackMargin"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="@drawable/cc_pill_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:nextFocusUp="@+id/ccBtnResetHome"
-                    android:nextFocusDown="@+id/ccBtnBackMargin"
-                    android:gravity="center"
-                    android:text="← Back to Control Center"
-                    android:textColor="#80D8FF"
-                    android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/ccBtnResetHome"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="🔄 Reset Defaults"
+                        android:textColor="#FFFF5252"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
 
-</LinearLayout>
+</com.gathin.tvhome.ControlCenterRootView>

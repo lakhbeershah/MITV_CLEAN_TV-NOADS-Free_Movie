@@ -80,14 +80,41 @@ public class ControlCenterManager {
     public void dismiss() {
         if (popup != null) {
             try {
-                popup.dismiss();
+                popup.forceDismiss();
             } catch (Throwable ignored) {}
         }
         if (activeInstance == this) activeInstance = null;
     }
 
-    private PopupWindow popup;
+    private ControlCenterPopupWindow popup;
     private View panel;
+
+    private class ControlCenterPopupWindow extends PopupWindow {
+        private boolean forceDismissing = false;
+
+        public ControlCenterPopupWindow(View contentView, int width, int height, boolean focusable) {
+            super(contentView, width, height, focusable);
+        }
+
+        public void forceDismiss() {
+            forceDismissing = true;
+            super.dismiss();
+        }
+
+        @Override
+        public void dismiss() {
+            if (forceDismissing) {
+                super.dismiss();
+                return;
+            }
+            if ((viewScreensaver != null && viewScreensaver.getVisibility() == View.VISIBLE)
+                    || (viewMargin != null && viewMargin.getVisibility() == View.VISIBLE)) {
+                switchToView(viewMain, "CONTROL CENTER");
+                return;
+            }
+            super.dismiss();
+        }
+    }
 
     // View Containers
     private View viewMain;
@@ -121,6 +148,7 @@ public class ControlCenterManager {
     private TextView[] sleepBtns;
     private TextView[] soundBtns;
     private TextView[] dnsBtns;
+    private View lastOpenedSubView;
 
     public ControlCenterManager(MainActivity activity, View anchor) {
         this.activity = activity;
@@ -136,8 +164,20 @@ public class ControlCenterManager {
         LayoutInflater inflater = LayoutInflater.from(activity);
         panel = inflater.inflate(R.layout.control_center_panel, null);
 
+        if (panel instanceof ControlCenterRootView) {
+            ((ControlCenterRootView) panel).setOnBackPressedListener(() -> {
+                if ((viewScreensaver != null && viewScreensaver.getVisibility() == View.VISIBLE)
+                        || (viewMargin != null && viewMargin.getVisibility() == View.VISIBLE)) {
+                    switchToView(viewMain, "CONTROL CENTER");
+                    return true;
+                }
+                dismiss();
+                return true;
+            });
+        }
+
         int panelWidth = Math.round(440 * density);
-        popup = new PopupWindow(panel, panelWidth, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        popup = new ControlCenterPopupWindow(panel, panelWidth, ViewGroup.LayoutParams.WRAP_CONTENT, true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popup.setOutsideTouchable(true);
         popup.setAnimationStyle(0);
@@ -190,13 +230,19 @@ public class ControlCenterManager {
                 }
                 return true;
             }
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                if ((viewScreensaver != null && viewScreensaver.getVisibility() == View.VISIBLE)
-                        || (viewMargin != null && viewMargin.getVisibility() == View.VISIBLE)) {
-                    switchToView(viewMain, "CONTROL CENTER");
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
                     return true;
                 }
-                dismiss();
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    if ((viewScreensaver != null && viewScreensaver.getVisibility() == View.VISIBLE)
+                            || (viewMargin != null && viewMargin.getVisibility() == View.VISIBLE)) {
+                        switchToView(viewMain, "CONTROL CENTER");
+                        return true;
+                    }
+                    dismiss();
+                    return true;
+                }
                 return true;
             }
             return false;
@@ -593,35 +639,33 @@ public class ControlCenterManager {
         View btnOpenScreensaver = root.findViewById(R.id.ccBtnOpenScreensaver);
         View btnOpenMargin = root.findViewById(R.id.ccBtnOpenMargin);
 
-        btnOpenScreensaver.setOnClickListener(v -> {
-            updateScreensaverFolderStats();
-            switchToView(viewScreensaver, "SCREENSAVER & SYNC");
-        });
+        if (btnOpenScreensaver != null) {
+            btnOpenScreensaver.setOnClickListener(v -> {
+                lastOpenedSubView = viewScreensaver;
+                updateScreensaverFolderStats();
+                switchToView(viewScreensaver, "SCREENSAVER & SYNC");
+            });
+        }
 
-        btnOpenMargin.setOnClickListener(v -> {
-            switchToView(viewMargin, "HOME APPS & STUDIO");
-            View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
-            if (plus != null) plus.requestFocus();
-        });
-
-        root.findViewById(R.id.ccBtnBackScreensaver).setOnClickListener(v -> {
-            switchToView(viewMain, "CONTROL CENTER");
-            btnOpenScreensaver.requestFocus();
-        });
-
-        root.findViewById(R.id.ccBtnBackMargin).setOnClickListener(v -> {
-            switchToView(viewMain, "CONTROL CENTER");
-            btnOpenMargin.requestFocus();
-        });
+        if (btnOpenMargin != null) {
+            btnOpenMargin.setOnClickListener(v -> {
+                lastOpenedSubView = viewMargin;
+                switchToView(viewMargin, "HOME APPS & STUDIO");
+                View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
+                if (plus != null) plus.requestFocus();
+            });
+        }
     }
 
     public void openScreensaverStudio() {
+        lastOpenedSubView = viewScreensaver;
         updateScreensaverFolderStats();
         switchToView(viewScreensaver, "SCREENSAVER & SYNC");
     }
 
     public void openHomeStudio() {
         if (viewMargin != null) {
+            lastOpenedSubView = viewMargin;
             switchToView(viewMargin, "HOME APPS & STUDIO");
             View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
             if (plus != null) plus.requestFocus();
@@ -657,8 +701,14 @@ public class ControlCenterManager {
                     btnSyncNow.requestFocus();
                 }
             } else {
-                View wifi = panel.findViewById(R.id.ccBtnWifi);
-                if (wifi != null) wifi.requestFocus();
+                if (lastOpenedSubView == viewScreensaver && panel.findViewById(R.id.ccBtnOpenScreensaver) != null) {
+                    panel.findViewById(R.id.ccBtnOpenScreensaver).requestFocus();
+                } else if (lastOpenedSubView == viewMargin && panel.findViewById(R.id.ccBtnOpenMargin) != null) {
+                    panel.findViewById(R.id.ccBtnOpenMargin).requestFocus();
+                } else {
+                    View wifi = panel.findViewById(R.id.ccBtnWifi);
+                    if (wifi != null) wifi.requestFocus();
+                }
             }
         });
     }
