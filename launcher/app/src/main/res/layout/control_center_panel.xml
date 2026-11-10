@@ -70,137 +70,113 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Section: Quick Status & Tools -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⚡ QUICK STATUS &amp; TOOLS"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="6dp" />
-
-                <!-- Row 1: Wi-Fi & Remote -->
+                <!-- 6 Quick Status & Action Pills in 1 Single Row -->
                 <LinearLayout
+                    android:id="@+id/ccRowStatusPills"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="14dp">
 
-                    <TextView
+                    <!-- 1. Wi-Fi / Ethernet -->
+                    <ImageView
                         android:id="@+id/ccBtnWifi"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/cc_card_bg"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="Network"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp"
-                        android:singleLine="true"
-                        android:ellipsize="end" />
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_wifi"
+                        android:contentDescription="Network Status" />
 
-                    <TextView
+                    <!-- 2. Bluetooth Remote -->
+                    <ImageView
                         android:id="@+id/ccBtnRemote"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/cc_card_bg"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="Remote"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp"
-                        android:singleLine="true"
-                        android:ellipsize="end" />
-                </LinearLayout>
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_bluetooth"
+                        android:contentDescription="Bluetooth Remote" />
 
-
-
-                <!-- Row 3: Inputs & System Settings -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
+                    <!-- 3. TV / HDMI Inputs -->
+                    <ImageView
                         android:id="@+id/ccBtnInputs"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/cc_card_bg"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="📺 TV / HDMI Inputs"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp" />
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_input"
+                        android:tint="#FFFFFFFF"
+                        android:contentDescription="TV / HDMI Inputs" />
 
-                    <TextView
+                    <!-- 4. System Settings -->
+                    <ImageView
                         android:id="@+id/ccBtnSettings"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/cc_card_bg"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="⚙️ System Settings"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_settings"
+                        android:tint="#FFFFFFFF"
+                        android:contentDescription="System Settings" />
 
-                <!-- Convenience Tools: Wi-Fi QR & Web Remote -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
+                    <!-- 5. Wi-Fi QR Share -->
+                    <ImageView
                         android:id="@+id/ccBtnShareWifiQr"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/cc_pill_bg"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center"
-                        android:text="📶 Wi-Fi QR Share"
-                        android:textColor="#80D8FF"
-                        android:textSize="12sp" />
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_qr_code"
+                        android:tint="#FFFFFFFF"
+                        android:contentDescription="Share Wi-Fi QR" />
 
-                    <TextView
+                    <!-- 6. Virtual Web Remote -->
+                    <ImageView
                         android:id="@+id/ccBtnWebRemote"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="46dp"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/cc_pill_bg"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="0dp"
+                        android:background="@drawable/cc_circle_pill_bg"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center"
-                        android:text="📱 Web Remote: OFF"
-                        android:textColor="#80D8FF"
-                        android:textSize="12sp" />
+                        android:padding="11dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_remote"
+                        android:tint="#FFFFFFFF"
+                        android:contentDescription="Virtual Web Remote" />
                 </LinearLayout>
 
                 <!-- Section: Sleep Timer Presets -->

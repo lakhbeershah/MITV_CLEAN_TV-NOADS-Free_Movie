@@ -117,7 +117,7 @@ public class ControlCenterManager {
     private TextView btnSsDim0, btnSsDim25, btnSsDim50, btnSsDim75;
 
     // Convenience & System Toggles
-    private TextView btnWebRemote;
+    private ImageView btnWebRemote;
     private TextView txtSleepStatus;
     private TextView[] sleepBtns;
     private TextView[] soundBtns;
@@ -215,16 +215,17 @@ public class ControlCenterManager {
     // =========================================================================
 
     private void setupQuickStatus(View root) {
-        TextView btnWifi = root.findViewById(R.id.ccBtnWifi);
-        TextView btnRemote = root.findViewById(R.id.ccBtnRemote);
+        ImageView btnWifi = root.findViewById(R.id.ccBtnWifi);
+        ImageView btnRemote = root.findViewById(R.id.ccBtnRemote);
         TextView txtRamRom = root.findViewById(R.id.ccTxtRamRom);
-        TextView btnInputs = root.findViewById(R.id.ccBtnInputs);
-        TextView btnSettings = root.findViewById(R.id.ccBtnSettings);
+        ImageView btnInputs = root.findViewById(R.id.ccBtnInputs);
+        ImageView btnSettings = root.findViewById(R.id.ccBtnSettings);
+        ImageView btnWifiQr = root.findViewById(R.id.ccBtnShareWifiQr);
+        btnWebRemote = root.findViewById(R.id.ccBtnWebRemote);
 
-        // Wi-Fi / Network Status
+        // 1. Wi-Fi / Ethernet Status
         boolean online = false;
         boolean isEthernet = false;
-        String netName = "Disconnected";
         try {
             ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
             Network active = cm != null ? cm.getActiveNetwork() : null;
@@ -234,40 +235,22 @@ public class ControlCenterManager {
                     online = true;
                     if (nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
                         isEthernet = true;
-                        netName = "Ethernet";
-                    } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        WifiManager wm = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        WifiInfo info = wm != null ? wm.getConnectionInfo() : null;
-                        if (info != null && info.getSSID() != null) {
-                            String s = info.getSSID().replace("\"", "").trim();
-                            if (!s.isEmpty() && !s.contains("unknown") && !s.equals("0x")) netName = s;
-                        }
-                        if ("Disconnected".equals(netName)) netName = "Wi-Fi";
                     }
                 }
             }
         } catch (Throwable ignored) {}
-        btnWifi.setText(netName);
-        try {
-            int netIconRes = isEthernet ? R.drawable.ic_ethernet : R.drawable.ic_wifi;
-            android.graphics.drawable.Drawable d = activity.getDrawable(netIconRes);
-            if (d != null) {
-                d = d.mutate();
-                d.setTint(online ? 0xFF00E676 : 0x88FFFFFF);
-                int sz = (int) (18 * density);
-                d.setBounds(0, 0, sz, sz);
-                btnWifi.setCompoundDrawables(d, null, null, null);
-                btnWifi.setCompoundDrawablePadding((int) (8 * density));
-            }
-        } catch (Throwable ignored) {}
-        btnWifi.setOnClickListener(v -> {
-            dismiss();
-            activity.openNetworkPill();
-        });
+        if (btnWifi != null) {
+            btnWifi.setImageResource(isEthernet ? R.drawable.ic_ethernet : R.drawable.ic_wifi);
+            btnWifi.setColorFilter(online ? 0xFF00E676 : 0xFFFFFFFF);
+            btnWifi.setSelected(online);
+            btnWifi.setOnClickListener(v -> {
+                dismiss();
+                activity.openNetworkPill();
+            });
+        }
 
-        // Bluetooth Remote Status
+        // 2. Bluetooth Remote Status
         boolean btOn = false;
-        String btDevice = "Disconnected";
         try {
             for (int id : android.view.InputDevice.getDeviceIds()) {
                 android.view.InputDevice dev = android.view.InputDevice.getDevice(id);
@@ -276,7 +259,6 @@ public class ControlCenterManager {
                     if (name != null) {
                         String lower = name.toLowerCase(Locale.ROOT);
                         if (lower.contains("xiaomi") || lower.contains("remote") || lower.endsWith(" rc") || lower.startsWith("rc ")) {
-                            btDevice = name;
                             btOn = true;
                             break;
                         }
@@ -287,32 +269,24 @@ public class ControlCenterManager {
                 BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
                 if (bta != null && bta.isEnabled()) {
                     btOn = true;
-                    btDevice = "Remote Active";
                 }
             }
         } catch (Throwable ignored) {}
-        btnRemote.setText(btDevice);
-        try {
-            android.graphics.drawable.Drawable d = activity.getDrawable(R.drawable.ic_bluetooth);
-            if (d != null) {
-                d = d.mutate();
-                d.setTint(btOn ? 0xFF00E676 : 0x88FFFFFF);
-                int sz = (int) (18 * density);
-                d.setBounds(0, 0, sz, sz);
-                btnRemote.setCompoundDrawables(d, null, null, null);
-                btnRemote.setCompoundDrawablePadding((int) (8 * density));
-            }
-        } catch (Throwable ignored) {}
-        btnRemote.setOnClickListener(v -> {
-            dismiss();
-            try {
-                Intent i = new Intent();
-                i.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
-                activity.startActivity(i);
-            } catch (Exception e) {
-                activity.startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
-            }
-        });
+        if (btnRemote != null) {
+            btnRemote.setImageResource(R.drawable.ic_bluetooth);
+            btnRemote.setColorFilter(btOn ? 0xFF00E676 : 0xFFFFFFFF);
+            btnRemote.setSelected(btOn);
+            btnRemote.setOnClickListener(v -> {
+                dismiss();
+                try {
+                    Intent i = new Intent();
+                    i.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
+                    activity.startActivity(i);
+                } catch (Exception e) {
+                    activity.startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
+                }
+            });
+        }
 
         // RAM & ROM Monitor in Header (purely informational, not focusable/clickable)
         if (txtRamRom != null) {
@@ -324,17 +298,39 @@ public class ControlCenterManager {
             txtRamRom.setOnClickListener(null);
         }
 
-        // TV / HDMI Inputs
-        btnInputs.setOnClickListener(v -> {
-            dismiss();
-            activity.showInputs();
-        });
+        // 3. TV / HDMI Inputs
+        if (btnInputs != null) {
+            btnInputs.setImageResource(R.drawable.ic_input);
+            btnInputs.setColorFilter(0xFFFFFFFF);
+            btnInputs.setOnClickListener(v -> {
+                dismiss();
+                activity.showInputs();
+            });
+        }
 
-        // System Settings
-        btnSettings.setOnClickListener(v -> {
-            dismiss();
-            activity.startActivity(new Intent(Settings.ACTION_SETTINGS));
-        });
+        // 4. System Settings
+        if (btnSettings != null) {
+            btnSettings.setImageResource(R.drawable.ic_settings);
+            btnSettings.setColorFilter(0xFFFFFFFF);
+            btnSettings.setOnClickListener(v -> {
+                dismiss();
+                activity.startActivity(new Intent(Settings.ACTION_SETTINGS));
+            });
+        }
+
+        // 5. Wi-Fi QR Share
+        if (btnWifiQr != null) {
+            btnWifiQr.setImageResource(R.drawable.ic_qr_code);
+            btnWifiQr.setColorFilter(0xFFFFFFFF);
+            btnWifiQr.setOnClickListener(v -> showWifiQrDialog());
+        }
+
+        // 6. Virtual Web Remote
+        if (btnWebRemote != null) {
+            btnWebRemote.setImageResource(R.drawable.ic_remote);
+            updateWebRemoteButton();
+            btnWebRemote.setOnClickListener(v -> toggleWebRemote());
+        }
     }
 
     // =========================================================================
@@ -342,20 +338,7 @@ public class ControlCenterManager {
     // =========================================================================
 
     private void setupConvenienceAndToggles(View root) {
-        // A. Wi-Fi QR Share (26)
-        View btnWifiQr = root.findViewById(R.id.ccBtnShareWifiQr);
-        if (btnWifiQr != null) {
-            btnWifiQr.setOnClickListener(v -> showWifiQrDialog());
-        }
-
-        // B. Virtual Web Remote (27)
-        btnWebRemote = root.findViewById(R.id.ccBtnWebRemote);
-        if (btnWebRemote != null) {
-            updateWebRemoteButton();
-            btnWebRemote.setOnClickListener(v -> toggleWebRemote());
-        }
-
-        // C. Sleep Timer Presets (11)
+        // Sleep Timer Presets (11)
         txtSleepStatus = root.findViewById(R.id.ccTxtSleepStatus);
         sleepBtns = new TextView[]{
                 root.findViewById(R.id.ccBtnSleepOff),
@@ -506,7 +489,7 @@ public class ControlCenterManager {
     private void updateWebRemoteButton() {
         if (btnWebRemote == null) return;
         boolean running = WebRemoteServer.isRunning();
-        btnWebRemote.setText(running ? "📱 Web Remote: ON (8080)" : "📱 Web Remote: OFF");
+        btnWebRemote.setColorFilter(running ? 0xFF00E676 : 0xFFFFFFFF);
         btnWebRemote.setSelected(running);
     }
 
