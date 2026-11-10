@@ -16,8 +16,12 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.provider.Settings;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.media.AudioManager;
+import android.os.Bundle;
 import android.widget.Toast;
 
 import java.util.Collections;
@@ -252,6 +256,108 @@ public class HomeKeyService extends AccessibilityService {
     private void openHome() {
         startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+    }
+
+    public static boolean navigate(int keyCode) {
+        HomeKeyService service = instance;
+        if (service == null) return false;
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return service.performGlobalAction(GLOBAL_ACTION_BACK);
+        }
+        if (keyCode == KeyEvent.KEYCODE_HOME) {
+            return service.performGlobalAction(GLOBAL_ACTION_HOME);
+        }
+        if (keyCode == KeyEvent.KEYCODE_POWER) {
+            return service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+        }
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            return service.performGlobalAction(GLOBAL_ACTION_RECENTS);
+        }
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) {
+            AudioManager am = (AudioManager) service.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                    am.adjustSuggestedStreamVolume(AudioManager.ADJUST_RAISE, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI);
+                } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    am.adjustSuggestedStreamVolume(AudioManager.ADJUST_LOWER, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI);
+                } else {
+                    am.adjustSuggestedStreamVolume(AudioManager.ADJUST_TOGGLE_MUTE, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI);
+                }
+                return true;
+            }
+        }
+
+        AccessibilityNodeInfo root = service.getRootInActiveWindow();
+        if (root == null) return false;
+        try {
+            AccessibilityNodeInfo focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if (focused == null) focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+            if (focused == null) {
+                focused = findFirstFocusable(root);
+                if (focused != null) {
+                    return focused.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                }
+                return false;
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+                return focused.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+
+            int dir = -1;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) dir = View.FOCUS_RIGHT;
+            else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) dir = View.FOCUS_LEFT;
+            else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) dir = View.FOCUS_DOWN;
+            else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) dir = View.FOCUS_UP;
+
+            if (dir != -1) {
+                AccessibilityNodeInfo next = focused.focusSearch(dir);
+                if (next == null) {
+                    if (dir == View.FOCUS_RIGHT) next = focused.focusSearch(View.FOCUS_FORWARD);
+                    else if (dir == View.FOCUS_LEFT) next = focused.focusSearch(View.FOCUS_BACKWARD);
+                }
+                if (next != null) {
+                    return next.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                }
+            }
+        } finally {
+            root.recycle();
+        }
+        return false;
+    }
+
+    private static AccessibilityNodeInfo findFirstFocusable(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isFocusable() && node.isVisibleToUser()) return node;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                AccessibilityNodeInfo res = findFirstFocusable(child);
+                if (res != null) return res;
+            }
+        }
+        return null;
+    }
+
+    public static boolean typeText(String text) {
+        HomeKeyService service = instance;
+        if (service == null || text == null || text.isEmpty()) return false;
+        AccessibilityNodeInfo root = service.getRootInActiveWindow();
+        if (root == null) return false;
+        try {
+            AccessibilityNodeInfo focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if (focused != null && focused.isEditable()) {
+                Bundle args = new Bundle();
+                CharSequence existing = focused.getText();
+                String combined = (existing != null ? existing.toString() : "") + text;
+                args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, combined);
+                return focused.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+            }
+        } finally {
+            root.recycle();
+        }
+        return false;
     }
 
     @Override
