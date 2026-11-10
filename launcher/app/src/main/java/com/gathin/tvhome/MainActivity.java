@@ -450,6 +450,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sky = findViewById(R.id.sky);
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
+        if (glass != null) {
+            glass.setRadius(getCustomCornerRadiusDp() * density * (adapter != null ? adapter.focusScale() : 1.15f));
+        }
         if (festive) glass.setAccent(festival.accentColor());
         ambient = findViewById(R.id.ambient);
         // The glow is one bitmap, so its alpha can be applied while drawing it. Otherwise every frame of
@@ -918,6 +921,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
                 .edit().putInt("dock_corner_radius", radiusDp).apply();
         if (adapter != null) adapter.notifyDataSetChanged();
+        if (glass != null) {
+            float customRadius = radiusDp * density;
+            float scale = adapter != null ? adapter.focusScale() : 1.15f;
+            glass.setRadius(customRadius * scale);
+            glassCardW = -1;
+        }
     }
 
     public void setCustomDimmingPercent(int percent) {
@@ -938,7 +947,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     public int getCustomCornerRadiusDp() {
-        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("dock_corner_radius", 20);
+        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("dock_corner_radius", 14);
     }
 
     public int getCustomDimmingPercent() {
@@ -1014,8 +1023,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (openPopup != null) {
+            openPopup.dismiss();
+            openPopup = null;
+        }
+        ControlCenterManager.dismissActive();
         if (openLauncherSettingsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
+        if (intent != null && intent.hasExtra("set_corner_radius")) {
+            setCustomCornerRadiusDp(intent.getIntExtra("set_corner_radius", 14));
+        }
+        if (intent != null && "com.gathin.tvhome.action.CONTROL_CENTER".equals(intent.getAction())) {
+            showControlCenter();
+            return;
+        }
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
         grid.scrollToPosition(0);
         lastFocused = 0;
@@ -1281,7 +1302,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Nothing of ours stays on screen over another app; an undecided prompt simply returns next time.
         if (cardPrompt != null) cardPrompt.dismiss();
         if (appLibrary != null) appLibrary.close();
-        if (openPopup != null) openPopup.dismiss();
+        if (openPopup != null) {
+            openPopup.dismiss();
+            openPopup = null;
+        }
+        ControlCenterManager.dismissActive();
     }
 
     @Override
@@ -1377,6 +1402,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (android.os.SystemClock.uptimeMillis() < wakeIgnoreUntilMs) return true;
+        if (event.getKeyCode() == KeyEvent.KEYCODE_HOME) {
+            boolean handled = false;
+            if (ControlCenterManager.getActiveInstance() != null && ControlCenterManager.getActiveInstance().isOpen()) {
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    ControlCenterManager.dismissActive();
+                }
+                handled = true;
+            }
+            if (openPopup != null && openPopup.isShowing()) {
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    openPopup.dismiss();
+                    openPopup = null;
+                }
+                handled = true;
+            }
+            if (handled) return true;
+        }
         if (handleSettingsKey(event)) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
@@ -1754,7 +1796,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             lp.height = (int) h;
             glass.setLayoutParams(lp);
             // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as the tile.
-            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale);
+            glass.setRadius(getCustomCornerRadiusDp() * density * scale);
         }
         glassCardW = card.getWidth();
         View item = (View) card.getParent();
@@ -1857,7 +1899,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 lp.width = w;
                 lp.height = h;
                 glass.setLayoutParams(lp);
-                glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale);
+                glass.setRadius(getCustomCornerRadiusDp() * density * scale);
             }
             glassShown = true;
             glass.setAlpha(1f);
@@ -3208,9 +3250,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     void showControlCenter() {
+        if (ControlCenterManager.getActiveInstance() != null && ControlCenterManager.getActiveInstance().isOpen()) {
+            ControlCenterManager.dismissActive();
+            return;
+        }
+        if (openPopup != null) {
+            openPopup.dismiss();
+            openPopup = null;
+        }
         View anchor = findViewById(R.id.btnProfile);
         if (anchor == null) anchor = findViewById(R.id.topButtons);
-        new ControlCenterManager(this, anchor).show();
+        ControlCenterManager ccm = new ControlCenterManager(this, anchor);
+        ccm.show();
+        openPopup = ccm.getPopup();
     }
 
     /** Control Center menu opened by clicking the single top-left icon. */

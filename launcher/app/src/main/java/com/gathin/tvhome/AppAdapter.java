@@ -474,10 +474,27 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.banner.setScaleX(focused && advancedEffects ? 1.035f : 1f);
         h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
         int customRadiusDp = ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getInt("dock_corner_radius", 14);
+        final float radiusPx = customRadiusDp * density;
         if (h.cardBackground instanceof android.graphics.drawable.GradientDrawable) {
-            ((android.graphics.drawable.GradientDrawable) h.cardBackground).setCornerRadius(customRadiusDp * density);
+            ((android.graphics.drawable.GradientDrawable) h.cardBackground).setCornerRadius(radiusPx);
         }
+        ViewOutlineProvider cardOutline = new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                if (radiusPx <= 0.5f) {
+                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                } else {
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radiusPx);
+                }
+            }
+        };
+        h.card.setOutlineProvider(cardOutline);
         h.card.setClipToOutline(true);
+        h.card.invalidateOutline();
+
+        h.banner.setOutlineProvider(cardOutline);
+        h.banner.setClipToOutline(true);
+        h.banner.invalidateOutline();
 
         // Dynamic tile sizing based on dockSize (columns) and tile_scale
         View rv = (View) h.card.getParent();
@@ -498,9 +515,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
-        // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
-        h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
+        // Keep card background attached so rounded corners and clipToOutline render consistently on all TV chipsets
+        h.card.setBackground(h.cardBackground);
         if (e.banner != null) {
             h.banner.setImageDrawable(e.banner);
             h.banner.setVisibility(View.VISIBLE);
@@ -813,14 +829,22 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             this.overshoot = overshoot;
 
             final float density = v.getResources().getDisplayMetrics().density;
-            card.setOutlineProvider(new ViewOutlineProvider() {
+            ViewOutlineProvider outlineProvider = new ViewOutlineProvider() {
                 @Override
                 public void getOutline(View view, Outline outline) {
-                    // 16dp at the design width, scaled down with the tile so small tiles keep the same shape.
-                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), cornerRadius(view.getWidth(), density));
+                    int customRadiusDp = view.getContext().getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getInt("dock_corner_radius", 14);
+                    float r = customRadiusDp * density;
+                    if (r <= 0.5f) {
+                        outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                    } else {
+                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), r);
+                    }
                 }
-            });
+            };
+            card.setOutlineProvider(outlineProvider);
             card.setClipToOutline(true);
+            banner.setOutlineProvider(outlineProvider);
+            banner.setClipToOutline(true);
 
             card.setOnKeyListener((view, keyCode, event) -> {
                 if (event.getAction() != KeyEvent.ACTION_DOWN) return false;

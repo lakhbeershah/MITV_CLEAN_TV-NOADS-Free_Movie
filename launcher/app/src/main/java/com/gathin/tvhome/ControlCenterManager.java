@@ -58,6 +58,34 @@ public class ControlCenterManager {
 
     private static ControlCenterManager activeInstance;
 
+    public static ControlCenterManager getActiveInstance() {
+        return activeInstance;
+    }
+
+    public static void dismissActive() {
+        if (activeInstance != null) {
+            activeInstance.dismiss();
+            activeInstance = null;
+        }
+    }
+
+    public PopupWindow getPopup() {
+        return popup;
+    }
+
+    public boolean isOpen() {
+        return popup != null && popup.isShowing();
+    }
+
+    public void dismiss() {
+        if (popup != null) {
+            try {
+                popup.dismiss();
+            } catch (Throwable ignored) {}
+        }
+        if (activeInstance == this) activeInstance = null;
+    }
+
     private PopupWindow popup;
     private View panel;
 
@@ -151,7 +179,7 @@ public class ControlCenterManager {
         // Close button
         View btnClose = root.findViewById(R.id.ccBtnClose);
         if (btnClose != null) {
-            btnClose.setOnClickListener(v -> popup.dismiss());
+            btnClose.setOnClickListener(v -> dismiss());
         }
 
         setupQuickStatus(root);
@@ -160,18 +188,26 @@ public class ControlCenterManager {
         setupScreensaverView(root);
         setupHomeStudioView(root);
 
-        attachBackKeyInterceptor(viewScreensaver);
-        attachBackKeyInterceptor(viewMargin);
+        attachBackKeyInterceptor(root);
     }
 
     private void attachBackKeyInterceptor(View v) {
         if (v == null) return;
         v.setOnKeyListener((view, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_HOME) {
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    dismiss();
+                }
+                return true;
+            }
             if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                if (viewScreensaver.getVisibility() == View.VISIBLE || viewMargin.getVisibility() == View.VISIBLE) {
+                if ((viewScreensaver != null && viewScreensaver.getVisibility() == View.VISIBLE)
+                        || (viewMargin != null && viewMargin.getVisibility() == View.VISIBLE)) {
                     switchToView(viewMain, "CONTROL CENTER");
                     return true;
                 }
+                dismiss();
+                return true;
             }
             return false;
         });
@@ -196,6 +232,7 @@ public class ControlCenterManager {
 
         // Wi-Fi / Network Status
         boolean online = false;
+        boolean isEthernet = false;
         String netName = "Disconnected";
         try {
             ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -205,6 +242,7 @@ public class ControlCenterManager {
                 if (nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
                     online = true;
                     if (nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        isEthernet = true;
                         netName = "Ethernet";
                     } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                         WifiManager wm = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -213,13 +251,26 @@ public class ControlCenterManager {
                             String s = info.getSSID().replace("\"", "").trim();
                             if (!s.isEmpty() && !s.contains("unknown") && !s.equals("0x")) netName = s;
                         }
+                        if ("Disconnected".equals(netName)) netName = "Wi-Fi";
                     }
                 }
             }
         } catch (Throwable ignored) {}
-        btnWifi.setText((online ? "🟢 " : "🔴 ") + netName);
+        btnWifi.setText(netName);
+        try {
+            int netIconRes = isEthernet ? R.drawable.ic_ethernet : R.drawable.ic_wifi;
+            android.graphics.drawable.Drawable d = activity.getDrawable(netIconRes);
+            if (d != null) {
+                d = d.mutate();
+                d.setTint(online ? 0xFF00E676 : 0x88FFFFFF);
+                int sz = (int) (18 * density);
+                d.setBounds(0, 0, sz, sz);
+                btnWifi.setCompoundDrawables(d, null, null, null);
+                btnWifi.setCompoundDrawablePadding((int) (8 * density));
+            }
+        } catch (Throwable ignored) {}
         btnWifi.setOnClickListener(v -> {
-            popup.dismiss();
+            dismiss();
             activity.openNetworkPill();
         });
 
@@ -249,9 +300,20 @@ public class ControlCenterManager {
                 }
             }
         } catch (Throwable ignored) {}
-        btnRemote.setText((btOn ? "🟢 " : "🔴 ") + btDevice);
+        btnRemote.setText(btDevice);
+        try {
+            android.graphics.drawable.Drawable d = activity.getDrawable(R.drawable.ic_bluetooth);
+            if (d != null) {
+                d = d.mutate();
+                d.setTint(btOn ? 0xFF00E676 : 0x88FFFFFF);
+                int sz = (int) (18 * density);
+                d.setBounds(0, 0, sz, sz);
+                btnRemote.setCompoundDrawables(d, null, null, null);
+                btnRemote.setCompoundDrawablePadding((int) (8 * density));
+            }
+        } catch (Throwable ignored) {}
         btnRemote.setOnClickListener(v -> {
-            popup.dismiss();
+            dismiss();
             try {
                 Intent i = new Intent();
                 i.setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"));
@@ -269,13 +331,13 @@ public class ControlCenterManager {
 
         // TV / HDMI Inputs
         btnInputs.setOnClickListener(v -> {
-            popup.dismiss();
+            dismiss();
             activity.showInputs();
         });
 
         // System Settings
         btnSettings.setOnClickListener(v -> {
-            popup.dismiss();
+            dismiss();
             activity.startActivity(new Intent(Settings.ACTION_SETTINGS));
         });
     }
@@ -754,7 +816,7 @@ public class ControlCenterManager {
         });
 
         root.findViewById(R.id.ccBtnTestScreensaver).setOnClickListener(v -> {
-            popup.dismiss();
+            dismiss();
             activity.startActivity(new Intent(activity, ClockActivity.class));
         });
 
