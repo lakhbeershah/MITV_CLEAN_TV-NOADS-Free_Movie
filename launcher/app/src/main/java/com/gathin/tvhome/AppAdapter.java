@@ -216,7 +216,6 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int focusedPosition = 0;
 
     void setFocusedPosition(int pos, RecyclerView rv) {
-        if (focusedPosition == pos && rv != null) return;
         focusedPosition = pos;
         if (rv == null) return;
         float density = ctx.getResources().getDisplayMetrics().density;
@@ -256,11 +255,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
-            if (animations && !reducedMotion) {
-                card.animate().translationX(targetX).setDuration(220)
-                        .setInterpolator(new DecelerateInterpolator()).start();
-            } else {
-                card.setTranslationX(targetX);
+            if (Math.abs(card.getTranslationX() - targetX) > 0.5f) {
+                if (animations && !reducedMotion) {
+                    card.animate().translationX(targetX).setDuration(220)
+                            .setInterpolator(new DecelerateInterpolator()).start();
+                } else {
+                    card.setTranslationX(targetX);
+                }
             }
         }
     }
@@ -496,7 +497,28 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         float density = ctx.getResources().getDisplayMetrics().density;
         float spacing = 16f * density;
         int lastPos = getItemCount() - 1;
-        int cardW = h.card.getLayoutParams() != null ? h.card.getLayoutParams().width : 0;
+
+        // Dynamic tile sizing based on dockSize (columns) and tile_scale
+        View rv = (View) h.card.getParent();
+        int w = 0;
+        if (rv != null && rv.getParent() instanceof View) {
+            View rvParent = (View) rv.getParent();
+            int pWidth = rvParent.getWidth() > 0 ? rvParent.getWidth() : ctx.getResources().getDisplayMetrics().widthPixels;
+            int inner = pWidth - rvParent.getPaddingLeft() - rvParent.getPaddingRight();
+            int pH = rvParent.getHeight() > 0 ? rvParent.getHeight() : ctx.getResources().getDisplayMetrics().heightPixels;
+            w = tileWidthPx(inner, pH, dockSize, rowsBelowDock, dockTitle, dockRow, density);
+            String tileScale = ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getString("tile_scale", "standard");
+            if ("compact".equals(tileScale)) w = Math.round(w * 0.88f);
+            else if ("spacious".equals(tileScale)) w = Math.round(w * 1.12f);
+            int th = tileHeightPx(w);
+            if (h.card.getLayoutParams().width != w || h.card.getLayoutParams().height != th) {
+                h.card.getLayoutParams().width = w;
+                h.card.getLayoutParams().height = th;
+                h.card.requestLayout();
+            }
+        }
+
+        int cardW = w > 0 ? w : (h.card.getLayoutParams() != null ? h.card.getLayoutParams().width : 0);
         float expandX = (focusScale() - 1.0f) * cardW / 2f;
         float tx = 0f;
         if (position == focusedPosition) {
@@ -540,25 +562,6 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.banner.setOutlineProvider(cardOutline);
         h.banner.setClipToOutline(true);
         h.banner.invalidateOutline();
-
-        // Dynamic tile sizing based on dockSize (columns) and tile_scale
-        View rv = (View) h.card.getParent();
-        if (rv != null && rv.getParent() instanceof View) {
-            View rvParent = (View) rv.getParent();
-            int pWidth = rvParent.getWidth() > 0 ? rvParent.getWidth() : ctx.getResources().getDisplayMetrics().widthPixels;
-            int inner = pWidth - rvParent.getPaddingLeft() - rvParent.getPaddingRight();
-            int pH = rvParent.getHeight() > 0 ? rvParent.getHeight() : ctx.getResources().getDisplayMetrics().heightPixels;
-            int w = tileWidthPx(inner, pH, dockSize, rowsBelowDock, dockTitle, dockRow, density);
-            String tileScale = ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getString("tile_scale", "standard");
-            if ("compact".equals(tileScale)) w = Math.round(w * 0.88f);
-            else if ("spacious".equals(tileScale)) w = Math.round(w * 1.12f);
-            int th = tileHeightPx(w);
-            if (h.card.getLayoutParams().width != w || h.card.getLayoutParams().height != th) {
-                h.card.getLayoutParams().width = w;
-                h.card.getLayoutParams().height = th;
-                h.card.requestLayout();
-            }
-        }
 
         int marginPx = ctx instanceof MainActivity ? ((MainActivity) ctx).getCustomMarginPx() :
                 ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getInt("dock_margin_px", 16);
@@ -912,7 +915,16 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             card.setOnFocusChangeListener((view, focused) -> {
                 view.animate().cancel();
-                if (focused) view.setTranslationX(0f);
+                int p = getBindingAdapterPosition();
+                RecyclerView.Adapter<?> ad = getBindingAdapter();
+                int lastPos = ad != null ? ad.getItemCount() - 1 : -1;
+                float fScale = animations ? FOCUS_SCALE : 1f;
+                float expandX = (fScale - 1.0f) * view.getWidth() / 2f;
+                float targetX = 0f;
+                if (p == 0) targetX = expandX;
+                else if (p == lastPos && lastPos > 0) targetX = -expandX;
+
+                if (focused) view.setTranslationX(targetX);
                 banner.animate().cancel();
                 name.animate().cancel();
                 float scale = !animations ? 1f : FOCUS_SCALE;
@@ -920,7 +932,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (!animations) {
                     view.setScaleX(1f);
                     view.setScaleY(1f);
-                    view.setTranslationX(0f);
+                    view.setTranslationX(targetX);
                     view.setTranslationY(0f);
                     view.setTranslationZ(0f);
                     banner.setScaleX(1f);
@@ -954,9 +966,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 .setDuration(280).start();
                     }
                 }
-                int pos = getBindingAdapterPosition();
-                if (focused && listener != null && pos != RecyclerView.NO_POSITION) {
-                    listener.onTileFocused(pos, view);
+                if (focused && listener != null && p != RecyclerView.NO_POSITION) {
+                    listener.onTileFocused(p, view);
                 }
             });
         }
