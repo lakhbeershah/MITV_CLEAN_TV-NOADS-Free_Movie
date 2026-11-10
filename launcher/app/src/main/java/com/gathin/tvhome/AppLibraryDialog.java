@@ -222,6 +222,7 @@ final class AppLibraryDialog {
         LOADER.execute(() -> {
             Map<String, ResolveInfo> unique = new LinkedHashMap<>();
             Set<String> tv = new HashSet<>();
+            Set<String> hiddenApps = HiddenAppsManager.getHiddenApps(activity);
             // Prefer the TV entry when an app declares both categories.
             for (String category : new String[]{Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {
                 for (ResolveInfo info : pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(category), 0)) {
@@ -229,6 +230,7 @@ final class AppLibraryDialog {
                     String pkg = info.activityInfo.packageName;
                     boolean isStreamHub = StreamHubActivity.class.getName().equals(info.activityInfo.name);
                     String key = isStreamHub ? (pkg + "/" + info.activityInfo.name) : pkg;
+                    if (hiddenApps != null && (hiddenApps.contains(pkg) || (isStreamHub && hiddenApps.contains(StreamHubActivity.class.getName())))) continue;
                     if (Intent.CATEGORY_LEANBACK_LAUNCHER.equals(category)) tv.add(isStreamHub ? key : pkg);
                     if ((!pkg.equals(self) || isStreamHub) && !unique.containsKey(key)) unique.put(key, info);
                 }
@@ -537,14 +539,27 @@ final class AppLibraryDialog {
         boolean home = onHome.test(pkg);
         addAction(rows, home ? R.string.library_remove_shortcut : R.string.library_add_home,
                 () -> changeHome(app, !home));
-        addAction(rows, R.string.library_app_info, () -> {
+        addAction(rows, R.string.tile_hide, () -> {
             close();
-            try {
-                activity.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg)));
-            } catch (ActivityNotFoundException | SecurityException e) {
-                Toast.makeText(activity, activity.getString(R.string.cant_open, label(app)), Toast.LENGTH_SHORT).show();
-            }
+            String hideKey = StreamHubActivity.class.getName().equals(app.activityInfo.name)
+                    ? StreamHubActivity.class.getName() : app.activityInfo.packageName;
+            Set<String> hidden = new HashSet<>(HiddenAppsManager.getHiddenApps(activity));
+            hidden.add(hideKey);
+            HiddenAppsManager.setHiddenApps(activity, hidden);
+            LibraryApps.save(activity, app.activityInfo.packageName, false);
+            Toast.makeText(activity, "App hidden and moved to Hidden Apps", Toast.LENGTH_SHORT).show();
+            if (changed != null) changed.run();
         });
+        if (!StreamHubActivity.class.getName().equals(app.activityInfo.name)) {
+            addAction(rows, R.string.library_app_info, () -> {
+                close();
+                try {
+                    activity.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg)));
+                } catch (ActivityNotFoundException | SecurityException e) {
+                    Toast.makeText(activity, activity.getString(R.string.cant_open, label(app)), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         int menuWidth = dp(220);
         for (int i = 0; i < rows.getChildCount(); i++) {
             TextView title = rows.getChildAt(i).findViewById(R.id.title);

@@ -62,12 +62,15 @@ public class HiddenAppsManager {
             if (seen.add(ri.activityInfo.packageName)) all.add(ri);
         }
 
-        // Filter out this launcher
+        // Filter out this launcher, but include StreamHubActivity
         List<ResolveInfo> apps = new ArrayList<>();
         String myPkg = activity.getPackageName();
         for (ResolveInfo ri : all) {
-            if (ri.activityInfo != null && !myPkg.equals(ri.activityInfo.packageName)) {
-                apps.add(ri);
+            if (ri.activityInfo != null) {
+                boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+                if (!myPkg.equals(ri.activityInfo.packageName) || isStreamHub) {
+                    apps.add(ri);
+                }
             }
         }
 
@@ -79,24 +82,28 @@ public class HiddenAppsManager {
 
         for (int i = 0; i < apps.size(); i++) {
             ResolveInfo ri = apps.get(i);
+            boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+            String itemKey = isStreamHub ? StreamHubActivity.class.getName() : ri.activityInfo.packageName;
             labels[i] = String.valueOf(ri.loadLabel(pm));
-            checked[i] = currentlyHidden.contains(ri.activityInfo.packageName);
+            checked[i] = currentlyHidden.contains(itemKey) || currentlyHidden.contains(ri.activityInfo.packageName);
         }
 
         new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Select Apps to Hide from Dock")
+                .setTitle("Select Apps to Hide from Dock & Drawer")
                 .setMultiChoiceItems(labels, checked, (dialog, which, isChecked) -> {
                     checked[which] = isChecked;
                 })
                 .setPositiveButton("Save", (dialog, which) -> {
                     Set<String> newHidden = new HashSet<>();
                     for (int i = 0; i < apps.size(); i++) {
-                        String pkg = apps.get(i).activityInfo.packageName;
+                        ResolveInfo ri = apps.get(i);
+                        boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+                        String itemKey = isStreamHub ? StreamHubActivity.class.getName() : ri.activityInfo.packageName;
                         if (checked[i]) {
-                            newHidden.add(pkg);
-                        } else if (currentlyHidden.contains(pkg)) {
+                            newHidden.add(itemKey);
+                        } else if (currentlyHidden.contains(itemKey) || currentlyHidden.contains(ri.activityInfo.packageName)) {
                             // Unhidden by user -> ensure it is restored to Home dock
-                            LibraryApps.save(activity, pkg, true);
+                            LibraryApps.save(activity, ri.activityInfo.packageName, true);
                         }
                     }
                     setHiddenApps(activity, newHidden);
@@ -125,13 +132,17 @@ public class HiddenAppsManager {
 
         List<ResolveInfo> hiddenApps = new ArrayList<>();
         Set<String> seen = new HashSet<>();
-        for (String pkg : hiddenSet) {
+        for (String pkgOrKey : hiddenSet) {
             for (ResolveInfo ri : all) {
-                if (ri.activityInfo != null && pkg.equals(ri.activityInfo.packageName)) {
-                    if (seen.add(pkg)) {
-                        hiddenApps.add(ri);
+                if (ri.activityInfo != null) {
+                    boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+                    String key = isStreamHub ? StreamHubActivity.class.getName() : ri.activityInfo.packageName;
+                    if (pkgOrKey.equals(key) || pkgOrKey.equals(ri.activityInfo.packageName)) {
+                        if (seen.add(key)) {
+                            hiddenApps.add(ri);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -266,6 +277,10 @@ public class HiddenAppsManager {
     }
 
     private static void launchApp(Activity activity, PackageManager pm, ResolveInfo ri, String pkg) {
+        if (StreamHubActivity.class.getName().equals(ri.activityInfo.name)) {
+            activity.startActivity(new Intent(activity, StreamHubActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return;
+        }
         Intent launch = new Intent(Intent.ACTION_MAIN)
                 .setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
@@ -286,10 +301,11 @@ public class HiddenAppsManager {
     private static void unhideSingleApp(Activity activity, String pkg, CharSequence label, PopupWindow popup, Runnable onUnhide) {
         Set<String> updated = new HashSet<>(getHiddenApps(activity));
         updated.remove(pkg);
+        updated.remove(StreamHubActivity.class.getName());
         setHiddenApps(activity, updated);
         LibraryApps.save(activity, pkg, true);
         popup.dismiss();
-        Toast.makeText(activity, "Restored to Home: " + label, Toast.LENGTH_SHORT).show();
+        Toast.makeText(activity, "Restored: " + label, Toast.LENGTH_SHORT).show();
         if (onUnhide != null) onUnhide.run();
     }
 }

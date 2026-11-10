@@ -3450,8 +3450,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (reordering) return;
         String key = adapter.keyAt(position);
         String pkg = adapter.packageAt(position);
-        // Empty dock slots and the Default-home tile carry the launcher's own package: no menu for them.
-        if (key == null || pkg == null || pkg.equals(getPackageName())) return;
+        boolean isStreamHub = key != null && key.contains("StreamHubActivity");
+        // Empty dock slots, hidden apps shortcut, and Default-home tile carry the launcher's own package: no menu for them.
+        if (key == null || pkg == null || (pkg.equals(getPackageName()) && !isStreamHub)) return;
+        if ("com.gathin.tvhome.HiddenAppsShortcut".equals(key)) return;
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));
@@ -3468,12 +3470,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             pickUp(at);
             Toast.makeText(this, R.string.reorder_hint, Toast.LENGTH_LONG).show();
         });
-        if (appLibraryEnabled) addSettingsMenuRow(rows, popup, R.string.library_remove_shortcut, () -> {
-            if (LibraryApps.save(this, pkg, false)) reloadApps(false);
-            else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
+        addSettingsMenuRow(rows, popup, R.string.tile_hide, () -> {
+            String hideKey = isStreamHub ? StreamHubActivity.class.getName() : pkg;
+            Set<String> hidden = new HashSet<>(HiddenAppsManager.getHiddenApps(this));
+            hidden.add(hideKey);
+            HiddenAppsManager.setHiddenApps(this, hidden);
+            LibraryApps.save(this, pkg, false);
+            reloadApps(false);
+            Toast.makeText(this, "App hidden. Access it in Hidden Apps.", Toast.LENGTH_SHORT).show();
         });
-        addSettingsMenuRow(rows, popup, R.string.library_app_info, () -> open(new Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg))));
+        if (!isStreamHub) {
+            addSettingsMenuRow(rows, popup, R.string.library_app_info, () -> open(new Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg))));
+        }
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
         // Dock tiles sit near the bottom of the screen: open the menu above the tile when it would not fit below.

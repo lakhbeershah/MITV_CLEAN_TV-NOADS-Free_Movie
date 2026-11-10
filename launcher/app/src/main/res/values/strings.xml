@@ -106,6 +106,7 @@
     <string name="library_on_home">On Home</string>
     <string name="library_add_home">Add</string>
     <string name="library_remove_shortcut">Remove</string>
+    <string name="tile_hide">Hide</string>
     <string name="library_open">Open</string>
     <string name="library_app_info">Info</string>
     <string name="library_save_failed">Failed</string>

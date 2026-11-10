@@ -339,6 +339,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
             boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+            if (hidden.contains(pkg) || (userHidden != null && userHidden.contains(pkg))) continue;
+            if (isStreamHub && (hidden.contains(StreamHubActivity.class.getName()) || (userHidden != null && userHidden.contains(StreamHubActivity.class.getName())))) continue;
             if ((pkg.equals(ctx.getPackageName()) && !isStreamHub) || !ri.activityInfo.exported
                     || !LibraryApps.visible(tvPackages.contains(pkg) || isStreamHub, hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
             ComponentName component = new ComponentName(pkg, ri.activityInfo.name);
