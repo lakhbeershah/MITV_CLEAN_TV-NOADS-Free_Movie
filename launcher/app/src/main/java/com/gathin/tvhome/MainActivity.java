@@ -869,18 +869,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     public void resetHomeDefaults() {
         this.customMarginPx = 16;
-        COLUMNS = 6;
+        COLUMNS = 7;
         getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
                 .edit()
                 .putInt("dock_margin_px", 16)
-                .putInt("custom_columns", 6)
+                .putInt("custom_columns", 7)
                 .putString("tile_scale", "standard")
                 .putInt("dock_corner_radius", 14)
-                .putInt("wallpaper_dimming_percent", 0)
+                .putInt("wallpaper_dimming_percent", 50)
                 .apply();
 
         if (adapter != null) {
-            adapter.setDockSize(6);
+            adapter.setDockSize(7);
             adapter.notifyDataSetChanged();
         }
         if (glass != null) {
@@ -888,7 +888,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             glassCardW = -1;
         }
         View scrim = findViewById(R.id.wallpaperDimmingScrim);
-        if (scrim != null) scrim.setAlpha(0f);
+        if (scrim != null) scrim.setAlpha(0.5f);
         recalculateBottomDock();
     }
 
@@ -980,17 +980,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     public int getCustomDimmingPercent() {
-        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("wallpaper_dimming_percent", 0);
+        return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("wallpaper_dimming_percent", 50);
     }
 
     public void applyCustomHomePrefs() {
         SharedPreferences sp = getSharedPreferences("home_custom_prefs", MODE_PRIVATE);
         Config cfg = Config.load(this);
-        int cols = sp.getInt("custom_columns", cfg.columns);
+        int cols = sp.getInt("custom_columns", cfg.columns > 0 ? cfg.columns : 7);
         if (cols >= 3 && cols <= 8) {
             this.COLUMNS = cols;
         }
-        this.customMarginPx = Math.max(0, sp.getInt("dock_margin_px", Math.round(11 * density)));
+        this.customMarginPx = Math.max(0, sp.getInt("dock_margin_px", 16));
         int radiusDp = sp.getInt("dock_corner_radius", 14);
         if (glass != null) {
             float customRadius = radiusDp * density;
@@ -998,7 +998,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             glass.setRadius(customRadius * scale);
             glassCardW = -1;
         }
-        int dimPercent = sp.getInt("wallpaper_dimming_percent", 0);
+        int dimPercent = sp.getInt("wallpaper_dimming_percent", 50);
         View scrim = findViewById(R.id.wallpaperDimmingScrim);
         if (scrim != null) {
             scrim.setAlpha(dimPercent / 100f);
@@ -1091,6 +1091,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         if (intent != null && intent.hasExtra("set_margin_px")) {
             setCustomMarginPx(intent.getIntExtra("set_margin_px", 16));
+        }
+        if (intent != null && "com.gathin.tvhome.action.RESET_DEFAULTS".equals(intent.getAction())) {
+            resetHomeDefaults();
+            return;
         }
         if (intent != null && "com.gathin.tvhome.action.HOME_STUDIO".equals(intent.getAction())) {
             showHomeStudio();

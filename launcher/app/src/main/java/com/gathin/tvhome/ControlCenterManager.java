@@ -1097,11 +1097,11 @@ public class ControlCenterManager {
             btnResetHome.setOnClickListener(v -> {
                 new AlertDialog.Builder(activity)
                         .setTitle("🔄 Reset Home Layout")
-                        .setMessage("Reset Home layout to default settings?\n\n• Margin: 16 px (balanced)\n• Columns: 6\n• Tile Size: Standard\n• Corner Radius: Smooth (14dp)\n• Dimming: 0%\n\n(Your Google Photos links, downloaded screensaver albums, and photo history will NOT be affected.)")
+                        .setMessage("Reset Home layout to default settings?\n\n• Margin: 16 px\n• Columns: 7\n• Tile Size: Standard\n• Corner Radius: Smooth (14dp)\n• Dimming: 50%\n\n(Your Google Photos links, downloaded screensaver albums, and photo history will NOT be affected.)")
                         .setPositiveButton("Reset", (dialog, which) -> {
                             activity.resetHomeDefaults();
                             currentMarginPx = 16;
-                            currentColumns = 6;
+                            currentColumns = 7;
                             updateMarginDisplay();
                             updateColsDisplay();
                             if (btnScaleStandard != null) {
@@ -1110,7 +1110,7 @@ public class ControlCenterManager {
                                 if (btnScaleSpacious != null) btnScaleSpacious.setSelected(false);
                             }
                             selectRadiusBtn(btnRad14, btnRad0, btnRad20, btnRad28);
-                            selectDimBtn(btnDim0, btnDim25, btnDim50, btnDim75);
+                            selectDimBtn(btnDim50, btnDim0, btnDim25, btnDim75);
                             Toast.makeText(activity, "Home layout reset to defaults", Toast.LENGTH_SHORT).show();
                         })
                         .setNegativeButton("Cancel", null)
