@@ -424,6 +424,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         settingsKeycodes = cfg.settingsKeycodes;
         settingsKeyPanel = cfg.settingsKeyPanel;
         COLUMNS = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("custom_columns", cfg.columns);
+
+        SharedPreferences setupPrefs = getSharedPreferences(SetupWizardActivity.PREFS_SETUP, MODE_PRIVATE);
+        boolean setupDone = setupPrefs.getBoolean(SetupWizardActivity.KEY_SETUP_COMPLETED, false);
+        if (!setupDone) {
+            SharedPreferences homePrefs = getSharedPreferences("home_custom_prefs", MODE_PRIVATE);
+            if (homePrefs.contains("custom_columns")) {
+                setupPrefs.edit().putBoolean(SetupWizardActivity.KEY_SETUP_COMPLETED, true).apply();
+            } else {
+                startActivity(new Intent(this, SetupWizardActivity.class));
+            }
+        }
         animations = cfg.animations;
         advancedEffects = cfg.animations && cfg.advancedEffects;
         reducedMotion = cfg.reducedMotion;

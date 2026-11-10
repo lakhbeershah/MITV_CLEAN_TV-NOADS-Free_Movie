@@ -1,0 +1,933 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0E17"
+    android:orientation="vertical"
+    android:paddingStart="32dp"
+    android:paddingEnd="32dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp">
+
+    <!-- Top Header & Step Progress Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/wizardHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:text="✨ CLEAN TV SETUP WIZARD"
+            android:textColor="#FFFFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.04" />
+
+        <!-- 4 Step Indicator Pills -->
+        <LinearLayout
+            android:id="@+id/stepPillsRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/stepPill1"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/cc_pill_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="1. 🧹 Boost RAM"
+                android:textColor="#FF35B7FF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/stepPill2"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/cc_pill_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="2. 🖼️ Screensaver"
+                android:textColor="#88FFFFFF"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/stepPill3"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/cc_pill_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="3. 📦 Apps Suite"
+                android:textColor="#88FFFFFF"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/stepPill4"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/cc_pill_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="4. 🏠 Default Home"
+                android:textColor="#88FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Content Frame holding the 4 Step Views -->
+    <FrameLayout
+        android:id="@+id/stepContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ============================================================= -->
+        <!-- STEP 1: RAM & Background Process Cleaner                      -->
+        <!-- ============================================================= -->
+        <LinearLayout
+            android:id="@+id/stepViewRam"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <!-- Left Column: RAM Status & Actions -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/cc_card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡ SYSTEM MEMORY STATUS"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/txtRamStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Available RAM: Calculating..."
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtRamSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Android TVs often suffer from memory bloat and background video services. Cleaning them speeds up your TV instantly."
+                    android:textColor="#A0FFFFFF"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/txtRamCleanResult"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="✓ 480 MB Memory Boosted!"
+                    android:textColor="#FF00E676"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/btnCleanRam"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:text="🧹 Boost Memory &amp; Clean Background Apps"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnNextFromRam"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Continue to Screensaver ➔"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Right Column: Apps Checklist -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/cc_card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SELECT BACKGROUND SERVICES TO CLEAN"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Safe bloatware &amp; tracking daemons recommended to be stopped:"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="12sp" />
+
+                <!-- Checklist Rows -->
+                <LinearLayout
+                    android:id="@+id/chkRow1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/chkBox1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☑"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="10dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Xiaomi Analytics &amp; Telemetry Daemon"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/chkRow2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/chkBox2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☑"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="10dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="PatchWall Background Feeds &amp; Ads"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/chkRow3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/chkBox3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☑"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="10dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="System Firmware Auto-Upgrade Push"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/chkRow4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_pill_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/chkBox4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☑"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="10dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Streaming &amp; Third-party Background Caches"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ============================================================= -->
+        <!-- STEP 2: Screensaver & Google Photos                           -->
+        <!-- ============================================================= -->
+        <LinearLayout
+            android:id="@+id/stepViewScreensaver"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <!-- Left: Timeout & URL Configuration -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.1"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/cc_card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🖼️ 1-MINUTE PHOTO SCREENSAVER"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Turn your TV into an ambient dynamic memory frame when untouched."
+                    android:textColor="#A0FFFFFF"
+                    android:textSize="12sp" />
+
+                <!-- Timeout Selection Row -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="INACTIVITY TIMEOUT:"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btnWizardTimeout1"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="1 Min (Fast)"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btnWizardTimeout2"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="2 Min"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btnWizardTimeout5"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="5 Min"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- URL Input -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="GOOGLE PHOTOS SHARED ALBUM LINK:"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/editWizardPhotoUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:hint="https://photos.app.goo.gl/..."
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#50FFFFFF"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSaveWizardPhotos"
+                        style="@style/ActionButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="💾 Save &amp; Sync Album"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/btnWizardCuratedWallpapers"
+                        style="@style/ActionButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="🏞️ Use 4K Curated Pack"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/btnNextFromScreensaver"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:text="Continue to Apps Suite ➔"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Right: QR Code to paste link from phone -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.9"
+                android:background="@drawable/cc_card_bg"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📱 SCAN FROM MOBILE"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.04" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center"
+                    android:text="Scan with camera to open Web Remote and paste your album link without remote typing:"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11.5sp" />
+
+                <ImageView
+                    android:id="@+id/imgWizardQr"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:background="#FFFFFFFF"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:id="@+id/txtWizardWebUrl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="http://192.168.1.38:8888"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ============================================================= -->
+        <!-- STEP 3: Essential Apps Suite                                  -->
+        <!-- ============================================================= -->
+        <LinearLayout
+            android:id="@+id/stepViewApps"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📦 ESSENTIAL TV APPS SUITE"
+                android:textColor="#FF35B7FF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="12dp"
+                android:text="5 essential ad-free apps tailored for TV remotes. Click 'Install All' or select individually:"
+                android:textColor="#88FFFFFF"
+                android:textSize="12sp" />
+
+            <!-- App Cards Container (Grid) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Row 1: TV Bro, SmartTube, Stream Hub -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <!-- App 1: TV Bro -->
+                    <LinearLayout
+                        android:id="@+id/cardAppTvBro"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🌐 TV Bro"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="4dp"
+                            android:text="Fast TV web browser with built-in ad blocker and remote mouse pointer."
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11.5sp" />
+                        <TextView
+                            android:id="@+id/badgeTvBro"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:background="@drawable/cc_pill_bg"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="⚡ Install"
+                            android:textColor="#FF35B7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- App 2: SmartTube -->
+                    <LinearLayout
+                        android:id="@+id/cardAppSmartTube"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📺 SmartTube"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="4dp"
+                            android:text="YouTube with zero ads, SponsorBlock, 4K 60fps and background playback."
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11.5sp" />
+                        <TextView
+                            android:id="@+id/badgeSmartTube"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:background="@drawable/cc_pill_bg"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="⚡ Install"
+                            android:textColor="#FF35B7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- App 3: TV Stream Hub -->
+                    <LinearLayout
+                        android:id="@+id/cardAppStreamHub"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📡 TV Stream Hub"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="4dp"
+                            android:text="Stream Free Live TV channels, news, sports and movies directly."
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11.5sp" />
+                        <TextView
+                            android:id="@+id/badgeStreamHub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:background="@drawable/cc_pill_bg"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="⚡ Install"
+                            android:textColor="#FF35B7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Row 2: Play Deck, TV FileBox -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <!-- App 4: Play Deck -->
+                    <LinearLayout
+                        android:id="@+id/cardAppPlayDeck"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎮 Play Deck"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="4dp"
+                            android:text="Retro gaming and TV controller station for classic gaming on TV."
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11.5sp" />
+                        <TextView
+                            android:id="@+id/badgePlayDeck"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:background="@drawable/cc_pill_bg"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="⚡ Install"
+                            android:textColor="#FF35B7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- App 5: TV FileBox -->
+                    <LinearLayout
+                        android:id="@+id/cardAppFileBox"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📁 TV FileBox"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="4dp"
+                            android:text="Clean dual-pane TV file manager with photo viewer and wireless phone transfer."
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11.5sp" />
+                        <TextView
+                            android:id="@+id/badgeFileBox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:background="@drawable/cc_pill_bg"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="⚡ Install"
+                            android:textColor="#FF35B7FF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Bottom Actions -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnInstallAllApps"
+                    style="@style/ActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="⚡ Install All Remaining Apps"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnNextFromApps"
+                    style="@style/ActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="Continue to Home Setup ➔"
+                    android:textColor="#FF35B7FF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ============================================================= -->
+        <!-- STEP 4: Default Home Setup                                    -->
+        <!-- ============================================================= -->
+        <LinearLayout
+            android:id="@+id/stepViewHome"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="560dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/cc_card_bg"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="28dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏠"
+                    android:textSize="40sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="SET CLEAN TV AS DEFAULT HOME"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.04" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Make Clean TV your TV's permanent launcher so pressing Home on your remote always opens this fast, ad-free interface."
+                    android:textColor="#A0FFFFFF"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/cc_pill_bg"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SAFE FOR ALL TVS (NEW &amp; OLD):"
+                        android:textColor="#FF35B7FF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="• Click below and select 'TV Home', then choose 'ALWAYS'\n• Zero black-screen risk on Google TV and Xiaomi TVs\n• Stock apps remain safe and accessible in the App Drawer"
+                        android:textColor="#DDFFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnSetDefaultHome"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="20dp"
+                    android:text="🏠 Set Default Home Now"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnFinishWizard"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:text="🎉 Finish Setup &amp; Launch Clean TV"
+                    android:textColor="#FF00E676"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

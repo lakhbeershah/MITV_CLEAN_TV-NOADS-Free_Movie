@@ -655,6 +655,15 @@ public class ControlCenterManager {
                 if (plus != null) plus.requestFocus();
             });
         }
+
+        View btnOpenSetupWizard = root.findViewById(R.id.ccBtnOpenSetupWizard);
+        if (btnOpenSetupWizard != null) {
+            btnOpenSetupWizard.setOnClickListener(v -> {
+                dismiss();
+                Intent wizard = new Intent(activity, SetupWizardActivity.class);
+                activity.startActivity(wizard);
+            });
+        }
     }
 
     public void openScreensaverStudio() {

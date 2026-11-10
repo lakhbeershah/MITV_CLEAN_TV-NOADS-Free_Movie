@@ -53,4 +53,13 @@
         <item name="android:layout_marginEnd">10dp</item>
         <item name="android:gravity">center</item>
     </style>
+
+    <style name="ActionButton">
+        <item name="android:background">@drawable/cc_pill_bg</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@string/font_medium</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+    </style>
 </resources>

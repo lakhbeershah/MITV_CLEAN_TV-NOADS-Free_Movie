@@ -520,7 +520,7 @@
                     android:background="@drawable/cc_card_bg"
                     android:clickable="true"
                     android:focusable="true"
-                    android:nextFocusDown="@+id/ccBtnOpenMargin"
+                    android:nextFocusDown="@+id/ccBtnOpenSetupWizard"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:paddingStart="12dp"
@@ -555,6 +555,62 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Columns • Tile Size • Corner Radius • Hidden Apps"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="10sp"
+                            android:layout_marginTop="1dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="→"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- Section 4: TV Setup & Optimization Wizard -->
+                <LinearLayout
+                    android:id="@+id/ccBtnOpenSetupWizard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/ccBtnOpenSetupWizard"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingBottom="7dp"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="2dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚀"
+                        android:textSize="17sp"
+                        android:layout_marginEnd="10dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TV SETUP &amp; OPTIMIZATION WIZARD"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="RAM Boost • Google Photos • Apps Suite • Default Home"
                             android:textColor="#99FFFFFF"
                             android:textSize="10sp"
                             android:layout_marginTop="1dp" />
