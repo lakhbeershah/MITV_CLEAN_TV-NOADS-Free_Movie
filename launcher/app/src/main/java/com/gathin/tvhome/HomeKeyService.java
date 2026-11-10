@@ -40,6 +40,9 @@ import java.util.Set;
  */
 public class HomeKeyService extends AccessibilityService {
 
+    private static volatile HomeKeyService instance;
+    public static HomeKeyService getInstance() { return instance; }
+
     /** restore_key_services was on when the config was read: this helper is noted for ServiceRepair. */
     private boolean repairRecord;
     /** Remote buttons that should open Settings (config.xml, settings_key_scancodes and settings_key_keycodes). */
@@ -63,6 +66,7 @@ public class HomeKeyService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        instance = this;
         settingsScancodes = getResources().getIntArray(R.array.settings_key_scancodes);
         // The service is directBootAware: Android 11 skips a service that is not while the user is still
         // locked at boot, writes accessibility_enabled=0 and, on TCL G03 firmware, never binds it after the
@@ -95,6 +99,7 @@ public class HomeKeyService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+        if (instance == this) instance = null;
         stopWaitingForUnlock();
         if (gamepads != null) gamepads.stop();
         super.onDestroy();

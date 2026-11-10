@@ -290,17 +290,18 @@ public class WebRemoteServer {
     }
 
     private static void sendKeyEvent(Activity activity, int code) {
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                try {
+                    activity.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, code));
+                    activity.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, code));
+                } catch (Throwable ignored) {}
+            });
+        }
         KEY_EXECUTOR.execute(() -> {
             try {
                 Runtime.getRuntime().exec("input keyevent " + code).waitFor();
-            } catch (Exception e) {
-                if (activity != null) {
-                    activity.runOnUiThread(() -> {
-                        activity.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, code));
-                        activity.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, code));
-                    });
-                }
-            }
+            } catch (Exception ignored) {}
         });
     }
 }

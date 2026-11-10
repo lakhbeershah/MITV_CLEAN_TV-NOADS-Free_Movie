@@ -510,6 +510,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             wallpaperDimmingScrim.setAlpha(dimPercent / 100f);
         }
         photoSyncBadge = findViewById(R.id.photoSyncBadge);
+        WebRemoteServer.startServer(this);
         PhotoSyncEngine.setSyncListener(this::showNewMemoriesBadge);
         PhotoSyncEngine.startPeriodicSync(this);
         IntentFilter memoriesFilter = new IntentFilter(PhotoSyncEngine.ACTION_TEST_MEMORIES);
@@ -901,8 +902,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (grid == null) return;
         int h = grid.getHeight();
         if (h <= 0) h = getResources().getDisplayMetrics().heightPixels;
-        int inner = grid.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
-        if (inner <= 0) inner = getResources().getDisplayMetrics().widthPixels - (int) (48 * density);
+        int padH = customMarginPx;
+        int inner = grid.getWidth() - (2 * padH);
+        if (inner <= 0) inner = getResources().getDisplayMetrics().widthPixels - (2 * padH);
 
         Config cfg = Config.load(this);
         int rowsBelowDock = cfg.rowsBelowDock;
@@ -919,11 +921,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
         if (!this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
 
-        grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), 0);
+        grid.setPadding(padH, want, padH, 0);
         View memoriesFrame = findViewById(R.id.memoriesFrame);
         if (memoriesFrame != null) {
             ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
-            int targetH = Math.max((int) (200 * density), want - (int) (16 * density));
+            int targetH = want;
             if (mlp.height != targetH) {
                 mlp.height = targetH;
                 memoriesFrame.setLayoutParams(mlp);
@@ -1843,32 +1845,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Spread out left-side apps to the left and right-side apps to the right
         adapter.setFocusedPosition(position, grid);
 
-        // Center-Anchored Carousel Scrolling:
-        // Keeps the focused card at the exact horizontal center of the screen,
-        // unless at the start or end where no more apps can scroll.
-        int itemCenterX = item.getLeft() + item.getWidth() / 2;
-        int screenCenterX = grid.getWidth() / 2;
-        int desiredDx = itemCenterX - screenCenterX;
-        int dx = desiredDx;
-
-        RecyclerView.LayoutManager lm = grid.getLayoutManager();
-        if (lm != null) {
-            View firstChild = lm.findViewByPosition(0);
-            if (firstChild != null) {
-                int minScrollLeft = firstChild.getLeft() - grid.getPaddingLeft();
-                if (dx < minScrollLeft) {
-                    dx = minScrollLeft;
-                }
-            }
-            int lastPos = adapter.getItemCount() - 1;
-            View lastChild = lm.findViewByPosition(lastPos);
-            if (lastChild != null) {
-                int gridInnerRight = grid.getWidth() - grid.getPaddingRight();
-                int maxScrollRight = lastChild.getRight() - gridInnerRight;
-                if (dx > maxScrollRight) {
-                    dx = maxScrollRight;
-                }
-            }
+        // Smooth horizontal scrolling: only scroll when the focused item exceeds visible boundaries,
+        // so that navigating to app 2 or 3 never pushes the 1st app on the left off-screen!
+        int dx = 0;
+        int gridInnerLeft = grid.getPaddingLeft();
+        int gridInnerRight = grid.getWidth() - grid.getPaddingRight();
+        if (item.getLeft() < gridInnerLeft) {
+            dx = item.getLeft() - gridInnerLeft;
+        } else if (item.getRight() > gridInnerRight) {
+            dx = item.getRight() - gridInnerRight;
         }
 
         if (dx != 0) {

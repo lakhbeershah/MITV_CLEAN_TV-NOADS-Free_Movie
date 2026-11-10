@@ -1,5 +1,6 @@
 package com.gathin.tvhome;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
@@ -74,7 +75,19 @@ public class SleepTimerManager {
     private static void triggerTvSleep(Activity activity) {
         if (activity == null || activity.isFinishing()) return;
         try {
-            // Send Power keyevent to enter standby
+            if (HomeKeyService.getInstance() != null) {
+                HomeKeyService.getInstance().performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
+                return;
+            }
+            if (InputKeyService.getInstance() != null) {
+                InputKeyService.getInstance().performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Accessibility lock screen failed", t);
+        }
+        try {
+            // Fallback: Send Power keyevent to enter standby
             new Thread(() -> {
                 try {
                     Runtime.getRuntime().exec("input keyevent 26");

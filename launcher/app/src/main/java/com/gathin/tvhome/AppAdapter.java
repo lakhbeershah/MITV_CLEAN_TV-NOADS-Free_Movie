@@ -219,7 +219,6 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (focusedPosition == pos && rv != null) return;
         focusedPosition = pos;
         if (rv == null) return;
-        float spread = 50f * ctx.getResources().getDisplayMetrics().density;
         int childCount = rv.getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = rv.getChildAt(i);
@@ -227,12 +226,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (itemPos == RecyclerView.NO_POSITION) continue;
             View card = child.findViewById(R.id.card);
             if (card == null) continue;
-            float targetX = itemPos < focusedPosition ? -spread : (itemPos > focusedPosition ? spread : 0f);
-            if (animations && !reducedMotion) {
-                card.animate().translationX(targetX).setDuration(220)
-                        .setInterpolator(new OvershootInterpolator(1.2f)).start();
-            } else {
-                card.setTranslationX(targetX);
+            if (card.getTranslationX() != 0f) {
+                if (animations && !reducedMotion) {
+                    card.animate().translationX(0f).setDuration(200).start();
+                } else {
+                    card.setTranslationX(0f);
+                }
             }
         }
     }
@@ -463,13 +462,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.name.setText(e.name);
         h.name.setVisibility(View.GONE);
         float density = ctx.getResources().getDisplayMetrics().density;
-        float spread = 50f * density;
-        float tx = position < focusedPosition ? -spread : (position > focusedPosition ? spread : 0f);
-        h.card.setTranslationX(tx);
+        h.card.setTranslationX(0f);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
         h.card.setScaleY(focused && animations ? focusScale() : 1f);
-        h.card.setTranslationY(focused && advancedEffects ? -4f * ctx.getResources().getDisplayMetrics().density : 0f);
+        h.card.setTranslationY(0f);
         h.card.setTranslationZ(focused && advancedEffects ? 8f * ctx.getResources().getDisplayMetrics().density : 0f);
         h.banner.setScaleX(focused && advancedEffects ? 1.035f : 1f);
         h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
@@ -880,7 +877,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     // A short zoom with no hardware layer: building a layer for so short an animation costs more
                     // frames than it saves. The name just appears instead of fading.
                     view.animate().scaleX(s).scaleY(s)
-                            .translationY(focused && advancedEffects ? -4f * density : 0f)
+                            .translationY(0f)
                             .translationZ(focused && advancedEffects ? 8f * density : 0f)
                             .setDuration(focused ? Motion.REDUCED_MS : 60)
                             .setInterpolator(new DecelerateInterpolator())
@@ -892,7 +889,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if (focused) name.setTranslationY(density * 4f);
                 } else {
                     view.animate().scaleX(s).scaleY(s)
-                            .translationY(focused ? -8f * density : 0f)
+                            .translationY(0f)
                             .translationZ(focused ? 20f * density : 0f)
                             .setDuration(focused ? 260 : 180)
                             .setInterpolator(focused ? new OvershootInterpolator(1.8f)
