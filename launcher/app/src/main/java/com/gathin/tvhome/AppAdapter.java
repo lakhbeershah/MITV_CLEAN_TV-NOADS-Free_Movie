@@ -338,8 +338,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         for (ResolveInfo ri : found) {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
-            if (pkg.equals(ctx.getPackageName()) || !ri.activityInfo.exported
-                    || !LibraryApps.visible(tvPackages.contains(pkg), hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
+            boolean isStreamHub = StreamHubActivity.class.getName().equals(ri.activityInfo.name);
+            if ((pkg.equals(ctx.getPackageName()) && !isStreamHub) || !ri.activityInfo.exported
+                    || !LibraryApps.visible(tvPackages.contains(pkg) || isStreamHub, hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
             ComponentName component = new ComponentName(pkg, ri.activityInfo.name);
             Cards.Card card = cardByPkg.get(pkg);
             if (card != null && !card.component.equals(component)) continue;   // the card stands in for this tile
@@ -596,6 +597,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
     private void launch(Entry e) {
+        if (StreamHubActivity.class.getName().equals(e.component.getClassName())) {
+            Intent intent = new Intent(ctx, StreamHubActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(intent);
+            return;
+        }
         if ("com.gathin.tvhome.HiddenAppsShortcut".equals(e.component.getClassName())) {
             listener.onHiddenAppsClicked();
             return;

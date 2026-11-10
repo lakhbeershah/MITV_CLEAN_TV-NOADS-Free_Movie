@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -346,6 +347,15 @@ public class WebRemoteServer {
                             "Connection: close\r\n\r\n";
                     os.write(header.getBytes(StandardCharsets.UTF_8));
                     os.write(bytes);
+                } else if (requestLine.startsWith("GET /stream-hub")) {
+                    byte[] bytes = loadStreamHub(activity);
+                    String header = "HTTP/1.1 200 OK\r\n" +
+                            corsHeaders +
+                            "Content-Type: text/html; charset=UTF-8\r\n" +
+                            "Content-Length: " + bytes.length + "\r\n" +
+                            "Connection: close\r\n\r\n";
+                    os.write(header.getBytes(StandardCharsets.UTF_8));
+                    os.write(bytes);
                 } else if (requestLine.startsWith("GET /set-photo-link")) {
                     int idx = requestLine.indexOf("url=");
                     if (idx != -1) {
@@ -446,5 +456,28 @@ public class WebRemoteServer {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static byte[] cachedStreamHub = null;
+
+    private static synchronized byte[] loadStreamHub(Activity activity) {
+        if (cachedStreamHub != null) return cachedStreamHub;
+        try {
+            if (activity != null) {
+                InputStream is = activity.getAssets().open("stream_hub.html");
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = is.read(buf)) != -1) {
+                    baos.write(buf, 0, n);
+                }
+                is.close();
+                cachedStreamHub = baos.toByteArray();
+                return cachedStreamHub;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to load stream_hub.html from assets", e);
+        }
+        return "<html><body><h2>Stream Hub</h2><p>Please reload.</p></body></html>".getBytes(StandardCharsets.UTF_8);
     }
 }

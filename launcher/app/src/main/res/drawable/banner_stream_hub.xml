@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="320dp" android:height="180dp">
+        <shape android:shape="rectangle">
+            <gradient android:angle="315" android:startColor="#FF0F172A" android:endColor="#FF020617" />
+            <stroke android:width="2dp" android:color="#FF00E5FF" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <item android:width="72dp" android:height="72dp" android:gravity="center"
+        android:drawable="@drawable/ic_stream_hub" />
+</layer-list>

@@ -227,28 +227,31 @@ final class AppLibraryDialog {
                 for (ResolveInfo info : pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(category), 0)) {
                     if (info.activityInfo == null || !info.activityInfo.exported) continue;
                     String pkg = info.activityInfo.packageName;
-                    if (Intent.CATEGORY_LEANBACK_LAUNCHER.equals(category)) tv.add(pkg);
-                    if (!pkg.equals(self) && !unique.containsKey(pkg)) unique.put(pkg, info);
+                    boolean isStreamHub = StreamHubActivity.class.getName().equals(info.activityInfo.name);
+                    String key = isStreamHub ? (pkg + "/" + info.activityInfo.name) : pkg;
+                    if (Intent.CATEGORY_LEANBACK_LAUNCHER.equals(category)) tv.add(isStreamHub ? key : pkg);
+                    if ((!pkg.equals(self) || isStreamHub) && !unique.containsKey(key)) unique.put(key, info);
                 }
             }
             Map<String, String> names = new HashMap<>();
             Map<String, Long> installed = new HashMap<>();
             for (Map.Entry<String, ResolveInfo> entry : unique.entrySet()) {
-                String pkg = entry.getKey();
+                String key = entry.getKey();
+                String pkg = entry.getValue().activityInfo.packageName;
                 long updated = 0;
                 try {
                     PackageInfo info = pm.getPackageInfo(pkg, 0);
-                    installed.put(pkg, info.firstInstallTime);
+                    installed.put(key, info.firstInstallTime);
                     updated = info.lastUpdateTime;
                 } catch (PackageManager.NameNotFoundException | RuntimeException unavailable) {
-                    installed.put(pkg, 0L);
+                    installed.put(key, 0L);
                 }
-                Known known = KNOWN.get(pkg);
+                Known known = KNOWN.get(key);
                 if (known == null || known.updated != updated) {
                     known = new Known(updated, loadLabel(pm, entry.getValue()));
-                    KNOWN.put(pkg, known);
+                    KNOWN.put(key, known);
                 }
-                names.put(pkg, known.label);
+                names.put(key, known.label);
             }
             KNOWN.keySet().retainAll(unique.keySet());
             main.post(() -> {
@@ -306,10 +309,12 @@ final class AppLibraryDialog {
     /** The app's icon from this opening's cache, or loaded on LOADER and set once it arrives. */
     private void bindIcon(ImageView icon, ResolveInfo app) {
         String pkg = app.activityInfo.packageName;
-        icon.setTag(pkg);
-        Drawable cached = icons.get(pkg);
+        String key = StreamHubActivity.class.getName().equals(app.activityInfo.name)
+                ? app.activityInfo.name : pkg;
+        icon.setTag(key);
+        Drawable cached = icons.get(key);
         icon.setImageDrawable(cached);
-        if (cached != null || !iconsLoading.add(pkg)) return;
+        if (cached != null || !iconsLoading.add(key)) return;
         PackageManager pm = activity.getPackageManager();
         LOADER.execute(() -> {
             Drawable loaded;
@@ -317,12 +322,12 @@ final class AppLibraryDialog {
             catch (RuntimeException unavailable) { loaded = null; }
             Drawable result = loaded;
             main.post(() -> {
-                iconsLoading.remove(pkg);
+                iconsLoading.remove(key);
                 if (closed) return;
                 Drawable shown = result != null ? result : activity.getDrawable(R.drawable.ic_apps);
-                icons.put(pkg, shown);
+                icons.put(key, shown);
                 // The view may show another app by now; a view bound to it later takes it from the cache.
-                if (pkg.equals(icon.getTag())) icon.setImageDrawable(shown);
+                if (key.equals(icon.getTag())) icon.setImageDrawable(shown);
             });
         });
     }
@@ -494,6 +499,12 @@ final class AppLibraryDialog {
 
     private void open(ResolveInfo app) {
         close();
+        if (StreamHubActivity.class.getName().equals(app.activityInfo.name)) {
+            Intent intent = new Intent(activity, StreamHubActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try { activity.startActivity(intent); } catch (Exception ignored) {}
+            return;
+        }
         Intent intent = new Intent(Intent.ACTION_MAIN).setComponent(
                 new ComponentName(app.activityInfo.packageName, app.activityInfo.name));
         // TV apps keep the leanback launch intent, so an app already running resumes instead of restarting.
