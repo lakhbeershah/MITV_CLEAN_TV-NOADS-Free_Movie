@@ -1061,23 +1061,31 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- 1. Bottom Clearance Stepper -->
+                <!-- 1. Dock Vertical Margin & Clearance (PX) -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="BOTTOM FOCUS GLOW CLEARANCE"
+                    android:text="DOCK VERTICAL MARGIN &amp; CLEARANCE (PX)"
                     android:textColor="#88FFFFFF"
                     android:textSize="11sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Equal top &amp; bottom icon margin • Auto-saved"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="10sp"
+                    android:layout_marginBottom="6dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="14dp">
 
                     <TextView
                         android:id="@+id/ccBtnMarginMinus"
@@ -1098,7 +1106,7 @@
                         android:layout_height="44dp"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="11 dp"
+                        android:text="16 px"
                         android:textColor="#FF00E676"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -1115,42 +1123,6 @@
                         android:textColor="#FFFFFFFF"
                         android:textSize="20sp"
                         android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
-
-                    <TextView
-                        android:id="@+id/ccBtnSaveMargin"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/cc_card_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="💾 Save Clearance"
-                        android:textColor="#FF00E676"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/ccBtnRevertMargin"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/cc_card_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="↩️ Revert"
-                        android:textColor="#FFFF5252"
-                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <!-- 2. Dock Columns Stepper -->
@@ -1422,9 +1394,26 @@
                     android:background="@drawable/cc_card_bg"
                     android:clickable="true"
                     android:focusable="true"
+                    android:nextFocusDown="@+id/ccBtnResetHome"
                     android:gravity="center"
                     android:text="🔒 Manage Hidden Apps"
                     android:textColor="#80D8FF"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- 7. Reset Home Defaults Button -->
+                <TextView
+                    android:id="@+id/ccBtnResetHome"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/cc_card_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/ccBtnManageHiddenApps"
+                    android:nextFocusDown="@+id/ccBtnBackMargin"
+                    android:gravity="center"
+                    android:text="🔄 Reset Home to Defaults"
+                    android:textColor="#FFFF5252"
                     android:textSize="13sp"
                     android:layout_marginBottom="12dp" />
 
@@ -1436,6 +1425,7 @@
                     android:background="@drawable/cc_pill_bg"
                     android:clickable="true"
                     android:focusable="true"
+                    android:nextFocusUp="@+id/ccBtnResetHome"
                     android:nextFocusDown="@+id/ccBtnBackMargin"
                     android:gravity="center"
                     android:text="← Back to Control Center"

@@ -96,11 +96,13 @@ public class ControlCenterManager {
     private TextView txtTitle;
 
     // Home Studio State
-    private int initialMarginDp;
-    private int currentMarginDp;
+    private int currentMarginPx;
     private TextView txtMarginValue;
     private int currentColumns;
     private TextView txtColsValue;
+    private TextView btnScaleCompact, btnScaleStandard, btnScaleSpacious;
+    private TextView btnRad0, btnRad14, btnRad20, btnRad28;
+    private TextView btnDim0, btnDim25, btnDim50, btnDim75;
 
     // Screensaver State
     private SharedPreferences syncPrefs;
@@ -145,16 +147,11 @@ public class ControlCenterManager {
 
         initViews(panel);
 
-        initialMarginDp = activity.getCustomBottomRoomDp();
-        currentMarginDp = initialMarginDp;
+        currentMarginPx = activity.getCustomMarginPx();
         updateMarginDisplay();
 
         popup.setOnDismissListener(() -> {
             if (activeInstance == this) activeInstance = null;
-            // If user closed dialog without saving margin, revert back to saved value
-            if (currentMarginDp != initialMarginDp) {
-                activity.setCustomBottomRoomDp(initialMarginDp, false);
-            }
         });
 
         // Show drop-down hanging under anchor
@@ -1019,47 +1016,31 @@ public class ControlCenterManager {
     // =========================================================================
 
     private void setupHomeStudioView(View root) {
-        // 1. Bottom Clearance Stepper
+        // 1. Dock Vertical Margin & Clearance (PX)
         txtMarginValue = root.findViewById(R.id.ccTxtMarginValue);
         View btnMarginMinus = root.findViewById(R.id.ccBtnMarginMinus);
         View btnMarginPlus = root.findViewById(R.id.ccBtnMarginPlus);
-        View btnSaveMargin = root.findViewById(R.id.ccBtnSaveMargin);
-        View btnRevertMargin = root.findViewById(R.id.ccBtnRevertMargin);
+
+        currentMarginPx = activity.getCustomMarginPx();
+        updateMarginDisplay();
 
         if (btnMarginMinus != null) {
             btnMarginMinus.setOnClickListener(v -> {
-                if (currentMarginDp > 0) {
-                    currentMarginDp--;
+                if (currentMarginPx > 0) {
+                    currentMarginPx = Math.max(0, currentMarginPx - 2);
                     updateMarginDisplay();
-                    activity.setCustomBottomRoomDp(currentMarginDp, false); // LIVE PREVIEW!
+                    activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
                 }
             });
         }
 
         if (btnMarginPlus != null) {
             btnMarginPlus.setOnClickListener(v -> {
-                if (currentMarginDp < 60) {
-                    currentMarginDp++;
+                if (currentMarginPx < 80) {
+                    currentMarginPx = Math.min(80, currentMarginPx + 2);
                     updateMarginDisplay();
-                    activity.setCustomBottomRoomDp(currentMarginDp, false); // LIVE PREVIEW!
+                    activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
                 }
-            });
-        }
-
-        if (btnSaveMargin != null) {
-            btnSaveMargin.setOnClickListener(v -> {
-                initialMarginDp = currentMarginDp;
-                activity.setCustomBottomRoomDp(currentMarginDp, true); // Persists to SharedPreferences!
-                Toast.makeText(activity, "Clearance saved: " + currentMarginDp + " dp", Toast.LENGTH_SHORT).show();
-            });
-        }
-
-        if (btnRevertMargin != null) {
-            btnRevertMargin.setOnClickListener(v -> {
-                currentMarginDp = initialMarginDp;
-                updateMarginDisplay();
-                activity.setCustomBottomRoomDp(currentMarginDp, false); // Reverts live on screen!
-                Toast.makeText(activity, "Reverted to " + initialMarginDp + " dp", Toast.LENGTH_SHORT).show();
             });
         }
 
@@ -1091,9 +1072,9 @@ public class ControlCenterManager {
         }
 
         // 3. App Tile Size Scaler (32)
-        TextView btnScaleCompact = root.findViewById(R.id.ccBtnTileScaleCompact);
-        TextView btnScaleStandard = root.findViewById(R.id.ccBtnTileScaleStandard);
-        TextView btnScaleSpacious = root.findViewById(R.id.ccBtnTileScaleSpacious);
+        btnScaleCompact = root.findViewById(R.id.ccBtnTileScaleCompact);
+        btnScaleStandard = root.findViewById(R.id.ccBtnTileScaleStandard);
+        btnScaleSpacious = root.findViewById(R.id.ccBtnTileScaleSpacious);
         String currentScale = activity.getCustomTileScale();
 
         if (btnScaleCompact != null) {
@@ -1127,10 +1108,10 @@ public class ControlCenterManager {
         }
 
         // 4. Corner Radius Stepper (33)
-        TextView btnRad0 = root.findViewById(R.id.ccBtnRadius0);
-        TextView btnRad14 = root.findViewById(R.id.ccBtnRadius14);
-        TextView btnRad20 = root.findViewById(R.id.ccBtnRadius20);
-        TextView btnRad28 = root.findViewById(R.id.ccBtnRadius28);
+        btnRad0 = root.findViewById(R.id.ccBtnRadius0);
+        btnRad14 = root.findViewById(R.id.ccBtnRadius14);
+        btnRad20 = root.findViewById(R.id.ccBtnRadius20);
+        btnRad28 = root.findViewById(R.id.ccBtnRadius28);
         int currentRadius = activity.getCustomCornerRadiusDp();
 
         if (btnRad0 != null) {
@@ -1163,10 +1144,10 @@ public class ControlCenterManager {
         }
 
         // 5. Wallpaper Dimming (34)
-        TextView btnDim0 = root.findViewById(R.id.ccBtnDim0);
-        TextView btnDim25 = root.findViewById(R.id.ccBtnDim25);
-        TextView btnDim50 = root.findViewById(R.id.ccBtnDim50);
-        TextView btnDim75 = root.findViewById(R.id.ccBtnDim75);
+        btnDim0 = root.findViewById(R.id.ccBtnDim0);
+        btnDim25 = root.findViewById(R.id.ccBtnDim25);
+        btnDim50 = root.findViewById(R.id.ccBtnDim50);
+        btnDim75 = root.findViewById(R.id.ccBtnDim75);
         int currentDim = activity.getCustomDimmingPercent();
 
         if (btnDim0 != null) {
@@ -1205,6 +1186,33 @@ public class ControlCenterManager {
                 HiddenAppsManager.showManageDialog(activity, () -> activity.refreshApps());
             });
         }
+
+        // 7. Reset Home to Defaults
+        View btnResetHome = root.findViewById(R.id.ccBtnResetHome);
+        if (btnResetHome != null) {
+            btnResetHome.setOnClickListener(v -> {
+                new AlertDialog.Builder(activity)
+                        .setTitle("🔄 Reset Home Layout")
+                        .setMessage("Reset Home layout to default settings?\n\n• Margin: 16 px (balanced)\n• Columns: 6\n• Tile Size: Standard\n• Corner Radius: Smooth (14dp)\n• Dimming: 0%\n\n(Your Google Photos links, downloaded screensaver albums, and photo history will NOT be affected.)")
+                        .setPositiveButton("Reset", (dialog, which) -> {
+                            activity.resetHomeDefaults();
+                            currentMarginPx = 16;
+                            currentColumns = 6;
+                            updateMarginDisplay();
+                            updateColsDisplay();
+                            if (btnScaleStandard != null) {
+                                btnScaleStandard.setSelected(true);
+                                if (btnScaleCompact != null) btnScaleCompact.setSelected(false);
+                                if (btnScaleSpacious != null) btnScaleSpacious.setSelected(false);
+                            }
+                            selectRadiusBtn(btnRad14, btnRad0, btnRad20, btnRad28);
+                            selectDimBtn(btnDim0, btnDim25, btnDim50, btnDim75);
+                            Toast.makeText(activity, "Home layout reset to defaults", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        }
     }
 
     private void selectRadiusBtn(TextView target, TextView... others) {
@@ -1219,7 +1227,11 @@ public class ControlCenterManager {
 
     private void updateMarginDisplay() {
         if (txtMarginValue != null) {
-            txtMarginValue.setText(currentMarginDp + " dp");
+            if (currentMarginPx == 0) {
+                txtMarginValue.setText("0 px (Edge)");
+            } else {
+                txtMarginValue.setText(currentMarginPx + " px");
+            }
         }
     }
 

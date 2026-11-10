@@ -249,7 +249,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private List<Cards.Card> cards = Collections.emptyList();
     /** The grid has been laid out and focused since the last resume; the card prompt waits for this. */
     private boolean tilesReady;
-    private int customBottomRoomDp = 11;
+    private int customMarginPx = 16;
     private boolean settingsRecreationPending;
     private Dialog cardPrompt;
     /** Set when a decision could not be saved: no more prompts until the next resume, instead of asking in a loop. */
@@ -402,6 +402,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     };
 
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private void registerMemoriesReceiverLegacy(IntentFilter filter) {
+        registerReceiver(testMemoriesReceiver, filter);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -437,7 +442,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sourcePanelService = cfg.sourcePanelService;
         sourcePanelAction = cfg.sourcePanelAction;
         sourcePanelExtra = cfg.sourcePanelExtra;
-        customBottomRoomDp = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("bottom_room_dp", 11);
+        customMarginPx = getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .getInt("dock_margin_px", Math.round(11 * density));
         coocaaSources = cfg.coocaaSources;
 
         root = findViewById(R.id.root);
@@ -511,7 +517,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(testMemoriesReceiver, memoriesFilter, Context.RECEIVER_EXPORTED);
         } else {
-            registerReceiver(testMemoriesReceiver, memoriesFilter);
+            registerMemoriesReceiverLegacy(memoriesFilter);
         }
         raceCalendar = cfg.raceCalendar;
         racePanel = findViewById(R.id.racePanel);
@@ -597,9 +603,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int rowsBelowDock = cfg.rowsBelowDock;
         int tileWInitial = AppAdapter.tileWidthPx(innerInitial, displayH, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
         int tileHInitial = AppAdapter.tileHeightPx(tileWInitial);
-        int itemHInitial = tileHInitial + Math.round((8 + 1) * density);
-        int bottomRoomInitial = Math.round(customBottomRoomDp * density);
-        int initialWant = Math.max(0, displayH - itemHInitial - bottomRoomInitial);
+        int dockRowInitial = tileHInitial + (2 * customMarginPx);
+        int initialWant = Math.max(0, displayH - dockRowInitial);
         grid.setPadding(grid.getPaddingLeft(), initialWant, grid.getPaddingRight(), 0);
         View initialMemories = findViewById(R.id.memoriesFrame);
         if (initialMemories != null) {
@@ -616,18 +621,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
             int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
             String tileScale = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getString("tile_scale", "standard");
-        if ("compact".equals(tileScale)) tileW = Math.round(tileW * 0.88f);
-        else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
+            if ("compact".equals(tileScale)) tileW = Math.round(tileW * 0.88f);
+            else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
 
-        int tileH = AppAdapter.tileHeightPx(tileW);
-            int itemH = tileH + Math.round((8 + 1) * density);
-            int dockRow = itemH;   // item height without DockDecoration offsets
+            int tileH = AppAdapter.tileHeightPx(tileW);
+            int dockRow = tileH + (2 * customMarginPx);
             int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int bottomRoom = Math.round(customBottomRoomDp * density);
-            int want = Math.max(shelfClearance, h - dockRow - gridRows - bottomRoom);
+            int want = Math.max(shelfClearance, h - dockRow - gridRows);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
             if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
@@ -849,16 +852,48 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent())) openInputsIfAsked(getIntent());
     }
 
+    public int getCustomMarginPx() {
+        return customMarginPx;
+    }
+
+    public void setCustomMarginPx(int px) {
+        this.customMarginPx = Math.max(0, px);
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit().putInt("dock_margin_px", this.customMarginPx).apply();
+        if (adapter != null) adapter.notifyDataSetChanged();
+        recalculateBottomDock();
+    }
+
     public int getCustomBottomRoomDp() {
-        return customBottomRoomDp;
+        return Math.round(customMarginPx / density);
     }
 
     public void setCustomBottomRoomDp(int dp, boolean save) {
-        this.customBottomRoomDp = dp;
-        if (save) {
-            getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
-                    .edit().putInt("bottom_room_dp", dp).apply();
+        setCustomMarginPx(Math.round(dp * density));
+    }
+
+    public void resetHomeDefaults() {
+        this.customMarginPx = 16;
+        COLUMNS = 6;
+        getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                .edit()
+                .putInt("dock_margin_px", 16)
+                .putInt("custom_columns", 6)
+                .putString("tile_scale", "standard")
+                .putInt("dock_corner_radius", 14)
+                .putInt("wallpaper_dimming_percent", 0)
+                .apply();
+
+        if (adapter != null) {
+            adapter.setDockSize(6);
+            adapter.notifyDataSetChanged();
         }
+        if (glass != null) {
+            glass.setRadius(14 * density * (adapter != null ? adapter.focusScale() : 1.15f));
+            glassCardW = -1;
+        }
+        View scrim = findViewById(R.id.wallpaperDimmingScrim);
+        if (scrim != null) scrim.setAlpha(0f);
         recalculateBottomDock();
     }
 
@@ -877,11 +912,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
 
         int tileH = AppAdapter.tileHeightPx(tileW);
-        int dockRow = tileH + Math.round((8 + 1) * density);
+        int dockRow = tileH + (2 * customMarginPx);
         int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
         int shelfClearance = cfg.appLibrary && hero != null ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-        int bottomRoom = Math.round(customBottomRoomDp * density);
-        int want = Math.max(shelfClearance, h - dockRow - gridRows - bottomRoom);
+        int want = Math.max(shelfClearance, h - dockRow - gridRows);
         if (this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
         if (!this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
 
@@ -1032,6 +1066,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (openInputsIfAsked(intent)) return;
         if (intent != null && intent.hasExtra("set_corner_radius")) {
             setCustomCornerRadiusDp(intent.getIntExtra("set_corner_radius", 14));
+        }
+        if (intent != null && intent.hasExtra("set_margin_px")) {
+            setCustomMarginPx(intent.getIntExtra("set_margin_px", 16));
         }
         if (intent != null && "com.gathin.tvhome.action.CONTROL_CENTER".equals(intent.getAction())) {
             showControlCenter();
@@ -1788,7 +1825,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float w = card.getWidth() * scale + 2 * pad;
         float h = card.getHeight() * scale + 2 * pad;
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (8f * density);
+        float y = r.exactCenterY() - h / 2f;
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
         if (lp.width != (int) w || lp.height != (int) h || card.getWidth() != glassCardW) {
@@ -1885,7 +1922,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (8f * density);
+        float y = r.exactCenterY() - h / 2f;
         if (!glassShown || Math.abs(glass.getTranslationX() - x) > 1f || Math.abs(glass.getTranslationY() - y) > 1f
                 || glass.getWidth() != w || glass.getHeight() != h) {
             springX.cancel();

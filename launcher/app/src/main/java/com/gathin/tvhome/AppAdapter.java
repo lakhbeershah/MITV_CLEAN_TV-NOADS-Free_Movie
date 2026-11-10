@@ -515,6 +515,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
+        int marginPx = ctx instanceof MainActivity ? ((MainActivity) ctx).getCustomMarginPx() :
+                ctx.getSharedPreferences("home_custom_prefs", Context.MODE_PRIVATE).getInt("dock_margin_px", 16);
+        int padH = Math.round(4f * density);
+        h.itemView.setPadding(padH, marginPx, padH, marginPx);
+
         // Keep card background attached so rounded corners and clipToOutline render consistently on all TV chipsets
         h.card.setBackground(h.cardBackground);
         if (e.banner != null) {
