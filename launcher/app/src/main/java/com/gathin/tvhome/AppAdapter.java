@@ -190,7 +190,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final boolean fillDock;
     /** Dock apps found at the last reload, and the empty slots after them. */
     private int docked, emptySlots;
-    /** Never shown as tiles (res/values/config.xml, hidden_apps). */
+    /** Base hidden apps from config.xml */
+    private final Set<String> baseHidden;
+    /** Never shown as tiles (res/values/config.xml, hidden_apps + user_hidden_apps). */
     private final Set<String> hidden;
     /** Apps pre-seeded into the App library's "added" set (config.xml library_apps); empty by default. */
     private final Set<String> libraryPreload;
@@ -241,7 +243,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.dockSize = dockSize;
         this.favourites = cfg.dockApps;
         this.fillDock = cfg.fillDock;
-        this.hidden = new HashSet<>(cfg.hiddenApps);
+        this.baseHidden = new HashSet<>(cfg.hiddenApps);
+        this.hidden = new HashSet<>(baseHidden);
         this.libraryPreload = new HashSet<>(cfg.libraryApps);
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
@@ -273,6 +276,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      * so focus follows it); hidden_apps wins over a card, and a card's package in dock_apps takes that slot.
      */
     void reload(List<Cards.Card> cards, List<ResolveInfo> leanback) {
+        hidden.clear();
+        hidden.addAll(baseHidden);
         Set<String> userHidden = HiddenAppsManager.getHiddenApps(ctx);
         if (userHidden != null && !userHidden.isEmpty()) {
             hidden.addAll(userHidden);

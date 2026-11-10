@@ -5,15 +5,17 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/cc_card_bg"
-    android:focusable="true"
-    android:clickable="true"
+    android:duplicateParentState="true"
+    android:focusable="false"
+    android:clickable="false"
     android:padding="8dp">
 
     <ImageView
         android:id="@+id/hiddenAppIcon"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:duplicateParentState="true" />
 
     <TextView
         android:id="@+id/hiddenAppName"
@@ -24,6 +26,7 @@
         android:ellipsize="end"
         android:textColor="#FFFFFFFF"
         android:textSize="11sp"
-        android:layout_marginTop="6dp" />
+        android:layout_marginTop="6dp"
+        android:duplicateParentState="true" />
 
 </LinearLayout>

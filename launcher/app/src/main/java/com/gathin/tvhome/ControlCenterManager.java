@@ -55,6 +55,8 @@ public class ControlCenterManager {
     private final View anchor;
     private final float density;
 
+    private static ControlCenterManager activeInstance;
+
     private PopupWindow popup;
     private View panel;
 
@@ -102,6 +104,7 @@ public class ControlCenterManager {
     }
 
     public void show() {
+        activeInstance = this;
         LayoutInflater inflater = LayoutInflater.from(activity);
         panel = inflater.inflate(R.layout.control_center_panel, null);
 
@@ -118,6 +121,7 @@ public class ControlCenterManager {
         updateMarginDisplay();
 
         popup.setOnDismissListener(() -> {
+            if (activeInstance == this) activeInstance = null;
             // If user closed dialog without saving margin, revert back to saved value
             if (currentMarginDp != initialMarginDp) {
                 activity.setCustomBottomRoomDp(initialMarginDp, false);
@@ -614,8 +618,23 @@ public class ControlCenterManager {
         String savedUrl = syncPrefs.getString(GooglePhotosSyncEngine.KEY_ALBUM_URL, GooglePhotosSyncEngine.DEFAULT_ALBUM_URL);
         txtAlbumLink.setText(savedUrl);
 
-        // Edit Album Link on click
+        // Edit Album Link triggers
         txtAlbumLink.setOnClickListener(v -> showEditLinkDialog());
+
+        View btnEditLink = root.findViewById(R.id.ccBtnEditAlbumLink);
+        if (btnEditLink != null) {
+            btnEditLink.setOnClickListener(v -> showEditLinkDialog());
+        }
+
+        View btnEditLink2 = root.findViewById(R.id.ccBtnEditAlbumLink2);
+        if (btnEditLink2 != null) {
+            btnEditLink2.setOnClickListener(v -> showEditLinkDialog());
+        }
+
+        View btnQrPaste = root.findViewById(R.id.ccBtnQrPasteLink);
+        if (btnQrPaste != null) {
+            btnQrPaste.setOnClickListener(v -> showQrPhotoLinkDialog());
+        }
 
         // Multi-Album selection (Part 2, 21)
         updateActiveAlbumDisplay();
@@ -830,24 +849,54 @@ public class ControlCenterManager {
         return count;
     }
 
+    public static void notifyAlbumLinkUpdated(String url) {
+        if (activeInstance != null && activeInstance.txtAlbumLink != null) {
+            activeInstance.activity.runOnUiThread(() -> activeInstance.txtAlbumLink.setText(url));
+        }
+    }
+
     private void showEditLinkDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert);
-        builder.setTitle("Google Photos Album Link");
+        builder.setTitle("✏️ Google Photos Album Link");
         final EditText input = new EditText(activity);
-        input.setText(txtAlbumLink.getText());
-        input.setSelection(input.getText().length());
+        input.setText(txtAlbumLink != null ? txtAlbumLink.getText() : "");
+        if (input.getText() != null) input.setSelection(input.getText().length());
+        input.setTextColor(Color.WHITE);
+        input.setHint("https://photos.app.goo.gl/...");
+        input.setHintTextColor(Color.GRAY);
+        input.setSingleLine(true);
+        input.setPadding((int)(16 * density), (int)(14 * density), (int)(16 * density), (int)(14 * density));
         builder.setView(input);
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        builder.setPositiveButton("Save Link", (dialog, which) -> {
             String newUrl = input.getText().toString().trim();
             if (!newUrl.isEmpty()) {
-                txtAlbumLink.setText(newUrl);
+                if (txtAlbumLink != null) txtAlbumLink.setText(newUrl);
                 syncPrefs.edit().putString(GooglePhotosSyncEngine.KEY_ALBUM_URL, newUrl).apply();
                 Toast.makeText(activity, "Album link updated. Click 'Sync Photos Now' to download.", Toast.LENGTH_LONG).show();
             }
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+    }
+
+    private void showQrPhotoLinkDialog() {
+        if (!WebRemoteServer.isRunning()) {
+            WebRemoteServer.startServer(activity);
+            updateWebRemoteButton();
+        }
+        String ip = getDeviceIp();
+        String url = "http://" + ip + ":" + WebRemoteServer.PORT + "/photo-link";
+        try {
+            QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
+            Bitmap bmp = qr.toBitmap(8, 2);
+            showQrDialog("📲 Paste Photos Link from Phone",
+                    "Scan with phone camera to paste your Google Photos link directly into TV:\n" + url + "\n\n⚠️ Ensure phone is on the same Wi-Fi router", bmp);
+        } catch (Exception e) {
+            Toast.makeText(activity, "Web server running at: " + url, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void triggerSync() {

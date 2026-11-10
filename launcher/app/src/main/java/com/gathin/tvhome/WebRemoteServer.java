@@ -1,7 +1,10 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -9,6 +12,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -110,6 +114,51 @@ public class WebRemoteServer {
             "</body>\n" +
             "</html>\n";
 
+    private static final String PHOTO_LINK_PAGE = "<!DOCTYPE html>\n" +
+            "<html>\n" +
+            "<head>\n" +
+            "<meta charset=\"utf-8\">\n" +
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n" +
+            "<meta name=\"theme-color\" content=\"#0E1116\">\n" +
+            "<title>Send Google Photos Link</title>\n" +
+            "<style>\n" +
+            "* { box-sizing: border-box; margin: 0; padding: 0; }\n" +
+            "body { background: #0E1116; color: #FFF; font-family: -apple-system, sans-serif; text-align: center; padding: 32px 16px; }\n" +
+            ".box { max-width: 380px; margin: 0 auto; background: #1B2028; border: 1px solid #2B3340; border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }\n" +
+            "h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #FFF; }\n" +
+            "p { font-size: 13px; color: #8A96AC; line-height: 1.5; margin-bottom: 20px; }\n" +
+            "input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #2B3340; background: #0E1116; color: #FFF; font-size: 14px; margin-bottom: 16px; outline: none; }\n" +
+            "input:focus { border-color: #00E676; }\n" +
+            "button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #00E676; color: #000; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; }\n" +
+            "button:active { transform: scale(0.97); }\n" +
+            ".back { display: inline-block; margin-top: 20px; font-size: 14px; color: #80D8FF; text-decoration: none; }\n" +
+            ".success { display: none; margin-top: 16px; color: #00E676; font-size: 15px; font-weight: 700; }\n" +
+            "</style>\n" +
+            "</head>\n" +
+            "<body>\n" +
+            "<div class=\"box\">\n" +
+            "  <h2>📺 Send Google Photos Link</h2>\n" +
+            "  <p>Paste your shared album link from Google Photos below and click send:</p>\n" +
+            "  <input id=\"url\" type=\"url\" placeholder=\"https://photos.app.goo.gl/...\" autocomplete=\"off\">\n" +
+            "  <button onclick=\"send()\">Send to TV 🚀</button>\n" +
+            "  <div id=\"done\" class=\"success\">✓ Link updated on TV!</div>\n" +
+            "</div>\n" +
+            "<a href=\"/\" class=\"back\">← Open TV Web Remote</a>\n" +
+            "<script>\n" +
+            "function send() {\n" +
+            "  var u = document.getElementById('url').value.trim();\n" +
+            "  if (!u) return alert('Please paste an album link');\n" +
+            "  fetch('/set-photo-link?url=' + encodeURIComponent(u))\n" +
+            "    .then(r => r.text())\n" +
+            "    .then(() => {\n" +
+            "      document.getElementById('done').style.display = 'block';\n" +
+            "    })\n" +
+            "    .catch(e => alert('Error sending to TV: ' + e));\n" +
+            "}\n" +
+            "</script>\n" +
+            "</body>\n" +
+            "</html>\n";
+
     public static synchronized boolean isRunning() {
         return isRunning;
     }
@@ -191,6 +240,35 @@ public class WebRemoteServer {
                     os.write(resp.getBytes(StandardCharsets.UTF_8));
                 } else if (requestLine.startsWith("GET /favicon.ico")) {
                     String resp = "HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n";
+                    os.write(resp.getBytes(StandardCharsets.UTF_8));
+                } else if (requestLine.startsWith("GET /photo-link")) {
+                    byte[] bytes = PHOTO_LINK_PAGE.getBytes(StandardCharsets.UTF_8);
+                    String header = "HTTP/1.1 200 OK\r\n" +
+                            corsHeaders +
+                            "Content-Type: text/html; charset=UTF-8\r\n" +
+                            "Content-Length: " + bytes.length + "\r\n" +
+                            "Connection: close\r\n\r\n";
+                    os.write(header.getBytes(StandardCharsets.UTF_8));
+                    os.write(bytes);
+                } else if (requestLine.startsWith("GET /set-photo-link")) {
+                    int idx = requestLine.indexOf("url=");
+                    if (idx != -1) {
+                        int end = requestLine.indexOf(" ", idx);
+                        if (end == -1) end = requestLine.length();
+                        String raw = requestLine.substring(idx + 4, end);
+                        try {
+                            String decoded = URLDecoder.decode(raw, "UTF-8");
+                            if (activity != null) {
+                                activity.runOnUiThread(() -> {
+                                    SharedPreferences sp = activity.getSharedPreferences(GooglePhotosSyncEngine.PREFS_NAME, Context.MODE_PRIVATE);
+                                    sp.edit().putString(GooglePhotosSyncEngine.KEY_ALBUM_URL, decoded).apply();
+                                    ControlCenterManager.notifyAlbumLinkUpdated(decoded);
+                                    Toast.makeText(activity, "Google Photos link updated from phone!", Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    String resp = "HTTP/1.1 200 OK\r\n" + corsHeaders + "Content-Type: text/plain\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK";
                     os.write(resp.getBytes(StandardCharsets.UTF_8));
                 } else {
                     // Serve HTML page

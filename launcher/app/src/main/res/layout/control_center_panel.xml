@@ -613,28 +613,90 @@
                 android:visibility="gone">
 
                 <!-- Dynamic Album Link -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="GOOGLE PHOTOS ALBUM LINK"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="4dp">
 
-                <EditText
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:text="GOOGLE PHOTOS ALBUM LINK"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="11sp"
+                        android:fontFamily="@string/font_medium"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/ccBtnEditAlbumLink"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_alignParentEnd="true"
+                        android:background="@drawable/cc_pill_bg"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:gravity="center"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:text="✏️ Edit Link"
+                        android:textColor="#FF00E676"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+
+                <TextView
                     android:id="@+id/ccTxtAlbumLink"
                     android:layout_width="match_parent"
                     android:layout_height="42dp"
                     android:background="@drawable/cc_card_bg"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
+                    android:gravity="center_vertical"
                     android:singleLine="true"
                     android:ellipsize="middle"
                     android:textColor="#80D8FF"
                     android:textSize="12sp"
-                    android:layout_marginBottom="10dp" />
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Action buttons for album link -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnEditAlbumLink2"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:gravity="center"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:text="✏️ Edit Link"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnQrPasteLink"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_card_bg"
+                        android:gravity="center"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:text="📲 Phone QR Paste"
+                        android:textColor="#80D8FF"
+                        android:textSize="12sp"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
 
                 <!-- Multi-Album Selection Row -->
                 <TextView
