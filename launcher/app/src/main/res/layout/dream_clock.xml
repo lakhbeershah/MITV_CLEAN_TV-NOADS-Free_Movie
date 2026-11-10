@@ -12,9 +12,11 @@
 
     <!-- Cinema scrim: darkens photo layer so the clock is always crystal clear -->
     <View
+        android:id="@+id/dreamDimmingScrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#66000000" />
+        android:background="#FF000000"
+        android:alpha="0.35" />
 
     <View
         android:id="@+id/dreamAmbient"

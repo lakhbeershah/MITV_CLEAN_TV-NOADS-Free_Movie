@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.service.dreams.DreamService;
+import android.view.View;
 
 /**
  * Screensaver: full-screen ambient photo reel from tv_screensaver with clock and seconds.
@@ -21,6 +22,12 @@ public class ClockDream extends DreamService {
             photoSlider.setClickable(false);
             photoSlider.setFocusable(false);
             photoSlider.setOnClickListener(null);
+        }
+        View scrim = findViewById(R.id.dreamDimmingScrim);
+        if (scrim != null) {
+            int dimPercent = getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                    .getInt("screensaver_dim_percent", 35);
+            scrim.setAlpha(dimPercent / 100f);
         }
     }
 

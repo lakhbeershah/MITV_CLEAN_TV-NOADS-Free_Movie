@@ -842,6 +842,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
                     .build(), vpnCallback);
         }
+        applyCustomHomePrefs();
         // Not after recreate(): the launch intent survives it and would open the settings again.
         if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent())) openInputsIfAsked(getIntent());
     }
@@ -982,6 +983,33 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getInt("wallpaper_dimming_percent", 0);
     }
 
+    public void applyCustomHomePrefs() {
+        SharedPreferences sp = getSharedPreferences("home_custom_prefs", MODE_PRIVATE);
+        Config cfg = Config.load(this);
+        int cols = sp.getInt("custom_columns", cfg.columns);
+        if (cols >= 3 && cols <= 8) {
+            this.COLUMNS = cols;
+        }
+        this.customMarginPx = Math.max(0, sp.getInt("dock_margin_px", Math.round(11 * density)));
+        int radiusDp = sp.getInt("dock_corner_radius", 14);
+        if (glass != null) {
+            float customRadius = radiusDp * density;
+            float scale = adapter != null ? adapter.focusScale() : 1.15f;
+            glass.setRadius(customRadius * scale);
+            glassCardW = -1;
+        }
+        int dimPercent = sp.getInt("wallpaper_dimming_percent", 0);
+        View scrim = findViewById(R.id.wallpaperDimmingScrim);
+        if (scrim != null) {
+            scrim.setAlpha(dimPercent / 100f);
+        }
+        if (adapter != null) {
+            adapter.setDockSize(COLUMNS);
+            adapter.notifyDataSetChanged();
+        }
+        recalculateBottomDock();
+    }
+
     public void refreshApps() {
         reloadApps(false);
     }
@@ -1068,6 +1096,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             showHomeStudio();
             return;
         }
+        if (intent != null && "com.gathin.tvhome.action.SCREENSAVER_STUDIO".equals(intent.getAction())) {
+            showScreensaverStudio();
+            return;
+        }
         if (intent != null && "com.gathin.tvhome.action.CONTROL_CENTER".equals(intent.getAction())) {
             showControlCenter();
             return;
@@ -1117,6 +1149,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         restartIdleClock();
         promptsPaused = false;
+        applyCustomHomePrefs();
         if (grid.getAdapter() == null) grid.setAdapter(adapter);   // dropped by onTrimMemory
         switch (tileRefresh.onResume(packagesChangedSinceRebuild())) {
             case REBUILD:
@@ -2339,6 +2372,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return line.toString();
     }
 
+    String readDetailedStatsLine() {
+        StringBuilder line = new StringBuilder();
+        long[] mem = memUsedOfTotalMb();
+        if (mem != null) {
+            long used = mem[0];
+            long total = mem[1];
+            int pct = total > 0 ? (int) (used * 100 / total) : 0;
+            line.append("RAM ").append(pct).append("%");
+            if (total > 0) {
+                float usedGb = used / 1024.0f;
+                float totalGb = total / 1024.0f;
+                line.append(String.format(Locale.ROOT, " (%.1f/%.1fGB)", usedGb, totalGb));
+            }
+        }
+        String free = formatGb(getResources(), Environment.getDataDirectory().getFreeSpace());
+        if (!free.isEmpty()) {
+            if (line.length() > 0) line.append(" • ");
+            line.append(free).append(" Free");
+        }
+        return line.toString();
+    }
+
     // -1: need another sample. -2: this source cannot be read (Android 9 hides /proc/stat from apps).
     private static final int CPU_UNREADABLE = -2;
     private long cpuTotalPrev = -1, cpuIdlePrev = -1;
@@ -2422,7 +2477,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** RAM usage as {used, total} in MB, used = MemTotal - MemAvailable, e.g. "945 / 1536 MB". Used over
      *  free so the line reads as a load against a known whole; null when /proc/meminfo cannot be read. */
-    private long[] memUsedOfTotalMb() {
+    long[] memUsedOfTotalMb() {
         long available = -1, total = -1;
         try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader("/proc/meminfo"))) {
             String line;
@@ -3318,6 +3373,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         ccm.show();
         openPopup = ccm.getPopup();
         ccm.openHomeStudio();
+    }
+
+    void showScreensaverStudio() {
+        if (ControlCenterManager.getActiveInstance() != null && ControlCenterManager.getActiveInstance().isOpen()) {
+            ControlCenterManager.getActiveInstance().openScreensaverStudio();
+            return;
+        }
+        View anchor = findViewById(R.id.btnProfile);
+        if (anchor == null) anchor = findViewById(R.id.topButtons);
+        ControlCenterManager ccm = new ControlCenterManager(this, anchor);
+        ccm.show();
+        openPopup = ccm.getPopup();
+        ccm.openScreensaverStudio();
     }
 
     /** Control Center menu opened by clicking the single top-left icon. */

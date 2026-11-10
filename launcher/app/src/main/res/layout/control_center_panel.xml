@@ -21,26 +21,31 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ccTxtRamRom"
+            android:layout_marginEnd="8dp"
+            android:singleLine="true"
+            android:ellipsize="end"
             android:fontFamily="@string/font_medium"
             android:text="CONTROL CENTER"
             android:textColor="#FFFFFFFF"
-            android:textSize="17sp"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            android:letterSpacing="0.04" />
 
         <TextView
-            android:id="@+id/ccBtnClose"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
+            android:id="@+id/ccTxtRamRom"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="@drawable/cc_pill_bg"
-            android:clickable="true"
-            android:focusable="true"
             android:gravity="center"
-            android:text="✕"
-            android:textColor="#D9FFFFFF"
-            android:textSize="15sp" />
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="RAM 58% • 2.4 GB Free"
+            android:textColor="#FF00E676"
+            android:textSize="10.5sp"
+            android:fontFamily="@string/font_medium" />
     </RelativeLayout>
 
     <ScrollView
@@ -118,21 +123,7 @@
                         android:ellipsize="end" />
                 </LinearLayout>
 
-                <!-- Row 2: RAM & ROM -->
-                <TextView
-                    android:id="@+id/ccBtnRamRom"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="@drawable/cc_card_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:text="💾 RAM: 58% • ROM: 2.4 GB Free"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="6dp" />
+
 
                 <!-- Row 3: Inputs & System Settings -->
                 <LinearLayout
@@ -614,38 +605,15 @@
                 android:visibility="gone">
 
                 <!-- Dynamic Album Link -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:text="GOOGLE PHOTOS ALBUM LINK"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="11sp"
-                        android:fontFamily="@string/font_medium"
-                        android:letterSpacing="0.08" />
-
-                    <TextView
-                        android:id="@+id/ccBtnEditAlbumLink"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/cc_pill_bg"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:gravity="center"
-                        android:focusable="true"
-                        android:clickable="true"
-                        android:text="✏️ Edit Link"
-                        android:textColor="#FF00E676"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
+                    android:text="GOOGLE PHOTOS ALBUM LINK"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/ccTxtAlbumLink"
@@ -659,8 +627,8 @@
                     android:ellipsize="middle"
                     android:textColor="#80D8FF"
                     android:textSize="12sp"
-                    android:focusable="true"
-                    android:clickable="true"
+                    android:focusable="false"
+                    android:clickable="false"
                     android:layout_marginBottom="8dp" />
 
                 <!-- Action buttons for album link -->
@@ -697,52 +665,6 @@
                         android:textColor="#80D8FF"
                         android:textSize="12sp"
                         android:layout_marginStart="6dp" />
-                </LinearLayout>
-
-                <!-- Multi-Album Selection Row -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ACTIVE ALBUM / FOLDER"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:id="@+id/ccBtnAlbumAll"
-                        android:layout_width="0dp"
-                        android:layout_height="34dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="🌟 All (Combined)"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnAddAlbum"
-                        android:layout_width="wrap_content"
-                        android:layout_height="34dp"
-                        android:layout_marginStart="4dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="➕ Add Folder"
-                        android:textColor="#80D8FF"
-                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <!-- Download Quality Selector -->
@@ -825,19 +747,78 @@
                     android:visibility="gone"
                     android:layout_marginBottom="10dp" />
 
-                <!-- Ken Burns Motion Toggle -->
+                <!-- Screensaver Wallpaper Dimming -->
                 <TextView
-                    android:id="@+id/ccBtnKenBurnsToggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SCREENSAVER PHOTO DIMMING"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="@drawable/cc_card_bg"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:text="🎬 Ken Burns Cinematic Motion: OFF"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnSsDim0"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="0%"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSsDim25"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="25%"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSsDim50"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="50%"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSsDim75"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="75%"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
 
                 <!-- Auto-Sync Frequency -->
                 <TextView

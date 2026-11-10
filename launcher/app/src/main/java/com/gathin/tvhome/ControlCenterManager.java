@@ -115,8 +115,7 @@ public class ControlCenterManager {
     private ProgressBar syncProgress;
     private TextView[] autoSyncBtns;
     private TextView[] timeoutBtns;
-    private TextView btnKenBurnsToggle;
-    private TextView btnAlbumAll;
+    private TextView btnSsDim0, btnSsDim25, btnSsDim50, btnSsDim75;
 
     // Convenience & System Toggles
     private TextView btnWebRemote;
@@ -173,11 +172,7 @@ public class ControlCenterManager {
         viewScreensaver = root.findViewById(R.id.ccViewScreensaver);
         viewMargin = root.findViewById(R.id.ccViewMargin);
 
-        // Close button
-        View btnClose = root.findViewById(R.id.ccBtnClose);
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dismiss());
-        }
+
 
         setupQuickStatus(root);
         setupConvenienceAndToggles(root);
@@ -223,7 +218,7 @@ public class ControlCenterManager {
     private void setupQuickStatus(View root) {
         TextView btnWifi = root.findViewById(R.id.ccBtnWifi);
         TextView btnRemote = root.findViewById(R.id.ccBtnRemote);
-        TextView btnRamRom = root.findViewById(R.id.ccBtnRamRom);
+        TextView txtRamRom = root.findViewById(R.id.ccTxtRamRom);
         TextView btnInputs = root.findViewById(R.id.ccBtnInputs);
         TextView btnSettings = root.findViewById(R.id.ccBtnSettings);
 
@@ -320,11 +315,13 @@ public class ControlCenterManager {
             }
         });
 
-        // RAM & ROM Monitor
-        String stats = activity.readStatsLine();
-        if (TextUtils.isEmpty(stats)) stats = "RAM 58% • ROM 2.4 GB Free";
-        btnRamRom.setText("💾 " + stats);
-        btnRamRom.setOnClickListener(v -> Toast.makeText(activity, activity.readStatsLine(), Toast.LENGTH_SHORT).show());
+        // RAM & ROM Monitor in Header
+        if (txtRamRom != null) {
+            String stats = activity.readDetailedStatsLine();
+            if (TextUtils.isEmpty(stats)) stats = "RAM 58% • ROM 2.4 GB Free";
+            txtRamRom.setText(stats);
+            txtRamRom.setOnClickListener(v -> Toast.makeText(activity, activity.readDetailedStatsLine(), Toast.LENGTH_SHORT).show());
+        }
 
         // TV / HDMI Inputs
         btnInputs.setOnClickListener(v -> {
@@ -639,6 +636,11 @@ public class ControlCenterManager {
         });
     }
 
+    public void openScreensaverStudio() {
+        updateScreensaverFolderStats();
+        switchToView(viewScreensaver, "SCREENSAVER & SYNC");
+    }
+
     public void openHomeStudio() {
         if (viewMargin != null) {
             switchToView(viewMargin, "HOME APPS & STUDIO");
@@ -670,8 +672,6 @@ public class ControlCenterManager {
             } else if (target == viewScreensaver) {
                 if (sv != null) sv.scrollTo(0, 0);
                 View editLink = panel.findViewById(R.id.ccBtnEditAlbumLink2);
-                if (editLink == null) editLink = panel.findViewById(R.id.ccBtnEditAlbumLink);
-                if (editLink == null) editLink = panel.findViewById(R.id.ccTxtAlbumLink);
                 if (editLink != null) {
                     editLink.requestFocus();
                 } else if (btnSyncNow != null) {
@@ -695,20 +695,9 @@ public class ControlCenterManager {
         btnSyncNow = root.findViewById(R.id.ccBtnSyncNow);
         txtSyncStatus = root.findViewById(R.id.ccTxtSyncStatus);
         syncProgress = root.findViewById(R.id.ccSyncProgress);
-        btnKenBurnsToggle = root.findViewById(R.id.ccBtnKenBurnsToggle);
-        btnAlbumAll = root.findViewById(R.id.ccBtnAlbumAll);
-        View btnAddAlbum = root.findViewById(R.id.ccBtnAddAlbum);
 
         String savedUrl = syncPrefs.getString(GooglePhotosSyncEngine.KEY_ALBUM_URL, GooglePhotosSyncEngine.DEFAULT_ALBUM_URL);
         txtAlbumLink.setText(savedUrl);
-
-        // Edit Album Link triggers
-        txtAlbumLink.setOnClickListener(v -> showEditLinkDialog());
-
-        View btnEditLink = root.findViewById(R.id.ccBtnEditAlbumLink);
-        if (btnEditLink != null) {
-            btnEditLink.setOnClickListener(v -> showEditLinkDialog());
-        }
 
         View btnEditLink2 = root.findViewById(R.id.ccBtnEditAlbumLink2);
         if (btnEditLink2 != null) {
@@ -720,17 +709,11 @@ public class ControlCenterManager {
             btnQrPaste.setOnClickListener(v -> showQrPhotoLinkDialog());
         }
 
-        // Multi-Album selection (Part 2, 21)
-        updateActiveAlbumDisplay();
-        if (btnAlbumAll != null) {
-            btnAlbumAll.setOnClickListener(v -> showAlbumSelectorDialog());
-        }
-        if (btnAddAlbum != null) {
-            btnAddAlbum.setOnClickListener(v -> showCreateAlbumFolderDialog());
-        }
-
-        // Quality selection
-        String currentQuality = syncPrefs.getString(GooglePhotosSyncEngine.KEY_QUALITY, "720p");
+        // Quality selection (auto system-specific default)
+        String sysRes = GooglePhotosSyncEngine.getSystemDisplayResolution(activity);
+        String currentQuality = syncPrefs.getString(GooglePhotosSyncEngine.KEY_QUALITY, sysRes);
+        btnQuality720.setText("720p HD" + ("720p".equals(sysRes) ? " (Display)" : ""));
+        btnQuality1080.setText("1080p FHD" + ("1080p".equals(sysRes) ? " (Display)" : ""));
         btnQuality720.setSelected("720p".equals(currentQuality));
         btnQuality1080.setSelected("1080p".equals(currentQuality));
 
@@ -751,20 +734,18 @@ public class ControlCenterManager {
         // Sync Now button
         btnSyncNow.setOnClickListener(v -> triggerSync());
 
-        // Ken Burns Cinematic Motion Toggle (Part 2, 1)
-        if (btnKenBurnsToggle != null) {
-            boolean kbOn = ssPrefs.getBoolean("ken_burns_enabled", false);
-            btnKenBurnsToggle.setText(kbOn ? "🎬 Ken Burns Motion: ON" : "🎬 Ken Burns Cinematic Motion: OFF");
-            btnKenBurnsToggle.setSelected(kbOn);
-            btnKenBurnsToggle.setOnClickListener(v -> {
-                boolean cur = ssPrefs.getBoolean("ken_burns_enabled", false);
-                boolean nxt = !cur;
-                ssPrefs.edit().putBoolean("ken_burns_enabled", nxt).apply();
-                btnKenBurnsToggle.setText(nxt ? "🎬 Ken Burns Motion: ON" : "🎬 Ken Burns Cinematic Motion: OFF");
-                btnKenBurnsToggle.setSelected(nxt);
-                Toast.makeText(activity, nxt ? "🎬 Ken Burns Motion ON" : "🎬 Ken Burns Motion OFF (Static)", Toast.LENGTH_SHORT).show();
-            });
-        }
+        // Screensaver Photo Dimming
+        btnSsDim0 = root.findViewById(R.id.ccBtnSsDim0);
+        btnSsDim25 = root.findViewById(R.id.ccBtnSsDim25);
+        btnSsDim50 = root.findViewById(R.id.ccBtnSsDim50);
+        btnSsDim75 = root.findViewById(R.id.ccBtnSsDim75);
+        int currentSsDim = customPrefs.getInt("screensaver_dim_percent", 35);
+        updateSsDimSelection(currentSsDim);
+
+        if (btnSsDim0 != null) btnSsDim0.setOnClickListener(v -> setScreensaverDimming(0));
+        if (btnSsDim25 != null) btnSsDim25.setOnClickListener(v -> setScreensaverDimming(25));
+        if (btnSsDim50 != null) btnSsDim50.setOnClickListener(v -> setScreensaverDimming(50));
+        if (btnSsDim75 != null) btnSsDim75.setOnClickListener(v -> setScreensaverDimming(75));
 
         // Auto-Sync Schedule
         autoSyncBtns = new TextView[]{
@@ -830,91 +811,29 @@ public class ControlCenterManager {
         updateScreensaverFolderStats();
     }
 
-    private void updateActiveAlbumDisplay() {
-        if (btnAlbumAll == null) return;
-        String sel = ssPrefs.getString("selected_album", "all");
-        if ("all".equalsIgnoreCase(sel)) {
-            btnAlbumAll.setText("🌟 All Folders (Combined)");
-            btnAlbumAll.setSelected(true);
-        } else {
-            btnAlbumAll.setText("📁 " + sel);
-            btnAlbumAll.setSelected(false);
-        }
+    private void setScreensaverDimming(int percent) {
+        customPrefs.edit().putInt("screensaver_dim_percent", percent).apply();
+        updateSsDimSelection(percent);
+        Toast.makeText(activity, "Screensaver Dimming: " + percent + "%", Toast.LENGTH_SHORT).show();
     }
 
-    private void showAlbumSelectorDialog() {
-        File baseDir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
-        List<String> albums = new ArrayList<>();
-        albums.add("🌟 All Folders (Combined)");
-
-        if (baseDir.exists() && baseDir.isDirectory()) {
-            File[] files = baseDir.listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    if (f.isDirectory() && !f.getName().startsWith(".")) {
-                        albums.add(f.getName());
-                    }
-                }
-            }
-        }
-
-        String[] items = albums.toArray(new String[0]);
-        new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Select Active Album / Playlist")
-                .setItems(items, (dialog, which) -> {
-                    String chosen = which == 0 ? "all" : items[which];
-                    ssPrefs.edit().putString("selected_album", chosen).apply();
-                    PhotoSlider.resetPlaylist(activity);
-                    updateActiveAlbumDisplay();
-                    updateScreensaverFolderStats();
-                    Toast.makeText(activity, "Active: " + items[which], Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void showCreateAlbumFolderDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert);
-        builder.setTitle("Create Album Subfolder");
-        final EditText input = new EditText(activity);
-        input.setHint("e.g. Travel, Family, Landscapes");
-        builder.setView(input);
-
-        builder.setPositiveButton("Create", (dialog, which) -> {
-            String folderName = input.getText().toString().trim().replaceAll("[^a-zA-Z0-9_\\- ]", "");
-            if (!folderName.isEmpty()) {
-                File sub = new File(new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2"), folderName);
-                if (!sub.exists()) sub.mkdirs();
-                ssPrefs.edit().putString("selected_album", folderName).apply();
-                PhotoSlider.resetPlaylist(activity);
-                updateActiveAlbumDisplay();
-                updateScreensaverFolderStats();
-
-                new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                        .setTitle("Folder Created: " + folderName)
-                        .setMessage("Do you want to download Google Photos directly into this album now?")
-                        .setPositiveButton("Sync Now", (d, w) -> triggerSyncForAlbum(folderName))
-                        .setNegativeButton("Later", null)
-                        .show();
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+    private void updateSsDimSelection(int percent) {
+        if (btnSsDim0 != null) btnSsDim0.setSelected(percent == 0);
+        if (btnSsDim25 != null) btnSsDim25.setSelected(percent == 25);
+        if (btnSsDim50 != null) btnSsDim50.setSelected(percent == 50);
+        if (btnSsDim75 != null) btnSsDim75.setSelected(percent == 75);
     }
 
     private void updateScreensaverFolderStats() {
-        File dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
-        String sel = ssPrefs.getString("selected_album", "all");
-        File targetDir = "all".equalsIgnoreCase(sel) ? dir : new File(dir, sel);
-
-        int count = countJpgs(targetDir, "all".equalsIgnoreCase(sel));
+        File dir = GooglePhotosSyncEngine.getScreensaverDir(activity);
+        if (dir == null) dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
+        int count = countJpgs(dir, false);
         if (txtSyncStatus != null) {
-            String folderName = "all".equalsIgnoreCase(sel) ? "tv_screensaver_2 (All)" : sel;
-            txtSyncStatus.setText(count + " photos in " + folderName + " • Zero repeats");
+            txtSyncStatus.setText(count + " photos in " + dir.getName() + " • Zero repeats");
         }
-        TextView mainSub = panel.findViewById(R.id.ccMainScreensaverSub);
+        TextView mainSub = panel != null ? panel.findViewById(R.id.ccMainScreensaverSub) : null;
         if (mainSub != null) {
-            mainSub.setText(count + " photos synced • Multi-Album • Zero repeats");
+            mainSub.setText(count + " photos synced • Zero repeats");
         }
     }
 
@@ -984,9 +903,7 @@ public class ControlCenterManager {
     }
 
     private void triggerSync() {
-        String sel = ssPrefs.getString("selected_album", "all");
-        String subfolder = "all".equalsIgnoreCase(sel) ? null : sel;
-        triggerSyncForAlbum(subfolder);
+        triggerSyncForAlbum(null);
     }
 
     private void triggerSyncForAlbum(String subfolder) {

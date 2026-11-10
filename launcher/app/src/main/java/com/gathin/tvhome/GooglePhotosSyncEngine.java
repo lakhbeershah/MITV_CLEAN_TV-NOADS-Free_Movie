@@ -69,6 +69,27 @@ public class GooglePhotosSyncEngine {
         public int origH;
     }
 
+    public static String getSystemDisplayResolution(Context context) {
+        if (context == null) return "720p";
+        try {
+            android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            int width = Math.max(dm.widthPixels, dm.heightPixels);
+            int height = Math.min(dm.widthPixels, dm.heightPixels);
+            if (width >= 1920 || height >= 1080) {
+                return "1080p";
+            } else if (width >= 1280 || height >= 720) {
+                return "720p";
+            }
+        } catch (Throwable ignored) {}
+        return "720p";
+    }
+
+    public static File getScreensaverDir(Context context) {
+        File dir = new File(Environment.getExternalStorageDirectory(), "tv_screensaver_2");
+        if (!dir.exists()) dir.mkdirs();
+        return dir;
+    }
+
     public static void startSync(Context context, String albumUrl, String quality, SyncListener listener) {
         startSync(context, albumUrl, quality, null, listener);
     }
@@ -143,7 +164,11 @@ public class GooglePhotosSyncEngine {
 
                 Log.d(TAG, "New photos to download: " + toDownload.size() + ", already present: " + (albumPhotos.size() - toDownload.size()));
 
-                String qualityParam = "1080p".equalsIgnoreCase(quality) ? "=w1920-h1080-no" : "=w1280-h720-no";
+                String targetQuality = quality;
+                if (targetQuality == null || "auto".equalsIgnoreCase(targetQuality) || targetQuality.trim().isEmpty()) {
+                    targetQuality = getSystemDisplayResolution(context);
+                }
+                String qualityParam = "1080p".equalsIgnoreCase(targetQuality) ? "=w1920-h1080-no" : "=w1280-h720-no";
                 int downloadedCount = 0;
                 int failedCount = 0;
 

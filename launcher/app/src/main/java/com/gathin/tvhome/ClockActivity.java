@@ -48,11 +48,22 @@ public class ClockActivity extends Activity {
             photoSlider.setOnClickListener(null);
         }
         dreamContent = findViewById(R.id.dreamContent);
+        applyDimming();
+    }
+
+    private void applyDimming() {
+        View scrim = findViewById(R.id.dreamDimmingScrim);
+        if (scrim != null) {
+            int dimPercent = getSharedPreferences("home_custom_prefs", MODE_PRIVATE)
+                    .getInt("screensaver_dim_percent", 35);
+            scrim.setAlpha(dimPercent / 100f);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        applyDimming();
         if (photoSlider != null) {
             photoSlider.reloadPhotos();
             photoSlider.startLoop();
