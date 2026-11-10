@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TvHome — Clean, Ad-Free TV Launcher & Google Photos Ambient Hub</title>
+  <meta name="description" content="The lightweight, zero-bloat, ad-free home launcher for Android TV, Google TV, Xiaomi Mi TV, and Fire TV. Featuring ambient Google Photos screensaver, 1-click RAM booster, and mobile web remote.">
+  <meta property="og:title" content="TvHome — Clean, Ad-Free TV Launcher">
+  <meta property="og:description" content="Zero Ads. 1-Click RAM Booster. Google Photos 4K Screensaver. No Laptop Required.">
+  <meta property="og:image" content="./social-preview.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="./banner.png">
+  <style>
+    :root {
+      --bg: #0A0D14;
+      --card-bg: #121722;
+      --card-border: #1E2638;
+      --card-hover: #192030;
+      --accent: #00E676;
+      --accent-glow: rgba(0, 230, 118, 0.25);
+      --accent-blue: #00B0FF;
+      --text: #F0F4FC;
+      --text-muted: #8A96AC;
+      --text-dim: #5C677D;
+      --danger: #FF5252;
+      --warning: #FFAB00;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 0;
+    }
+    .nav-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+    .logo-badge {
+      font-size: 11px;
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #fff;
+    }
+    .btn-nav {
+      background: var(--accent);
+      color: #0A0D14 !important;
+      font-weight: 700 !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-nav:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 176, 255, 0.1);
+      border: 1px solid rgba(0, 176, 255, 0.3);
+      color: var(--accent-blue);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 5.5vw, 64px);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #A2B1D0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 40px;
+    }
+
+    /* Downloads Grid (SmartTube Style) */
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+    .download-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s, border-color 0.25s;
+    }
+    .download-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0, 230, 118, 0.5);
+    }
+    .download-card.beta {
+      border-color: rgba(0, 176, 255, 0.3);
+    }
+    .download-card.beta:hover {
+      border-color: var(--accent-blue);
+    }
+    .badge-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .version-tag {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .tag-stable {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .tag-beta {
+      background: rgba(0, 176, 255, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+    }
+    .filesize {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .download-card h3 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .download-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      flex-grow: 1;
+    }
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-stable {
+      background: var(--accent);
+      color: #0A0D14;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .btn-stable:hover {
+      background: #00c853;
+      transform: scale(1.02);
+    }
+    .btn-beta {
+      background: #182234;
+      color: var(--accent-blue);
+      border: 1px solid rgba(0, 176, 255, 0.4);
+    }
+    .btn-beta:hover {
+      background: rgba(0, 176, 255, 0.15);
+      border-color: var(--accent-blue);
+      transform: scale(1.02);
+    }
+    .compat-line {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* Downloader Code Box (AFTVnews) */
+    .downloader-banner {
+      background: linear-gradient(135deg, rgba(25, 32, 48, 0.8), rgba(18, 23, 34, 0.95));
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      max-width: 900px;
+      margin: 0 auto 60px;
+      padding: 20px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      text-align: left;
+    }
+    .downloader-info h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .downloader-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .code-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #0A0D14;
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 10px;
+    }
+    .code-number {
+      font-family: monospace;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+    .btn-copy {
+      background: #1E2638;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-copy:hover {
+      background: #2B364F;
+    }
+
+    /* App Preview Mockup */
+    .preview-wrap {
+      max-width: 1000px;
+      margin: 0 auto 80px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0, 230, 118, 0.1);
+      border: 1px solid var(--card-border);
+    }
+    .preview-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Features Grid */
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .section-title h2 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 17px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #182030;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 18px;
+    }
+    .feature-card h3 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Before vs After Comparison */
+    .comparison-section {
+      background: #0E131C;
+      border-top: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--card-border);
+      padding: 80px 0;
+      margin-bottom: 80px;
+    }
+    .comp-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .comp-image {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .comp-image img {
+      width: 100%;
+      display: block;
+    }
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .comp-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .comp-check {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .comp-item strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+    .comp-item span {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Installation Tabs */
+    .install-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 36px;
+      max-width: 900px;
+      margin: 0 auto 80px;
+    }
+    .tab-nav {
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: #1C2436;
+      color: #fff;
+      border-bottom: 2px solid var(--accent);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .step-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 30px;
+      height: 30px;
+      background: #1E283D;
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step-text h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .step-text p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Social Community Hub */
+    .community-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      max-width: 950px;
+      margin: 0 auto 80px;
+    }
+    .community-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .community-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+    .community-icon {
+      font-size: 28px;
+    }
+    .community-info h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .community-info span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* FAQ Section */
+    .faq-wrap {
+      max-width: 800px;
+      margin: 0 auto 80px;
+    }
+    .faq-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 18px 22px;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .faq-answer {
+      padding: 0 22px 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+    .faq-icon {
+      transition: transform 0.2s;
+      font-size: 18px;
+      color: var(--text-dim);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    footer a:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .comp-wrap { grid-template-columns: 1fr; }
+      .hero { padding: 50px 0 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header>
+    <div class="container nav-wrap">
+      <a href="#" class="logo">
+        <span>📺 TvHome</span>
+        <span class="logo-badge">PROD</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#downloads">Downloads</a></li>
+        <li><a href="#install">Install Guide</a></li>
+        <li><a href="#community">Community</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#downloads" class="btn-nav">Get APK</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero container">
+    <div class="hero-pill">⚡ Standalone TV App • Zero Laptop or PC Required</div>
+    <h1>Your TV Deserves Zero Ads.<br>And Infinite Smoothness.</h1>
+    <p>TvHome is the ultimate open-source, ad-free replacement for sluggish OEM TV launchers. Enjoy a clutter-free single-row dock, 4K ambient Google Photos screensaver, 1-click RAM cleaner, and seamless phone touch control.</p>
+
+    <!-- Downloads Grid (SmartTube Style) -->
+    <div class="download-grid" id="downloads">
+      <!-- Stable Release Card -->
+      <div class="download-card">
+        <div>
+          <div class="badge-wrap">
+            <span class="version-tag tag-stable">Stable Release</span>
+            <span class="filesize">3.2 MB • APK</span>
+          </div>
+          <h3>TvHome Stable v2.4.0</h3>
+          <p>Recommended for daily family use. Guaranteed stability, zero black-screen risk, smooth single-row dock, Google Photos sync, and 1-minute ambient screensaver.</p>
+        </div>
+        <div>
+          <a href="https://github.com/lakhbeershah/MITV_CLEAN_TV-NOADS-Free_Movie/releases/latest" class="btn-download btn-stable">
+            <span>📥 Download Stable APK</span>
+          </a>
+          <div class="compat-line">Supports Android TV 8.0, 9.0, 10, 11, 12, 14+</div>
+        </div>
+      </div>
+
+      <!-- Beta Release Card -->
+      <div class="download-card beta">
+        <div>
+          <div class="badge-wrap">
+            <span class="version-tag tag-beta">Beta Testing</span>
+            <span class="filesize">3.4 MB • APK</span>
+          </div>
+          <h3>TvHome Beta v2.5.0-rc1</h3>
+          <p>For power users and testers. Includes multi-album Google Photos picker, Ken Burns cinematic motion v2, live RAM telemetry, and Home Studio Pro layout scaler.</p>
+        </div>
+        <div>
+          <a href="https://github.com/lakhbeershah/MITV_CLEAN_TV-NOADS-Free_Movie/releases" class="btn-download btn-beta">
+            <span>⚡ Download Beta APK</span>
+          </a>
+          <div class="compat-line">Early access updates directly from GitHub Releases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Downloader App Code Banner (AFTVnews) -->
+    <div class="downloader-banner">
+      <div class="downloader-info">
+        <h4>📲 Quick Install on TV via Downloader App</h4>
+        <p>Open the Downloader app by AFTVnews on your TV and type this code:</p>
+      </div>
+      <div class="code-pill">
+        <span class="code-number" id="downCode">28544</span>
+        <button class="btn-copy" onclick="copyCode()">Copy Code</button>
+      </div>
+    </div>
+
+    <!-- TV Mockup / Screenshot Preview -->
+    <div class="preview-wrap">
+      <img src="./new-home.jpg" alt="TvHome Live TV Interface" loading="lazy">
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section class="container" id="features">
+    <div class="section-title">
+      <h2>Engineered for Performance & Beauty</h2>
+      <p>Everything you need for an ultra-fast, premium TV experience with zero junk.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🚫</div>
+        <h3>Zero Ads & Zero Telemetry</h3>
+        <p>Permanently eliminates annoying home-screen video ads, sponsored carousels, and OEM background tracking. TvHome has no network telemetry.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🖼️</div>
+        <h3>Google Photos 4K Ambient Frame</h3>
+        <p>Turns your television into a stunning ambient digital picture frame. Real-time sync with your private Google Photos album links, with 1-minute auto-sleep.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>1-Click Background RAM Booster</h3>
+        <p>Safely closes cached background apps that drain memory on 1GB and 2GB RAM TVs. Frees up to 400 MB of RAM with zero root permissions required.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Zero Black Screen Safe Switcher</h3>
+        <p>Never breaks your TV. Unlike risky debloating tools, TvHome keeps the OEM launcher intact as a backup and safely sets itself as the default home app.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Mobile Web Remote (Port 8080)</h3>
+        <p>Scan a QR code on your TV to turn your phone into a tactile touch remote. Easily paste long Google Photos album links right from your phone clipboard.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎛️</div>
+        <h3>Unified Control Center</h3>
+        <p>One press opens instant Wi-Fi QR guest sharing, Xiaomi Bluetooth remote battery status, live RAM/ROM monitors, sound profiles, and Private DNS ad-block.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Before vs After Comparison Section -->
+  <section class="comparison-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Stock OEM Bloat vs TvHome</h2>
+        <p>See why thousands of users switch to clean launcher architecture.</p>
+      </div>
+      <div class="comp-wrap">
+        <div class="comp-image">
+          <img src="./stock-vs-new.jpg" alt="Stock vs New TV Interface Comparison" loading="lazy">
+        </div>
+        <ul class="comp-list">
+          <li class="comp-item">
+            <div class="comp-check">✓</div>
+            <div>
+              <strong>Instant 60 FPS D-Pad Response</strong>
+              <span>Stock launchers take 2-4 seconds to load heavy ad carousels. TvHome responds instantaneously with 0ms lag.</span>
+            </div>
+          </li>
+          <li class="comp-item">
+            <div class="comp-check">✓</div>
+            <div>
+              <strong>Ultralight 22 MB Memory Footprint</strong>
+              <span>Stock PatchWall / Google TV consumes 450+ MB RAM. TvHome leaves 90% of your TV's memory free for streaming video.</span>
+            </div>
+          </li>
+          <li class="comp-item">
+            <div class="comp-check">✓</div>
+            <div>
+              <strong>Completely Private & Open Source</strong>
+              <span>No user tracking, no data harvesting, no analytics SDKs. 100% verified MIT licensed code on GitHub.</span>
+            </div>
+          </li>
+          <li class="comp-item">
+            <div class="comp-check">✓</div>
+            <div>
+              <strong>Zero-Risk Installation</strong>
+              <span>Installs just like a regular app. No root, no bootloader unlocking, and no laptop needed.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Installation Guide -->
+  <section class="container" id="install">
+    <div class="section-title">
+      <h2>How to Install on Any TV in 2 Minutes</h2>
+      <p>Pick the method easiest for you. No PC or cables needed!</p>
+    </div>
+
+    <div class="install-box">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-downloader')">Method 1: Downloader (Recommended)</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-sendfiles')">Method 2: Send Files to TV</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-usb')">Method 3: USB Drive</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-adb')">Method 4: ADB (Advanced)</button>
+      </div>
+
+      <!-- Tab 1: Downloader -->
+      <div id="tab-downloader" class="tab-content active">
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Install Downloader on TV</h4>
+              <p>On your Android TV / Google TV / Fire TV, open the Play Store or Appstore and search for <strong>Downloader by AFTVnews</strong>.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Enter Quick Code</h4>
+              <p>Launch Downloader, enter code <strong style="color:var(--accent);">28544</strong> into the URL bar, and click Go. The APK downloads automatically.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <h4>Install & Set as Default</h4>
+              <p>Click Install. When opened, follow the 4-step wizard to clean background apps, paste your Google Photos link, and set TvHome as default!</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab 2: Send Files to TV -->
+      <div id="tab-sendfiles" class="tab-content">
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Download APK on Phone</h4>
+              <p>Download the Stable APK from this website directly onto your smartphone.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Open "Send Files to TV"</h4>
+              <p>Ensure both your phone and TV are connected to the same Wi-Fi. Open Send Files to TV on both devices and transfer the APK.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <h4>Open & Launch</h4>
+              <p>On TV, open the file with a TV file manager (like File Commander or TV Bro) and tap Install.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab 3: USB -->
+      <div id="tab-usb" class="tab-content">
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Copy APK to USB Pen Drive</h4>
+              <p>Download the APK onto your computer or phone and copy it to a FAT32/NTFS formatted USB flash drive.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Plug into TV</h4>
+              <p>Plug the USB drive into your TV's USB port. Open your TV's native File Manager or Media Player.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <h4>Install</h4>
+              <p>Locate `TvHome.apk` and tap Install. Confirm "Install from unknown sources" if prompted.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab 4: ADB -->
+      <div id="tab-adb" class="tab-content">
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Connect via Wireless ADB</h4>
+              <p>Enable Network Debugging in Developer Options on TV, then run:<br><code>adb connect &lt;tv-ip&gt;:5555</code></p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Install via Command Line</h4>
+              <p>Run: <code>adb install -r app-release.apk</code></p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community & Social Hub -->
+  <section class="container" id="community">
+    <div class="section-title">
+      <h2>Join the Community & Stay Updated</h2>
+      <p>Follow our official channels for tutorials, reels, updates, and community support.</p>
+    </div>
+
+    <div class="community-grid">
+      <a href="https://youtube.com/@TvHomeOfficial" target="_blank" class="community-card">
+        <div class="community-icon">▶️</div>
+        <div class="community-info">
+          <h4>YouTube</h4>
+          <span>Video Tutorials & Guides</span>
+        </div>
+      </a>
+
+      <a href="https://instagram.com/TvHomeOfficial" target="_blank" class="community-card">
+        <div class="community-icon">📸</div>
+        <div class="community-info">
+          <h4>Instagram</h4>
+          <span>Reels, Tips & Updates</span>
+        </div>
+      </a>
+
+      <a href="https://github.com/lakhbeershah/MITV_CLEAN_TV-NOADS-Free_Movie" target="_blank" class="community-card">
+        <div class="community-icon">🐙</div>
+        <div class="community-info">
+          <h4>GitHub</h4>
+          <span>Releases & Source Code</span>
+        </div>
+      </a>
+
+      <a href="https://t.me/TvHomeOfficial" target="_blank" class="community-card">
+        <div class="community-icon">💬</div>
+        <div class="community-info">
+          <h4>Telegram</h4>
+          <span>Community Discussion</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="container" id="faq">
+    <div class="section-title">
+      <h2>Frequently Asked Questions</h2>
+      <p>Got questions? We've got answers.</p>
+    </div>
+
+    <div class="faq-wrap">
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Can this brick my TV or cause a black screen?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          No! Unlike destructive rooting tools or scripts that uninstall core system components, TvHome works strictly as an independent user application. Your original TV launcher remains 100% intact as a fallback. If you ever want to revert, simply select your old launcher in Settings or uninstall TvHome.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>How does the Google Photos Screensaver work?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          In Control Center or during setup, scan the on-screen QR code with your smartphone. Paste your public or shared Google Photos album link into the mobile webpage and hit save. The TV automatically caches the high-resolution images locally for offline playback with zero internet lag.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>How do updates work? Do I need a laptop to update?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          No laptop is required! TvHome features a built-in OTA Update Checker connected to GitHub Releases. Whenever a new stable or beta release is published, a notification appears in your Control Center with a 1-click update button.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Will this work on Amazon Fire TV sticks?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Yes! TvHome runs smoothly on Fire TV OS 6, 7, and 8. You can install it directly via the Downloader app code or sideloading tools.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>TvHome is 100% Free & Open-Source under the MIT License.</p>
+      <div style="margin-top: 12px;">
+        <a href="https://github.com/lakhbeershah/MITV_CLEAN_TV-NOADS-Free_Movie">GitHub Repository</a> •
+        <a href="https://github.com/lakhbeershah/MITV_CLEAN_TV-NOADS-Free_Movie/releases">Release Notes</a> •
+        <a href="#install">Installation Guide</a>
+      </div>
+      <p style="margin-top: 16px; font-size: 12px; color: #434D61;">Not affiliated with Google, Xiaomi, or Amazon. All trademarks belong to their respective owners.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching logic
+    function switchTab(evt, tabId) {
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(c => c.classList.remove('active'));
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(b => b.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    // FAQ Accordion
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      item.classList.toggle('open');
+    }
+
+    // Copy Downloader Code
+    function copyCode() {
+      const code = document.getElementById('downCode').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.innerText = 'Copied! ✓';
+        btn.style.background = '#00E676';
+        btn.style.color = '#000';
+        setTimeout(() => {
+          btn.innerText = 'Copy Code';
+          btn.style.background = '#1E2638';
+          btn.style.color = '#fff';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
