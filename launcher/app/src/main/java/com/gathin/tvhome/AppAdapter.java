@@ -219,19 +219,48 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (focusedPosition == pos && rv != null) return;
         focusedPosition = pos;
         if (rv == null) return;
+        float density = ctx.getResources().getDisplayMetrics().density;
+        float spacing = 16f * density;
+        int lastPos = getItemCount() - 1;
         int childCount = rv.getChildCount();
+
         for (int i = 0; i < childCount; i++) {
             View child = rv.getChildAt(i);
             int itemPos = rv.getChildAdapterPosition(child);
             if (itemPos == RecyclerView.NO_POSITION) continue;
             View card = child.findViewById(R.id.card);
             if (card == null) continue;
-            if (card.getTranslationX() != 0f) {
-                if (animations && !reducedMotion) {
-                    card.animate().translationX(0f).setDuration(200).start();
+
+            float expandX = (focusScale() - 1.0f) * card.getWidth() / 2f;
+            float targetX;
+
+            if (itemPos == focusedPosition) {
+                if (itemPos == 0) {
+                    targetX = expandX;
+                } else if (itemPos == lastPos) {
+                    targetX = -expandX;
                 } else {
-                    card.setTranslationX(0f);
+                    targetX = 0f;
                 }
+            } else if (itemPos < focusedPosition) {
+                if (focusedPosition == lastPos) {
+                    targetX = -(expandX * 2f + spacing);
+                } else {
+                    targetX = -(expandX + spacing);
+                }
+            } else {
+                if (focusedPosition == 0) {
+                    targetX = expandX * 2f + spacing;
+                } else {
+                    targetX = expandX + spacing;
+                }
+            }
+
+            if (animations && !reducedMotion) {
+                card.animate().translationX(targetX).setDuration(220)
+                        .setInterpolator(new DecelerateInterpolator()).start();
+            } else {
+                card.setTranslationX(targetX);
             }
         }
     }
@@ -462,7 +491,23 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.name.setText(e.name);
         h.name.setVisibility(View.GONE);
         float density = ctx.getResources().getDisplayMetrics().density;
-        h.card.setTranslationX(0f);
+        float spacing = 16f * density;
+        int lastPos = getItemCount() - 1;
+        int cardW = h.card.getLayoutParams() != null ? h.card.getLayoutParams().width : 0;
+        float expandX = (focusScale() - 1.0f) * cardW / 2f;
+        float tx = 0f;
+        if (position == focusedPosition) {
+            if (position == 0) tx = expandX;
+            else if (position == lastPos) tx = -expandX;
+            else tx = 0f;
+        } else if (position < focusedPosition) {
+            if (focusedPosition == lastPos) tx = -(expandX * 2f + spacing);
+            else tx = -(expandX + spacing);
+        } else {
+            if (focusedPosition == 0) tx = expandX * 2f + spacing;
+            else tx = expandX + spacing;
+        }
+        h.card.setTranslationX(tx);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
         h.card.setScaleY(focused && animations ? focusScale() : 1f);

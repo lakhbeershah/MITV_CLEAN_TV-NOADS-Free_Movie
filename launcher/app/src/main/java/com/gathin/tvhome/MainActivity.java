@@ -79,6 +79,7 @@ import androidx.dynamicanimation.animation.FloatPropertyCompat;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
@@ -600,17 +601,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
         int displayH = dm.heightPixels;
         int displayW = dm.widthPixels;
-        int innerInitial = displayW - (int) (48 * density);
+        int innerInitial = displayW - (2 * customMarginPx);
         int rowsBelowDock = cfg.rowsBelowDock;
         int tileWInitial = AppAdapter.tileWidthPx(innerInitial, displayH, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
         int tileHInitial = AppAdapter.tileHeightPx(tileWInitial);
-        int dockRowInitial = tileHInitial + (2 * customMarginPx);
-        int initialWant = Math.max(0, displayH - dockRowInitial);
-        grid.setPadding(grid.getPaddingLeft(), initialWant, grid.getPaddingRight(), 0);
+        int initialWant = Math.max(0, displayH - tileHInitial - customMarginPx);
+        grid.setPadding(customMarginPx, initialWant, customMarginPx, customMarginPx);
         View initialMemories = findViewById(R.id.memoriesFrame);
         if (initialMemories != null) {
             ViewGroup.LayoutParams mlp = initialMemories.getLayoutParams();
-            mlp.height = Math.max((int) (200 * density), initialWant - (int) (16 * density));
+            mlp.height = Math.max(0, initialWant - customMarginPx);
             initialMemories.setLayoutParams(mlp);
         }
 
@@ -618,39 +618,32 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
-            // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
-            int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
+            int padH = customMarginPx;
+            int inner = (r - l) - (2 * padH);
+            if (inner <= 0) inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
             int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
             String tileScale = getSharedPreferences("home_custom_prefs", MODE_PRIVATE).getString("tile_scale", "standard");
             if ("compact".equals(tileScale)) tileW = Math.round(tileW * 0.88f);
             else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
 
             int tileH = AppAdapter.tileHeightPx(tileW);
-            int dockRow = tileH + (2 * customMarginPx);
             int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
-            // Keep the hero below the header when the library is enabled on a short screen,
-            // even when the theme requests an extra visible row below the dock.
-            int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int want = Math.max(shelfClearance, h - dockRow - gridRows);
-            // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
-            // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
+            int shelfClearance = cfg.appLibrary && hero != null ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
+            int want = Math.max(shelfClearance, h - tileH - customMarginPx - gridRows);
             if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
-            // No dock to push down: the grid starts at the top, with room for the first row's zoom and glass.
             if (!MainActivity.this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
-            if (grid.getPaddingTop() != want || grid.getPaddingBottom() != 0) {
-                grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), 0);
+            if (grid.getPaddingTop() != want || grid.getPaddingBottom() != customMarginPx || grid.getPaddingLeft() != padH || grid.getPaddingRight() != padH) {
+                grid.setPadding(padH, want, padH, customMarginPx);
             }
             View memoriesFrame = findViewById(R.id.memoriesFrame);
             if (memoriesFrame != null) {
                 ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
-                int targetH = Math.max((int) (200 * density), want - (int) (16 * density));
+                int targetH = Math.max(0, want - customMarginPx);
                 if (mlp.height != targetH) {
                     mlp.height = targetH;
                     memoriesFrame.setLayoutParams(mlp);
                 }
             }
-            // Cold start or column count > 4: the first focus can run before the grid has its final width or
-            // padding, leaving the glass at the XML design size until a key is pressed.
             grid.post(this::refitGlass);
         });
 
@@ -914,18 +907,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         else if ("spacious".equals(tileScale)) tileW = Math.round(tileW * 1.12f);
 
         int tileH = AppAdapter.tileHeightPx(tileW);
-        int dockRow = tileH + (2 * customMarginPx);
         int gridRows = AppAdapter.itemHeightPx(tileH, density) * rowsBelowDock;
         int shelfClearance = cfg.appLibrary && hero != null ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-        int want = Math.max(shelfClearance, h - dockRow - gridRows);
+        int want = Math.max(shelfClearance, h - tileH - customMarginPx - gridRows);
         if (this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
         if (!this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
 
-        grid.setPadding(padH, want, padH, 0);
+        grid.setPadding(padH, want, padH, customMarginPx);
         View memoriesFrame = findViewById(R.id.memoriesFrame);
         if (memoriesFrame != null) {
             ViewGroup.LayoutParams mlp = memoriesFrame.getLayoutParams();
-            int targetH = want;
+            int targetH = Math.max(0, want - customMarginPx);
             if (mlp.height != targetH) {
                 mlp.height = targetH;
                 memoriesFrame.setLayoutParams(mlp);
@@ -1071,6 +1063,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         if (intent != null && intent.hasExtra("set_margin_px")) {
             setCustomMarginPx(intent.getIntExtra("set_margin_px", 16));
+        }
+        if (intent != null && "com.gathin.tvhome.action.HOME_STUDIO".equals(intent.getAction())) {
+            showHomeStudio();
+            return;
         }
         if (intent != null && "com.gathin.tvhome.action.CONTROL_CENTER".equals(intent.getAction())) {
             showControlCenter();
@@ -1826,7 +1822,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float scale = adapter.focusScale();
         float w = card.getWidth() * scale + 2 * pad;
         float h = card.getHeight() * scale + 2 * pad;
-        float x = r.exactCenterX() - w / 2f;
+        float targetCardX = r.exactCenterX();
+        if (position == 0) targetCardX += (scale - 1.0f) * card.getWidth() / 2f;
+        else if (position == adapter.getItemCount() - 1) targetCardX -= (scale - 1.0f) * card.getWidth() / 2f;
+        float x = targetCardX - w / 2f;
         float y = r.exactCenterY() - h / 2f;
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
@@ -1845,19 +1844,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Spread out left-side apps to the left and right-side apps to the right
         adapter.setFocusedPosition(position, grid);
 
-        // Smooth horizontal scrolling: only scroll when the focused item exceeds visible boundaries,
-        // so that navigating to app 2 or 3 never pushes the 1st app on the left off-screen!
-        int dx = 0;
+        // Center-stop carousel scrolling: cursor moves towards middle, then selection STOPS at middle
+        // while apps scroll beneath it until the last app is reached, then cursor moves right!
+        int totalItems = adapter.getItemCount();
+        int itemW = item.getWidth() > 0 ? item.getWidth() : (int) (189 * density / 1.33f);
         int gridInnerLeft = grid.getPaddingLeft();
-        int gridInnerRight = grid.getWidth() - grid.getPaddingRight();
-        if (item.getLeft() < gridInnerLeft) {
-            dx = item.getLeft() - gridInnerLeft;
-        } else if (item.getRight() > gridInnerRight) {
-            dx = item.getRight() - gridInnerRight;
+        int gridInnerRight = grid.getPaddingRight();
+        int visibleWidth = grid.getWidth() - gridInnerLeft - gridInnerRight;
+        int totalWidth = totalItems * itemW;
+        int maxScroll = Math.max(0, totalWidth - visibleWidth);
+
+        int screenCenterX = grid.getWidth() / 2;
+        int itemCenterUnscrolled = gridInnerLeft + (int) ((position + 0.5f) * itemW);
+        int desiredScroll = itemCenterUnscrolled - screenCenterX;
+        int targetScroll = Math.max(0, Math.min(maxScroll, desiredScroll));
+
+        RecyclerView.LayoutManager lm = grid.getLayoutManager();
+        int currentScroll = 0;
+        if (lm instanceof LinearLayoutManager) {
+            LinearLayoutManager llm = (LinearLayoutManager) lm;
+            int firstPos = llm.findFirstVisibleItemPosition();
+            View firstChild = llm.findViewByPosition(firstPos);
+            if (firstChild != null && itemW > 0) {
+                currentScroll = (firstPos * itemW) - (firstChild.getLeft() - gridInnerLeft);
+            }
         }
+        int dx = targetScroll - currentScroll;
 
         if (dx != 0) {
-            x -= dx;
             if (!animations || reducedMotion) grid.scrollBy(dx, 0);
             else grid.smoothScrollBy(dx, 0);
         }
@@ -1906,7 +1920,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float scale = adapter.focusScale();
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
-        float x = r.exactCenterX() - w / 2f;
+        float expandX = (scale - 1.0f) * card.getWidth() / 2f;
+        float targetCardX = r.exactCenterX();
+        if (pos == 0) targetCardX += expandX;
+        else if (pos == adapter.getItemCount() - 1) targetCardX -= expandX;
+        float x = targetCardX - w / 2f;
         float y = r.exactCenterY() - h / 2f;
         if (!glassShown || Math.abs(glass.getTranslationX() - x) > 1f || Math.abs(glass.getTranslationY() - y) > 1f
                 || glass.getWidth() != w || glass.getHeight() != h) {
@@ -3285,6 +3303,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         ControlCenterManager ccm = new ControlCenterManager(this, anchor);
         ccm.show();
         openPopup = ccm.getPopup();
+    }
+
+    void showHomeStudio() {
+        if (ControlCenterManager.getActiveInstance() != null && ControlCenterManager.getActiveInstance().isOpen()) {
+            ControlCenterManager.getActiveInstance().openHomeStudio();
+            return;
+        }
+        View anchor = findViewById(R.id.btnProfile);
+        if (anchor == null) anchor = findViewById(R.id.topButtons);
+        ControlCenterManager ccm = new ControlCenterManager(this, anchor);
+        ccm.show();
+        openPopup = ccm.getPopup();
+        ccm.openHomeStudio();
     }
 
     /** Control Center menu opened by clicking the single top-left icon. */

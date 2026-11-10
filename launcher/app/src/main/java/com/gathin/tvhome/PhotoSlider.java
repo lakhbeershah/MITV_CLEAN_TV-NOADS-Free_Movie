@@ -213,16 +213,10 @@ public class PhotoSlider extends View implements View.OnFocusChangeListener, Vie
             }
         }
 
-        // 3. Draw cinema top and bottom vignettes
+        // 3. Draw cinema top vignette (leaves bottom photos crystal clear down to the dock)
         if (topVignette != null) {
             vignettePaint.setShader(topVignette);
             canvas.drawRect(0, 0, w, vignetteH, vignettePaint);
-
-            canvas.save();
-            canvas.translate(0, h);
-            canvas.scale(1, -1);
-            canvas.drawRect(0, 0, w, vignetteH, vignettePaint);
-            canvas.restore();
         }
     }
 

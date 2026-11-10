@@ -637,6 +637,14 @@ public class ControlCenterManager {
         });
     }
 
+    public void openHomeStudio() {
+        if (viewMargin != null) {
+            switchToView(viewMargin, "HOME APPS & STUDIO");
+            View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
+            if (plus != null) plus.requestFocus();
+        }
+    }
+
     private void switchToView(View target, String title) {
         viewMain.setVisibility(View.GONE);
         viewScreensaver.setVisibility(View.GONE);
@@ -1027,7 +1035,7 @@ public class ControlCenterManager {
         if (btnMarginMinus != null) {
             btnMarginMinus.setOnClickListener(v -> {
                 if (currentMarginPx > 0) {
-                    currentMarginPx = Math.max(0, currentMarginPx - 2);
+                    currentMarginPx = Math.max(0, currentMarginPx - 1);
                     updateMarginDisplay();
                     activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
                 }
@@ -1037,7 +1045,7 @@ public class ControlCenterManager {
         if (btnMarginPlus != null) {
             btnMarginPlus.setOnClickListener(v -> {
                 if (currentMarginPx < 80) {
-                    currentMarginPx = Math.min(80, currentMarginPx + 2);
+                    currentMarginPx = Math.min(80, currentMarginPx + 1);
                     updateMarginDisplay();
                     activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
                 }
