@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -558,12 +559,11 @@ public class ControlCenterManager {
         btnOpenScreensaver.setOnClickListener(v -> {
             updateScreensaverFolderStats();
             switchToView(viewScreensaver, "SCREENSAVER & SYNC");
-            btnSyncNow.requestFocus();
         });
 
         btnOpenMargin.setOnClickListener(v -> {
             switchToView(viewMargin, "HOME APPS & STUDIO");
-            View plus = panel.findViewById(R.id.ccBtnMarginPlus);
+            View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
             if (plus != null) plus.requestFocus();
         });
 
@@ -586,13 +586,28 @@ public class ControlCenterManager {
         target.setVisibility(View.VISIBLE);
         txtTitle.setText(title);
 
+        ScrollView sv = panel != null ? panel.findViewById(R.id.ccScrollView) : null;
+        if (sv != null) {
+            sv.scrollTo(0, 0);
+        }
+
         panel.post(() -> {
+            if (sv != null) {
+                sv.scrollTo(0, 0);
+            }
             if (target == viewMargin) {
                 View plus = panel.findViewById(R.id.ccBtnMarginPlus);
                 if (plus != null) plus.requestFocus();
             } else if (target == viewScreensaver) {
-                View sync = panel.findViewById(R.id.ccBtnSyncNow);
-                if (sync != null) sync.requestFocus();
+                if (sv != null) sv.scrollTo(0, 0);
+                View editLink = panel.findViewById(R.id.ccBtnEditAlbumLink2);
+                if (editLink == null) editLink = panel.findViewById(R.id.ccBtnEditAlbumLink);
+                if (editLink == null) editLink = panel.findViewById(R.id.ccTxtAlbumLink);
+                if (editLink != null) {
+                    editLink.requestFocus();
+                } else if (btnSyncNow != null) {
+                    btnSyncNow.requestFocus();
+                }
             } else {
                 View wifi = panel.findViewById(R.id.ccBtnWifi);
                 if (wifi != null) wifi.requestFocus();

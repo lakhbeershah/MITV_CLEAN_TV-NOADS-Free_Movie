@@ -14,12 +14,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +31,7 @@ import java.util.Set;
 
 /**
  * Manages user-hidden apps on the Home screen and provides the popup window
- * to view and launch hidden apps.
+ * to view, open, and unhide hidden apps.
  */
 public class HiddenAppsManager {
 
@@ -41,9 +43,9 @@ public class HiddenAppsManager {
         return sp.getStringSet(KEY_HIDDEN, Collections.emptySet());
     }
 
-    public static void setHiddenApps(Context ctx, Set<String> set) {
+    public static void setHiddenApps(Context ctx, Set<String> hidden) {
         SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sp.edit().putStringSet(KEY_HIDDEN, new HashSet<>(set)).apply();
+        sp.edit().putStringSet(KEY_HIDDEN, hidden).apply();
     }
 
     public static void showManageDialog(Activity activity, Runnable onUpdated) {
@@ -89,8 +91,12 @@ public class HiddenAppsManager {
                 .setPositiveButton("Save", (dialog, which) -> {
                     Set<String> newHidden = new HashSet<>();
                     for (int i = 0; i < apps.size(); i++) {
+                        String pkg = apps.get(i).activityInfo.packageName;
                         if (checked[i]) {
-                            newHidden.add(apps.get(i).activityInfo.packageName);
+                            newHidden.add(pkg);
+                        } else if (currentlyHidden.contains(pkg)) {
+                            // Unhidden by user -> ensure it is restored to Home dock
+                            LibraryApps.save(activity, pkg, true);
                         }
                     }
                     setHiddenApps(activity, newHidden);
@@ -137,12 +143,12 @@ public class HiddenAppsManager {
 
         float density = activity.getResources().getDisplayMetrics().density;
         View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_hidden_apps, null);
-        GridView grid = dialogView.findViewById(R.id.hiddenAppsGrid);
+        RecyclerView recycler = dialogView.findViewById(R.id.hiddenAppsRecycler);
         TextView title = dialogView.findViewById(R.id.hiddenAppsTitle);
         title.setText("HIDDEN APPS (" + hiddenApps.size() + ")");
 
         PopupWindow popup = new PopupWindow(dialogView,
-                (int) (540 * density), (int) (350 * density), true);
+                (int) (560 * density), (int) (360 * density), true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popup.setOutsideTouchable(true);
 
@@ -159,102 +165,131 @@ public class HiddenAppsManager {
             });
         }
 
-        grid.setAdapter(new BaseAdapter() {
-            @Override public int getCount() { return hiddenApps.size(); }
-            @Override public Object getItem(int pos) { return hiddenApps.get(pos); }
-            @Override public long getItemId(int pos) { return pos; }
+        recycler.setLayoutManager(new GridLayoutManager(activity, 4));
+
+        class HiddenAppViewHolder extends RecyclerView.ViewHolder {
+            final View card;
+            final ImageView icon;
+            final TextView name;
+            HiddenAppViewHolder(@NonNull View itemView) {
+                super(itemView);
+                card = itemView.findViewById(R.id.cardHiddenApp);
+                icon = itemView.findViewById(R.id.hiddenAppIcon);
+                name = itemView.findViewById(R.id.hiddenAppName);
+            }
+        }
+
+        RecyclerView.Adapter<HiddenAppViewHolder> adapter = new RecyclerView.Adapter<HiddenAppViewHolder>() {
+            @NonNull
+            @Override
+            public HiddenAppViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View v = LayoutInflater.from(activity).inflate(R.layout.item_hidden_app, parent, false);
+                return new HiddenAppViewHolder(v);
+            }
 
             @Override
-            public View getView(int pos, View convert, ViewGroup parent) {
-                View v = convert;
-                if (v == null) {
-                    v = LayoutInflater.from(activity).inflate(R.layout.item_hidden_app, parent, false);
-                }
-                ResolveInfo ri = hiddenApps.get(pos);
-                ImageView icon = v.findViewById(R.id.hiddenAppIcon);
-                TextView name = v.findViewById(R.id.hiddenAppName);
+            public void onBindViewHolder(@NonNull HiddenAppViewHolder holder, int position) {
+                ResolveInfo ri = hiddenApps.get(position);
+                String pkg = ri.activityInfo.packageName;
+                CharSequence label = ri.loadLabel(pm);
+                holder.icon.setImageDrawable(ri.loadIcon(pm));
+                holder.name.setText(label);
 
-                icon.setImageDrawable(ri.loadIcon(pm));
-                name.setText(ri.loadLabel(pm));
-                return v;
-            }
-        });
+                // TV remote focus scale animation
+                holder.card.setOnFocusChangeListener((v, hasFocus) -> {
+                    v.animate()
+                            .scaleX(hasFocus ? 1.08f : 1.0f)
+                            .scaleY(hasFocus ? 1.08f : 1.0f)
+                            .setDuration(150)
+                            .start();
+                });
 
-        // TV Remote Friendly: Click to open or unhide
-        grid.setOnItemClickListener((parent, view, position, id) -> {
-            if (position < 0 || position >= hiddenApps.size()) return;
-            ResolveInfo ri = hiddenApps.get(position);
-            String pkg = ri.activityInfo.packageName;
-            CharSequence label = ri.loadLabel(pm);
+                // TV remote click: Options to Open or Unhide
+                holder.card.setOnClickListener(v -> {
+                    CharSequence[] options = new CharSequence[] {
+                        "▶  Open " + label,
+                        "👁  Unhide (Restore to Home Dock)",
+                        "⚙  Manage All Hidden Apps"
+                    };
 
-            CharSequence[] options = new CharSequence[] {
-                "▶  Open " + label,
-                "👁  Unhide (Restore to Home Dock)",
-                "⚙  Manage All Hidden Apps"
-            };
-
-            new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                    .setTitle(label)
-                    .setItems(options, (d, which) -> {
-                        if (which == 0) {
-                            // Launch App
-                            popup.dismiss();
-                            Intent launch = new Intent(Intent.ACTION_MAIN)
-                                    .setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                            try {
-                                activity.startActivity(launch);
-                            } catch (Exception e) {
-                                Intent fallback = pm.getLeanbackLaunchIntentForPackage(pkg);
-                                if (fallback == null) fallback = pm.getLaunchIntentForPackage(pkg);
-                                if (fallback != null) {
-                                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    activity.startActivity(fallback);
-                                } else {
-                                    Toast.makeText(activity, "Could not open app: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle(label)
+                            .setItems(options, (d, which) -> {
+                                if (which == 0) {
+                                    popup.dismiss();
+                                    launchApp(activity, pm, ri, pkg);
+                                } else if (which == 1) {
+                                    unhideSingleApp(activity, pkg, label, popup, onUnhide);
+                                } else if (which == 2) {
+                                    popup.dismiss();
+                                    showManageDialog(activity, onUnhide);
                                 }
-                            }
-                        } else if (which == 1) {
-                            // Unhide this single app
-                            Set<String> updated = new HashSet<>(getHiddenApps(activity));
-                            updated.remove(pkg);
-                            setHiddenApps(activity, updated);
-                            popup.dismiss();
-                            Toast.makeText(activity, "Restored to Home: " + label, Toast.LENGTH_SHORT).show();
-                            if (onUnhide != null) onUnhide.run();
-                        } else if (which == 2) {
-                            // Open manage dialog
-                            popup.dismiss();
-                            showManageDialog(activity, onUnhide);
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        });
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                });
 
-        grid.setOnItemLongClickListener((parent, view, position, id) -> {
-            if (position < 0 || position >= hiddenApps.size()) return false;
-            ResolveInfo ri = hiddenApps.get(position);
-            String pkg = ri.activityInfo.packageName;
-            CharSequence label = ri.loadLabel(pm);
+                // Long press: Quick unhide confirmation
+                holder.card.setOnLongClickListener(v -> {
+                    new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle(label)
+                            .setMessage("Unhide " + label + " and restore to Home dock?")
+                            .setPositiveButton("Unhide", (d, w) -> {
+                                unhideSingleApp(activity, pkg, label, popup, onUnhide);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                    return true;
+                });
+            }
 
-            new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                    .setTitle(label)
-                    .setMessage("Unhide this app and restore it to the Home dock?")
-                    .setPositiveButton("Unhide", (d, w) -> {
-                        Set<String> updated = new HashSet<>(getHiddenApps(activity));
-                        updated.remove(pkg);
-                        setHiddenApps(activity, updated);
-                        popup.dismiss();
-                        Toast.makeText(activity, "Restored to Home: " + label, Toast.LENGTH_SHORT).show();
-                        if (onUnhide != null) onUnhide.run();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-            return true;
-        });
+            @Override
+            public int getItemCount() {
+                return hiddenApps.size();
+            }
+        };
+
+        recycler.setAdapter(adapter);
 
         popup.showAtLocation(anchor != null ? anchor : activity.getWindow().getDecorView(),
                 Gravity.CENTER, 0, 0);
+
+        // Immediate focus on first app card for TV remote D-pad navigation
+        recycler.post(() -> {
+            RecyclerView.ViewHolder vh = recycler.findViewHolderForAdapterPosition(0);
+            if (vh != null) {
+                vh.itemView.requestFocus();
+            } else {
+                recycler.requestFocus();
+            }
+        });
+    }
+
+    private static void launchApp(Activity activity, PackageManager pm, ResolveInfo ri, String pkg) {
+        Intent launch = new Intent(Intent.ACTION_MAIN)
+                .setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        try {
+            activity.startActivity(launch);
+        } catch (Exception e) {
+            Intent fallback = pm.getLeanbackLaunchIntentForPackage(pkg);
+            if (fallback == null) fallback = pm.getLaunchIntentForPackage(pkg);
+            if (fallback != null) {
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                activity.startActivity(fallback);
+            } else {
+                Toast.makeText(activity, "Could not open app: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private static void unhideSingleApp(Activity activity, String pkg, CharSequence label, PopupWindow popup, Runnable onUnhide) {
+        Set<String> updated = new HashSet<>(getHiddenApps(activity));
+        updated.remove(pkg);
+        setHiddenApps(activity, updated);
+        LibraryApps.save(activity, pkg, true);
+        popup.dismiss();
+        Toast.makeText(activity, "Restored to Home: " + label, Toast.LENGTH_SHORT).show();
+        if (onUnhide != null) onUnhide.run();
     }
 }

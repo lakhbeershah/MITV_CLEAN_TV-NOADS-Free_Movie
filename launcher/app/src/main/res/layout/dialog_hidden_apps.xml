@@ -40,6 +40,7 @@
                 android:gravity="center"
                 android:focusable="true"
                 android:clickable="true"
+                android:nextFocusDown="@+id/hiddenAppsRecycler"
                 android:text="⚙ Manage / Unhide"
                 android:textColor="#80D8FF"
                 android:textSize="12sp"
@@ -52,6 +53,7 @@
                 android:background="@drawable/cc_pill_bg"
                 android:clickable="true"
                 android:focusable="true"
+                android:nextFocusDown="@+id/hiddenAppsRecycler"
                 android:gravity="center"
                 android:text="✕"
                 android:textColor="#FFFFFFFF"
@@ -59,17 +61,14 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <GridView
-        android:id="@+id/hiddenAppsGrid"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/hiddenAppsRecycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:numColumns="4"
-        android:verticalSpacing="12dp"
-        android:horizontalSpacing="12dp"
-        android:gravity="center"
         android:focusable="true"
-        android:descendantFocusability="afterDescendants" />
+        android:clipToPadding="false"
+        android:nextFocusUp="@+id/btnHiddenManage" />
 
     <TextView
         android:layout_width="match_parent"
