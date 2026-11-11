@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -81,26 +82,40 @@ public class MainActivity extends Activity {
                 isVideoPlaying = playing;
             });
         }
+
+        @android.webkit.JavascriptInterface
+        public void nativeScrollFallback(final int dx, final int dy) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (webView != null) {
+                    webView.scrollBy(dx, dy);
+                }
+            });
+        }
     }
 
     private boolean isMovieOrVideoActive() {
-        if (customVideoView != null || isVideoActive || isVideoPlaying) {
+        if (customVideoView != null || isVideoActive) {
             return true;
         }
         if (webView != null && webView.getUrl() != null) {
-            String lower = webView.getUrl().toLowerCase();
-            if (lower.contains("youtube.com/watch") || lower.contains("youtu.be/") ||
-                lower.contains("hdmovie2") || lower.contains("/movie/") ||
-                lower.contains("/watch") || lower.contains("/stream") || lower.contains("/video")) {
+            String url = webView.getUrl().toLowerCase();
+            // Local files, game links, stream catalogs are NEVER video players
+            if (url.startsWith("file://") || url.contains("stream_hub.html")) {
+                return false;
+            }
+            if (url.contains("youtube.com/watch") || url.contains("youtu.be/") || url.contains("youtube.com/shorts/")) {
                 return true;
             }
         }
-        return false;
+        return isVideoPlaying;
     }
 
-    // D-Pad Mouse movement handler
+    // D-Pad Mouse movement handler (slow start for precision, smooth ramp on hold)
     private final Handler cursorHandler = new Handler(Looper.getMainLooper());
-    private float cursorSpeed = 16f;
+    private static final float CURSOR_MIN_SPEED = 5.0f;
+    private static final float CURSOR_MAX_SPEED = 10.5f;
+    private int cursorHoldFrames = 0;
+    private long lastEdgeHudTime = 0;
     private boolean isMovingCursor = false;
     private int activeDpadCode = 0;
 
@@ -135,22 +150,50 @@ public class MainActivity extends Activity {
     private void enterDpadMode() {
         isMouseMode = false;
         cursorView.setPointerVisible(false);
+        webView.requestFocus();
         if (isMovieOrVideoActive()) {
+            webView.evaluateJavascript("window._cleanTvDpadMode = false;", null);
             showHud("🎬", "Movie Mode (▲/▼ Vol, ◀/▶ Seek, OK Pause)\nHold BACK to return to Mouse");
         } else {
-            showHud("🎮", "D-Pad Arrow Mode (▲/▼ Scroll, OK Click)\nHold BACK to return to Mouse");
+            webView.evaluateJavascript("window._cleanTvDpadMode = true;", null);
+            webView.postDelayed(() -> {
+                if (!isMouseMode && !isMovieOrVideoActive() && webView != null) {
+                    webView.evaluateJavascript(
+                            "window._cleanTvDpadMode = true; " +
+                            "(function(){ var ae=document.activeElement; if(!ae || ae===document.body || ae===document.documentElement || ae.id==='searchInput'){ " +
+                            "var f=document.querySelector('.site-card.focusable') || document.querySelector('a[href], button, [role=\"button\"], .focusable:not(input):not(#searchInput), [tabindex]:not([tabindex=\"-1\"]):not(input)'); " +
+                            "if(f) f.focus({preventScroll:true}); } })();", null);
+                }
+            }, 90);
+            showHud("🎮", "Navigator Selector Active (D-Pad Move, OK Open)\nHold BACK to return to Mouse");
         }
     }
 
     private void enterMouseMode() {
         isMouseMode = true;
         cursorView.setPointerVisible(true);
+        if (webView != null) {
+            webView.evaluateJavascript(
+                    "window._cleanTvDpadMode = false; if (document.activeElement && document.activeElement.blur) document.activeElement.blur();",
+                    null);
+        }
         showHud("🎯", "Mouse Pointer Active");
     }
 
     private void scrollPageSlow(int deltaY) {
-        webView.scrollBy(0, deltaY);
-        webView.evaluateJavascript("window.scrollBy(0, " + deltaY + ");", null);
+        if ((deltaY > 0 && webView.canScrollVertically(1)) || (deltaY < 0 && webView.canScrollVertically(-1))) {
+            webView.scrollBy(0, deltaY);
+        } else if (cursorHoldFrames % 3 == 0) {
+            webView.evaluateJavascript("window.scrollBy(0, " + (deltaY * 3) + ");", null);
+        }
+    }
+
+    private void scrollPageSlowH(int deltaX) {
+        if ((deltaX > 0 && webView.canScrollHorizontally(1)) || (deltaX < 0 && webView.canScrollHorizontally(-1))) {
+            webView.scrollBy(deltaX, 0);
+        } else if (cursorHoldFrames % 3 == 0) {
+            webView.evaluateJavascript("window.scrollBy(" + (deltaX * 3) + ", 0);", null);
+        }
     }
 
     private void scrollPageWebpage(int deltaY, boolean isRepeat) {
@@ -158,7 +201,8 @@ public class MainActivity extends Activity {
         String behavior = isRepeat ? "auto" : "smooth";
         webView.evaluateJavascript("window.scrollBy({top: " + deltaY + ", behavior: '" + behavior + "'});", null);
         if (!isRepeat) {
-            showHud(deltaY < 0 ? "▲" : "▼", deltaY < 0 ? "Scroll Up" : "Scroll Down");
+            showHud(deltaY < 0 ? "▲" : "▼", deltaY < 0 ? "Scroll Up" : "Scroll Down",
+                    deltaY < 0 ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL));
         }
     }
 
@@ -167,21 +211,51 @@ public class MainActivity extends Activity {
         public void run() {
             if (!isMovingCursor || !isMouseMode || !cursorView.isPointerVisible()) return;
 
+            cursorHoldFrames++;
+            float speed = cursorHoldFrames <= 10
+                    ? CURSOR_MIN_SPEED
+                    : Math.min(CURSOR_MAX_SPEED, CURSOR_MIN_SPEED + (cursorHoldFrames - 10) * 0.35f);
+
             float dx = 0, dy = 0;
-            if (activeDpadCode == KeyEvent.KEYCODE_DPAD_UP) dy = -cursorSpeed;
-            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_DOWN) dy = cursorSpeed;
-            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_LEFT) dx = -cursorSpeed;
-            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_RIGHT) dx = cursorSpeed;
+            if (activeDpadCode == KeyEvent.KEYCODE_DPAD_UP) dy = -speed;
+            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_DOWN) dy = speed;
+            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_LEFT) dx = -speed;
+            else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_RIGHT) dx = speed;
 
             cursorView.moveBy(dx, dy);
 
-            // Gentle continuous edge scrolling: 8px per frame, keeping cursor visible at edge
+            // Fast continuous edge scrolling while in pointer mode (26px/frame)
+            float curX = cursorView.getCursorX();
             float curY = cursorView.getCursorY();
+            int viewW = cursorView.getWidth() > 0 ? cursorView.getWidth() : 1280;
             int viewH = cursorView.getHeight() > 0 ? cursorView.getHeight() : 720;
+            long now = SystemClock.uptimeMillis();
+
             if (dy > 0 && curY >= viewH - 45) {
-                scrollPageSlow(8);
+                scrollPageSlow(26);
+                if (now - lastEdgeHudTime > 800) {
+                    lastEdgeHudTime = now;
+                    showHud("▼", "Scroll Down", Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+                }
             } else if (dy < 0 && curY <= 45) {
-                scrollPageSlow(-8);
+                scrollPageSlow(-26);
+                if (now - lastEdgeHudTime > 800) {
+                    lastEdgeHudTime = now;
+                    showHud("▲", "Scroll Up", Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+                }
+            }
+            if (dx > 0 && curX >= viewW - 45) {
+                scrollPageSlowH(26);
+                if (now - lastEdgeHudTime > 800) {
+                    lastEdgeHudTime = now;
+                    showHud("▶", "Scroll Right", Gravity.CENTER_VERTICAL | Gravity.END);
+                }
+            } else if (dx < 0 && curX <= 45) {
+                scrollPageSlowH(-26);
+                if (now - lastEdgeHudTime > 800) {
+                    lastEdgeHudTime = now;
+                    showHud("◀", "Scroll Left", Gravity.CENTER_VERTICAL | Gravity.START);
+                }
             }
 
             cursorHandler.postDelayed(this, 16);
@@ -194,6 +268,7 @@ public class MainActivity extends Activity {
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
         loadPreferences();
@@ -296,7 +371,15 @@ public class MainActivity extends Activity {
                 isVideoActive = false;
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.setProgress(10);
+            }
+
+            @Override
+            public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                super.doUpdateVisitedHistory(view, url, isReload);
+                isVideoPlaying = false;
+                isVideoActive = false;
                 AdBlockEngine.injectVideoShield(view);
+                view.postDelayed(() -> AdBlockEngine.injectVideoShield(view), 800);
             }
 
             @Override
@@ -307,6 +390,11 @@ public class MainActivity extends Activity {
                 if (isDarkMode) {
                     AdBlockEngine.applyForcedDarkMode(view, true);
                 }
+                boolean dpadActive = !isMouseMode && !isMovieOrVideoActive();
+                view.evaluateJavascript(
+                        "window._cleanTvDpadMode = " + dpadActive + ";" +
+                        (dpadActive ? " (function(){ var ae=document.activeElement; if(!ae || ae===document.body || ae===document.documentElement || ae.id==='searchInput'){ var f=document.querySelector('.site-card.focusable') || document.querySelector('a[href], button, [role=\"button\"], .focusable:not(input):not(#searchInput), [tabindex]:not([tabindex=\"-1\"]):not(input)'); if(f) f.focus({preventScroll:true}); } })();" : ""),
+                        null);
             }
         });
 
@@ -314,6 +402,9 @@ public class MainActivity extends Activity {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 progressBar.setProgress(newProgress);
+                if (newProgress >= 75) {
+                    AdBlockEngine.injectVideoShield(view);
+                }
                 if (newProgress >= 100) {
                     progressBar.setVisibility(View.GONE);
                 }
@@ -350,6 +441,7 @@ public class MainActivity extends Activity {
 
     private void showKeyboard(View view) {
         if (view == null) return;
+        view.setFocusableInTouchMode(true);
         view.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -359,6 +451,7 @@ public class MainActivity extends Activity {
 
     private void hideKeyboard(View view) {
         if (view == null) return;
+        view.setFocusableInTouchMode(false);
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -367,13 +460,33 @@ public class MainActivity extends Activity {
 
     private void setupSpeedDial() {
         editSearchUrl.setOnClickListener(v -> showKeyboard(editSearchUrl));
+
+        View searchBarContainer = findViewById(R.id.searchBarContainer);
         editSearchUrl.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                showKeyboard(editSearchUrl);
+            if (!hasFocus) {
+                hideKeyboard(v);
+            }
+            if (searchBarContainer != null && searchBarContainer.getBackground() instanceof android.graphics.drawable.GradientDrawable) {
+                android.graphics.drawable.GradientDrawable gd = (android.graphics.drawable.GradientDrawable) searchBarContainer.getBackground().mutate();
+                gd.setStroke((int) (2 * getResources().getDisplayMetrics().density), hasFocus ? 0xFF00E5FF : 0x33FFFFFF);
             }
         });
 
         editSearchUrl.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    hideKeyboard(editSearchUrl);
+                    findViewById(R.id.cardHdMovie2).requestFocus();
+                }
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && editSearchUrl.getSelectionEnd() >= editSearchUrl.getText().length()) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    hideKeyboard(editSearchUrl);
+                    findViewById(R.id.btnGoSearch).requestFocus();
+                }
+                return true;
+            }
             if (event.getAction() == KeyEvent.ACTION_UP &&
                     (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) {
                 String text = editSearchUrl.getText().toString().trim();
@@ -494,6 +607,7 @@ public class MainActivity extends Activity {
     }
 
     public void loadUrl(String url) {
+        hideKeyboard(editSearchUrl);
         speedDialView.setVisibility(View.GONE);
         webView.setVisibility(View.VISIBLE);
         enterMouseMode();
@@ -501,6 +615,7 @@ public class MainActivity extends Activity {
     }
 
     private void openSpeedDial() {
+        hideKeyboard(editSearchUrl);
         webView.setVisibility(View.GONE);
         if (customViewContainer != null && customViewContainer.getVisibility() == View.VISIBLE) {
             customViewContainer.setVisibility(View.GONE);
@@ -616,7 +731,10 @@ public class MainActivity extends Activity {
                         toggleVideoPlayPause();
                         return true;
                     } else {
-                        return super.dispatchKeyEvent(event);
+                        long now = SystemClock.uptimeMillis();
+                        webView.dispatchKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0));
+                        webView.dispatchKeyEvent(new KeyEvent(now, now + 10, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0));
+                        return true;
                     }
                 }
                 if (speedDialView.getVisibility() == View.VISIBLE) {
@@ -650,36 +768,51 @@ public class MainActivity extends Activity {
                     return true;
                 }
             } else {
-                // Regular Webpage: D-Pad Arrow Navigation Mode!
-                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                    if (action == KeyEvent.ACTION_DOWN) {
-                        scrollPageWebpage(-240, event.getRepeatCount() > 0);
+                // Webpage / Navigator Selector Mode (Up/Down/Left/Right Selector + Scroll):
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
+                        keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+
+                    if (action == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                        String icon = "";
+                        String text = "";
+                        int gravity = Gravity.CENTER;
+                        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                            icon = "▲"; text = "Up / Scroll"; gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                        } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                            icon = "▼"; text = "Down / Scroll"; gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                            icon = "◀"; text = "Left / Scroll"; gravity = Gravity.CENTER_VERTICAL | Gravity.START;
+                        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                            icon = "▶"; text = "Right / Scroll"; gravity = Gravity.CENTER_VERTICAL | Gravity.END;
+                        }
+                        showHud(icon, text, gravity);
                     }
+
+                    // Dispatch directly to WebView to drive spatial navigation selector & page scroll
+                    webView.dispatchKeyEvent(event);
                     return true;
-                } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                    if (action == KeyEvent.ACTION_DOWN) {
-                        scrollPageWebpage(240, event.getRepeatCount() > 0);
-                    }
-                    return true;
-                } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                    return super.dispatchKeyEvent(event);
                 }
             }
         }
 
-        // 5. Virtual Cursor Movement & Gentle Edge Scrolling (Active by default in Mouse Mode)
+        // 5. Virtual Cursor Movement & Fast Edge Scrolling (Active by default in Mouse Mode)
         if (isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
                     keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
                 if (action == KeyEvent.ACTION_DOWN) {
-                    activeDpadCode = keyCode;
+                    if (activeDpadCode != keyCode) {
+                        activeDpadCode = keyCode;
+                        cursorHoldFrames = 0;
+                    }
                     if (!isMovingCursor) {
                         isMovingCursor = true;
+                        cursorHoldFrames = 0;
                         cursorHandler.post(cursorMoveRunnable);
                     }
                 } else if (action == KeyEvent.ACTION_UP) {
                     isMovingCursor = false;
+                    cursorHoldFrames = 0;
                     cursorHandler.removeCallbacks(cursorMoveRunnable);
                 }
                 return true;
@@ -786,7 +919,8 @@ public class MainActivity extends Activity {
         }
 
         int percent = (int) ((current * 100f) / max);
-        showHud("🔊", "Volume: " + percent + "%");
+        showHud(up ? "🔊" : "🔉", "Volume: " + percent + "%",
+                up ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL));
     }
 
     private void seekVideo(boolean forward) {
@@ -804,7 +938,8 @@ public class MainActivity extends Activity {
                 "  return 'none';\n" +
                 "})();";
         webView.evaluateJavascript(js, null);
-        showHud(forward ? "⏩" : "⏪", (forward ? "+10s" : "-10s") + " Seek");
+        showHud(forward ? "⏩" : "⏪", (forward ? "+10s" : "-10s") + " Seek",
+                forward ? (Gravity.CENTER_VERTICAL | Gravity.END) : (Gravity.CENTER_VERTICAL | Gravity.START));
     }
 
     private void toggleVideoPlayPause() {
@@ -840,12 +975,37 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void showHud(String icon, String text) {
+    private void showHud(String icon, String text, int gravity) {
         hudIcon.setText(icon);
         hudText.setText(text);
-        hudOverlay.setVisibility(View.VISIBLE);
 
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) hudOverlay.getLayoutParams();
+        lp.gravity = gravity;
+        int m = (int) (42 * getResources().getDisplayMetrics().density);
+
+        boolean isTop = (gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.TOP;
+        boolean isBottom = (gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM;
+        boolean isStart = (gravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) == Gravity.START
+                || (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+        boolean isEnd = (gravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) == Gravity.END
+                || (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.RIGHT;
+
+        int leftMargin = isStart ? m : 0;
+        int topMargin = isTop ? m : 0;
+        int rightMargin = isEnd ? m : 0;
+        int bottomMargin = isBottom ? m : 0;
+
+        lp.setMargins(leftMargin, topMargin, rightMargin, bottomMargin);
+        lp.setMarginStart(leftMargin);
+        lp.setMarginEnd(rightMargin);
+        hudOverlay.setLayoutParams(lp);
+
+        hudOverlay.setVisibility(View.VISIBLE);
         hudHandler.removeCallbacks(hideHudRunnable);
-        hudHandler.postDelayed(hideHudRunnable, 1400);
+        hudHandler.postDelayed(hideHudRunnable, 1200);
+    }
+
+    private void showHud(String icon, String text) {
+        showHud(icon, text, Gravity.CENTER);
     }
 }

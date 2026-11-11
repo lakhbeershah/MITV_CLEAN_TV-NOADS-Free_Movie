@@ -11,7 +11,8 @@
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="none" />
+        android:scrollbars="none"
+        android:visibility="gone" />
 
     <!-- Fullscreen Video Container (Exo / WebChrome Custom View) -->
     <FrameLayout
@@ -107,7 +108,7 @@
                     android:background="@null"
                     android:clickable="true"
                     android:focusable="true"
-                    android:focusableInTouchMode="true"
+                    android:focusableInTouchMode="false"
                     android:hint="Search Google or enter web URL..."
                     android:imeOptions="actionSearch"
                     android:inputType="textUri|text"
@@ -336,6 +337,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
+            android:gravity="center"
             android:text="Volume: 65%"
             android:textColor="@color/text_primary"
             android:textSize="16sp"

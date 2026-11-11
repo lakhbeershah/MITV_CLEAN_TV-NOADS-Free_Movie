@@ -83,8 +83,10 @@ public class VirtualCursorView extends View {
     }
 
     public void moveBy(float dx, float dy) {
-        cursorX = Math.max(0, Math.min(getWidth(), cursorX + dx));
-        cursorY = Math.max(0, Math.min(getHeight(), cursorY + dy));
+        float maxW = getWidth() > 2 ? getWidth() - 2 : 1278;
+        float maxH = getHeight() > 2 ? getHeight() - 2 : 718;
+        cursorX = Math.max(0, Math.min(maxW, cursorX + dx));
+        cursorY = Math.max(0, Math.min(maxH, cursorY + dy));
         invalidate();
     }
 

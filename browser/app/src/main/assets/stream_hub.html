@@ -531,6 +531,7 @@
             class="search-input focusable"
             placeholder="Search CinemaOS, Hotstar, Games..."
             autocomplete="off"
+            readonly
           />
         </div>
         <button id="addSiteBtn" class="action-btn focusable" title="Add custom website">
@@ -894,6 +895,15 @@
       });
     });
 
+    searchInput.addEventListener("click", () => {
+      searchInput.removeAttribute("readonly");
+      searchInput.focus();
+    });
+
+    searchInput.addEventListener("blur", () => {
+      searchInput.setAttribute("readonly", "readonly");
+    });
+
     searchInput.addEventListener("input", e => {
       searchQuery = e.target.value;
       renderHub();
@@ -1040,7 +1050,14 @@
 
     document.addEventListener("keydown", e => {
       const active = document.activeElement;
-      const isTextInput = active && (active.tagName === "INPUT" || active.tagName === "SELECT");
+      const isTextInput = active && (active.tagName === "INPUT" || active.tagName === "SELECT") && !active.hasAttribute("readonly");
+
+      if (e.key === "Enter" && active === searchInput && searchInput.hasAttribute("readonly")) {
+        e.preventDefault();
+        searchInput.removeAttribute("readonly");
+        searchInput.focus();
+        return;
+      }
 
       if (!isTextInput && (e.key === "f" || e.key === "F")) {
         if (active && active.classList.contains("site-card")) {
@@ -1085,7 +1102,7 @@
 
     window.addEventListener("load", () => {
       const firstCard = document.querySelector(".site-card.focusable");
-      if (firstCard && window.innerWidth >= 768) {
+      if (firstCard) {
         firstCard.focus({ preventScroll: true });
       }
     });
