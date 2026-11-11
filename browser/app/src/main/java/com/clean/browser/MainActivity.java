@@ -108,12 +108,13 @@ public class MainActivity extends Activity {
     private final Handler keyHandler = new Handler(Looper.getMainLooper());
     private boolean okLongHandled = false;
     private boolean backLongHandled = false;
+    private long menuOpenedTimestamp = 0;
 
     private final Runnable longPressOkRunnable = new Runnable() {
         @Override
         public void run() {
             okLongHandled = true;
-            toggleRadialMenu();
+            openRadialMenu();
         }
     };
 
@@ -528,26 +529,35 @@ public class MainActivity extends Activity {
 
         // 1. Long-press BACK detection -> Return to Mouse Pointer Mode
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (backLongHandled && action == KeyEvent.ACTION_DOWN) {
+                return true;
+            }
+
             if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
-                backLongHandled = true;
-                keyHandler.removeCallbacks(longPressBackRunnable);
-                if (!isMouseMode) {
-                    enterMouseMode();
-                } else {
-                    cursorView.resetToCenter();
-                    showHud("🎯", "Cursor Centered");
+                if (!backLongHandled) {
+                    backLongHandled = true;
+                    keyHandler.removeCallbacks(longPressBackRunnable);
+                    if (!isMouseMode) {
+                        enterMouseMode();
+                        cursorView.resetToCenter();
+                    } else {
+                        cursorView.resetToCenter();
+                        showHud("🎯", "Cursor Centered");
+                    }
                 }
                 return true;
             }
             if (action == KeyEvent.ACTION_DOWN) {
                 if (event.getRepeatCount() == 0) {
                     backLongHandled = false;
-                    keyHandler.postDelayed(longPressBackRunnable, 400);
+                    keyHandler.removeCallbacks(longPressBackRunnable);
+                    keyHandler.postDelayed(longPressBackRunnable, 450);
                 }
                 return true;
             } else if (action == KeyEvent.ACTION_UP) {
                 keyHandler.removeCallbacks(longPressBackRunnable);
                 if (backLongHandled) {
+                    backLongHandled = false;
                     return true;
                 }
                 // Regular short BACK press
@@ -558,21 +568,34 @@ public class MainActivity extends Activity {
 
         // 2. Long-press OK detection -> Radial Quick Menu
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+            if (okLongHandled && action == KeyEvent.ACTION_DOWN) {
+                return true;
+            }
+
             if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
-                okLongHandled = true;
-                keyHandler.removeCallbacks(longPressOkRunnable);
-                toggleRadialMenu();
+                if (!okLongHandled) {
+                    okLongHandled = true;
+                    keyHandler.removeCallbacks(longPressOkRunnable);
+                    openRadialMenu();
+                }
                 return true;
             }
             if (action == KeyEvent.ACTION_DOWN) {
                 if (event.getRepeatCount() == 0) {
                     okLongHandled = false;
-                    keyHandler.postDelayed(longPressOkRunnable, 400);
+                    keyHandler.removeCallbacks(longPressOkRunnable);
+                    if (radialMenuLayout.getVisibility() != View.VISIBLE) {
+                        keyHandler.postDelayed(longPressOkRunnable, 450);
+                    }
+                }
+                if (radialMenuLayout.getVisibility() == View.VISIBLE) {
+                    return super.dispatchKeyEvent(event);
                 }
                 return true;
             } else if (action == KeyEvent.ACTION_UP) {
                 keyHandler.removeCallbacks(longPressOkRunnable);
-                if (okLongHandled) {
+                if (okLongHandled || (SystemClock.uptimeMillis() - menuOpenedTimestamp < 450)) {
+                    okLongHandled = false;
                     return true;
                 }
                 // Regular short OK click
@@ -688,20 +711,28 @@ public class MainActivity extends Activity {
         return true;
     }
 
+    private void openRadialMenu() {
+        if (radialMenuLayout.getVisibility() == View.VISIBLE) return;
+
+        menuOpenedTimestamp = SystemClock.uptimeMillis();
+
+        menuBtnDpadMode.setText(isMouseMode ? "🎮 Turn ON D-Pad" : "🎯 Turn ON Mouse");
+        textZoomScale.setText(currentZoom + "%");
+        menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
+        menuBtnUserAgent.setText(isMobileUa ? "📱 Mobile (Smooth)" : "💻 Desktop (Full)");
+
+        speedDialView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        webView.setFocusable(false);
+
+        radialMenuLayout.setVisibility(View.VISIBLE);
+        menuBtnHome.requestFocus();
+    }
+
     private void toggleRadialMenu() {
         if (radialMenuLayout.getVisibility() == View.VISIBLE) {
             hideRadialMenu();
         } else {
-            menuBtnDpadMode.setText(isMouseMode ? "🎮 Turn ON D-Pad" : "🎯 Turn ON Mouse");
-            textZoomScale.setText(currentZoom + "%");
-            menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
-            menuBtnUserAgent.setText(isMobileUa ? "📱 Mobile (Smooth)" : "💻 Desktop (Full)");
-
-            speedDialView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-            webView.setFocusable(false);
-
-            radialMenuLayout.setVisibility(View.VISIBLE);
-            menuBtnHome.requestFocus();
+            openRadialMenu();
         }
     }
 
