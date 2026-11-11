@@ -276,83 +276,344 @@ public class AdBlockEngine {
                 "  document.addEventListener('pause', function() { setTimeout(reportMedia, 400); }, true);\n" +
                 "  document.addEventListener('ended', function() { setTimeout(reportMedia, 400); }, true);\n" +
                 "\n" +
-                "  // 7. TV Spatial Focus Selector Ring (High-visibility for D-Pad navigation)\n" +
-                "  try {\n" +
-                "    var focusTarget = document.head || document.body || document.documentElement;\n" +
-                "    if (focusTarget && !document.getElementById('clean_tv_focus_css')) {\n" +
-                "      var fStyle = document.createElement('style');\n" +
-                "      fStyle.id = 'clean_tv_focus_css';\n" +
-                "      fStyle.innerHTML = ':focus, :focus-visible, a:focus, button:focus, [tabindex]:focus { outline: 3px solid #00E5FF !important; outline-offset: 3px !important; box-shadow: 0 0 14px rgba(0, 229, 255, 0.9) !important; }';\n" +
-                "      focusTarget.appendChild(fStyle);\n" +
-                "    }\n" +
-                "  } catch(e) {}\n" +
-                "\n" +
-                "  // 8. Universal 2D Spatial Navigator Selector & Left/Right Scroll Engine\n" +
+                "  window._cleanTvShieldInjected = true;\n" +
+                "})();\n" +
+                getSubframeNavScript();
+
+        view.evaluateJavascript(js, null);
+    }
+
+    /**
+     * Universal 2D Spatial Navigator, Focus Ring CSS & Fullscreen/Iframe Control Bridge.
+     * Injected into every frame (including cross-origin iframes) via DOCUMENT_START_SCRIPT.
+     */
+    public static String getSubframeNavScript() {
+        return "(function() {\n" +
+                "  if (window._cleanTvNavInjected) return;\n" +
+                "  window._cleanTvNavInjected = true;\n" +
                 "  if (window._cleanTvDpadMode === undefined) window._cleanTvDpadMode = false;\n" +
-                "  window._cleanTvStepFocus = function(dir) {\n" +
+                "  window._cleanTvFocusEl = null;\n" +
+                "  window._cleanTvWakeTick = false;\n" +
+                "\n" +
+                "  function ensureFocusCss() {\n" +
+                "    try {\n" +
+                "      var focusTarget = document.head || document.body || document.documentElement;\n" +
+                "      if (focusTarget && !document.getElementById('clean_tv_focus_css')) {\n" +
+                "        var fStyle = document.createElement('style');\n" +
+                "        fStyle.id = 'clean_tv_focus_css';\n" +
+                "        fStyle.innerHTML = '[data-clean-focused=\"1\"] { outline: 3px solid #00E5FF !important; outline-offset: -2px !important; box-shadow: inset 0 0 0 2px #00E5FF, 0 0 14px rgba(0, 229, 255, 0.95) !important; } ' +\n" +
+                "          'body.clean-tv-dpad video::-webkit-media-controls-panel { opacity: 1 !important; pointer-events: auto !important; }';\n" +
+                "        focusTarget.appendChild(fStyle);\n" +
+                "      }\n" +
+                "    } catch(e) {}\n" +
+                "  }\n" +
+                "  ensureFocusCss();\n" +
+                "  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureFocusCss);\n" +
+                "\n" +
+                "  function emitFocusRectArr(arr) {\n" +
+                "    try {\n" +
+                "      if (window !== window.top) {\n" +
+                "        window.parent.postMessage({ type: 'cleanTvFocusRect', rect: arr }, '*');\n" +
+                "      } else if (window.CleanTvBridge && typeof window.CleanTvBridge.setFocusRect === 'function') {\n" +
+                "        if (arr && arr.length === 4) window.CleanTvBridge.setFocusRect(arr[0], arr[1], arr[2], arr[3]);\n" +
+                "        else window.CleanTvBridge.setFocusRect(-1, -1, 0, 0);\n" +
+                "      }\n" +
+                "    } catch(e) {}\n" +
+                "  }\n" +
+                "\n" +
+                "  function reportFocusRect(el) {\n" +
+                "    if (!el || !el.isConnected) { emitFocusRectArr(null); return; }\n" +
+                "    var r = el.getBoundingClientRect();\n" +
                 "    var vw = window.innerWidth || 1280;\n" +
                 "    var vh = window.innerHeight || 720;\n" +
-                "    var cur = document.activeElement;\n" +
-                "    var selectors = '.site-card, a[href], button, [role=\"button\"], input:not([type=\"hidden\"]), select, textarea, summary, [tabindex]:not([tabindex=\"-1\"]), [onclick]';\n" +
-                "    var nodes = document.querySelectorAll(selectors);\n" +
-                "    var candidates = [];\n" +
+                "    if (r.width < 4 || r.height < 4 || r.bottom <= 0 || r.right <= 0 || r.top >= vh || r.left >= vw) {\n" +
+                "      emitFocusRectArr(null); return;\n" +
+                "    }\n" +
+                "    emitFocusRectArr([\n" +
+                "      Math.max(0, r.left / vw),\n" +
+                "      Math.max(0, r.top / vh),\n" +
+                "      Math.min(1, r.width / vw),\n" +
+                "      Math.min(1, r.height / vh)\n" +
+                "    ]);\n" +
+                "  }\n" +
+                "\n" +
+                "  function clearFocusAttr() {\n" +
+                "    try {\n" +
+                "      var prev = document.querySelectorAll('[data-clean-focused]');\n" +
+                "      for (var i = 0; i < prev.length; i++) prev[i].removeAttribute('data-clean-focused');\n" +
+                "    } catch(e) {}\n" +
+                "  }\n" +
+                "\n" +
+                "  function applyFocus(el, shouldScroll) {\n" +
+                "    if (!el) return;\n" +
+                "    clearFocusAttr();\n" +
+                "    window._cleanTvEnsureFocusable(el);\n" +
+                "    el.setAttribute('data-clean-focused', '1');\n" +
+                "    window._cleanTvFocusEl = el;\n" +
+                "    try { el.focus({ preventScroll: true }); } catch(e) {}\n" +
+                "    if (shouldScroll) {\n" +
+                "      try { el.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' }); } catch(e) {}\n" +
+                "    }\n" +
+                "    reportFocusRect(el);\n" +
+                "    setTimeout(function() { if (window._cleanTvDpadMode && window._cleanTvFocusEl === el) reportFocusRect(el); }, 80);\n" +
+                "  }\n" +
+                "\n" +
+                "  window._cleanTvSetDpadFlag = function(on) {\n" +
+                "    window._cleanTvDpadMode = !!on;\n" +
+                "    ensureFocusCss();\n" +
+                "    if (document.body) {\n" +
+                "      if (on) document.body.classList.add('clean-tv-dpad');\n" +
+                "      else document.body.classList.remove('clean-tv-dpad');\n" +
+                "    }\n" +
+                "    if (!on) {\n" +
+                "      clearFocusAttr();\n" +
+                "      window._cleanTvFocusEl = null;\n" +
+                "      emitFocusRectArr(null);\n" +
+                "    }\n" +
+                "    try {\n" +
+                "      var iframes = document.querySelectorAll('iframe');\n" +
+                "      for (var i = 0; i < iframes.length; i++) {\n" +
+                "        if (iframes[i].contentWindow) iframes[i].contentWindow.postMessage({ type: 'cleanTvCmd', cmd: 'flag', on: !!on }, '*');\n" +
+                "      }\n" +
+                "    } catch(e) {}\n" +
+                "  };\n" +
+                "\n" +
+                "  window._cleanTvWakeControls = function() {\n" +
+                "    try {\n" +
+                "      window._cleanTvWakeTick = !window._cleanTvWakeTick;\n" +
+                "      var bump = window._cleanTvWakeTick ? 4 : -4;\n" +
+                "      var fsEl = document.fullscreenElement || document.webkitFullscreenElement || null;\n" +
+                "      var targets = document.querySelectorAll('.vjs-control-bar, .video-js, .plyr, .jwplayer, .html5-video-player, ytm-custom-control, #player-control-overlay, video');\n" +
+                "      var list = fsEl ? [fsEl] : [];\n" +
+                "      for (var i = 0; i < targets.length; i++) list.push(targets[i]);\n" +
+                "      if (list.length === 0 && document.body) list.push(document.body);\n" +
+                "      for (var j = 0; j < list.length; j++) {\n" +
+                "        var tgt = list[j];\n" +
+                "        if (!tgt) continue;\n" +
+                "        var r = tgt.getBoundingClientRect ? tgt.getBoundingClientRect() : { left: 100, top: 100, width: 400, height: 300 };\n" +
+                "        var px = r.left + r.width * 0.5 + bump;\n" +
+                "        var py = r.top + r.height * 0.7 + bump;\n" +
+                "        tgt.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, cancelable: true, clientX: px, clientY: py }));\n" +
+                "        tgt.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, clientX: px, clientY: py }));\n" +
+                "        if (typeof PointerEvent === 'function') {\n" +
+                "          tgt.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, cancelable: true, pointerType: 'mouse', clientX: px, clientY: py }));\n" +
+                "        }\n" +
+                "        if (tgt.classList) {\n" +
+                "          tgt.classList.remove('vjs-user-inactive', 'plyr--hide-controls', 'jw-flag-user-inactive', 'ytp-autohide');\n" +
+                "          if (tgt.classList.contains('video-js')) tgt.classList.add('vjs-user-active');\n" +
+                "        }\n" +
+                "      }\n" +
+                "    } catch(e) {}\n" +
+                "  };\n" +
+                "\n" +
+                "  var BTN_SELECTORS = '.site-card, a[href], button, [role=\"button\"], [role=\"slider\"], [role=\"menuitem\"], ' +\n" +
+                "    'input:not([type=\"hidden\"]), select, textarea, summary, [tabindex]:not([tabindex=\"-1\"]), [onclick], ' +\n" +
+                "    '.vjs-control, .vjs-big-play-button, .plyr__control, .jw-icon, .ytp-button, ' +\n" +
+                "    'button[class*=\"play\"], [role=\"button\"][class*=\"play\"], [class*=\"play-btn\"], [class*=\"play-button\"], [class*=\"playBtn\"], [class*=\"playButton\"], [class*=\"btn-play\"], [class*=\"icon-play\"], ' +\n" +
+                "    '[aria-label*=\"Play\"], [aria-label*=\"play\"], [aria-label*=\"Pause\"], [aria-label*=\"pause\"], ' +\n" +
+                "    '[aria-label*=\"Fullscreen\"], [aria-label*=\"fullscreen\"], [aria-label*=\"Exit\"], [aria-label*=\"exit\"], [aria-label*=\"Mute\"], [aria-label*=\"mute\"]';\n" +
+                "\n" +
+                "  window._cleanTvEnsureFocusable = function(el) {\n" +
+                "    if (!el) return;\n" +
+                "    var tag = el.tagName;\n" +
+                "    if (tag !== 'A' && tag !== 'BUTTON' && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA' && tag !== 'SUMMARY' && !el.hasAttribute('tabindex')) {\n" +
+                "      el.setAttribute('tabindex', '-1');\n" +
+                "    }\n" +
+                "  };\n" +
+                "\n" +
+                "  function getFullscreenRoot() {\n" +
+                "    return document.fullscreenElement || document.webkitFullscreenElement || null;\n" +
+                "  }\n" +
+                "\n" +
+                "  function collectCandidates(fsEl, vw, vh) {\n" +
+                "    var root = fsEl || document;\n" +
+                "    var nodes = root.querySelectorAll(BTN_SELECTORS);\n" +
+                "    var out = [];\n" +
                 "    for (var i = 0; i < nodes.length; i++) {\n" +
                 "      var el = nodes[i];\n" +
+                "      if (fsEl && el === fsEl) continue;\n" +
+                "      if (el.disabled || el.getAttribute('aria-hidden') === 'true') continue;\n" +
                 "      var r = el.getBoundingClientRect();\n" +
-                "      if (r.width < 4 || r.height < 4) continue;\n" +
-                "      if (r.bottom < -300 || r.top > vh + 300 || r.right < -300 || r.left > vw + 300) continue;\n" +
+                "      if (r.width < 14 || r.height < 14) continue;\n" +
+                "      if (fsEl) {\n" +
+                "        if (r.right <= 2 || r.bottom <= 2 || r.left >= vw - 2 || r.top >= vh - 2) continue;\n" +
+                "      } else {\n" +
+                "        if (r.bottom < -300 || r.top > vh + 300 || r.right < -300 || r.left > vw + 300) continue;\n" +
+                "      }\n" +
+                "      if (!fsEl && r.left <= 2 && r.top <= 2 && (r.width < 28 || r.height < 28)) continue;\n" +
                 "      var cs = window.getComputedStyle(el);\n" +
-                "      if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;\n" +
-                "      candidates.push({ el: el, r: r, cx: r.left + r.width / 2, cy: r.top + r.height / 2 });\n" +
-                "    }\n" +
-                "    var hasCur = cur && cur !== document.body && cur !== document.documentElement;\n" +
-                "    var cr = hasCur ? cur.getBoundingClientRect() : null;\n" +
-                "    if (cr && (cr.width < 2 || cr.height < 2)) hasCur = false;\n" +
-                "    if (!hasCur) {\n" +
-                "      var bestInit = null;\n" +
-                "      var bestInitScore = Infinity;\n" +
-                "      for (var k = 0; k < candidates.length; k++) {\n" +
-                "        var c0 = candidates[k];\n" +
-                "        if (c0.r.top >= 0 && c0.r.bottom <= vh && c0.r.left >= 0 && c0.r.right <= vw) {\n" +
-                "          var sc = c0.r.top * 2 + c0.r.left;\n" +
-                "          if (sc < bestInitScore) { bestInitScore = sc; bestInit = c0.el; }\n" +
-                "        }\n" +
+                "      if (cs.visibility === 'hidden' || cs.display === 'none' || cs.pointerEvents === 'none') continue;\n" +
+                "      if (cs.clip === 'rect(0px, 0px, 0px, 0px)' || cs.clipPath === 'inset(50%)') continue;\n" +
+                "      if (parseFloat(cs.opacity) < 0.05) continue;\n" +
+                "      var ancHidden = false, anc = el.parentElement, hop = 0;\n" +
+                "      while (anc && anc !== document.body && anc !== document.documentElement && hop < 6) {\n" +
+                "        var acs = window.getComputedStyle(anc);\n" +
+                "        if (acs.display === 'none' || acs.visibility === 'hidden' || parseFloat(acs.opacity) < 0.05) { ancHidden = true; break; }\n" +
+                "        anc = anc.parentElement; hop++;\n" +
                 "      }\n" +
-                "      if (bestInit) {\n" +
-                "        bestInit.focus({ preventScroll: true });\n" +
-                "        return true;\n" +
+                "      if (ancHidden) continue;\n" +
+                "      if (r.width > vw * 0.55 && r.height > vh * 0.45 && el.tagName !== 'IFRAME' && el.tagName !== 'VIDEO') {\n" +
+                "        if (el.querySelector('button, [role=\"button\"], a[href], .vjs-control, .plyr__control, .jw-icon')) continue;\n" +
+                "      }\n" +
+                "      if (el.id === 'searchInput') continue;\n" +
+                "      out.push({ el: el, r: r, cx: r.left + r.width / 2, cy: r.top + r.height / 2 });\n" +
+                "    }\n" +
+                "    if (out.length === 0 && !fsEl) {\n" +
+                "      var mediaNodes = document.querySelectorAll('video, iframe');\n" +
+                "      for (var m = 0; m < mediaNodes.length; m++) {\n" +
+                "        var mel = mediaNodes[m];\n" +
+                "        var mr = mel.getBoundingClientRect();\n" +
+                "        if (mr.width < 60 || mr.height < 40 || mr.bottom < -100 || mr.top > vh + 100) continue;\n" +
+                "        var mcs = window.getComputedStyle(mel);\n" +
+                "        if (mcs.visibility === 'hidden' || mcs.display === 'none') continue;\n" +
+                "        out.push({ el: mel, r: mr, cx: mr.left + mr.width / 2, cy: mr.top + mr.height / 2 });\n" +
                 "      }\n" +
                 "    }\n" +
-                "    var best = null;\n" +
-                "    var bestScore = Infinity;\n" +
-                "    if (hasCur) {\n" +
-                "      var curCx = cr.left + cr.width / 2;\n" +
-                "      var curCy = cr.top + cr.height / 2;\n" +
+                "    return out;\n" +
+                "  }\n" +
+                "\n" +
+                "  function isPlayControl(el) {\n" +
+                "    var aria = el.getAttribute('aria-label') || '';\n" +
+                "    var title = el.getAttribute('title') || '';\n" +
+                "    var cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();\n" +
+                "    return /\\b(play|pause)\\b/i.test(aria) || /\\b(play|pause)\\b/i.test(title) ||\n" +
+                "      cls.indexOf('play-control') !== -1 || cls.indexOf('big-play') !== -1 || cls.indexOf('ytp-play') !== -1 || cls.indexOf('plyr__control--overlaid') !== -1 ||\n" +
+                "      cls.indexOf('icon-play') !== -1 || cls.indexOf('play-btn') !== -1 || cls.indexOf('play-button') !== -1;\n" +
+                "  }\n" +
+                "\n" +
+                "  function pickInitialTarget(candidates, fsEl, vw, vh) {\n" +
+                "    if (!candidates || candidates.length === 0) return null;\n" +
+                "    if (fsEl) {\n" +
+                "      for (var i = 0; i < candidates.length; i++) {\n" +
+                "        if (isPlayControl(candidates[i].el)) return candidates[i].el;\n" +
+                "      }\n" +
+                "      var bestCenter = null, bestDist = Infinity;\n" +
                 "      for (var j = 0; j < candidates.length; j++) {\n" +
                 "        var c = candidates[j];\n" +
-                "        if (c.el === cur) continue;\n" +
-                "        var dx = c.cx - curCx;\n" +
-                "        var dy = c.cy - curCy;\n" +
-                "        var valid = false, pri = 0, perp = 0;\n" +
-                "        if (dir === 'ArrowRight' && dx > 10) { valid = true; pri = dx; perp = Math.abs(dy); }\n" +
-                "        else if (dir === 'ArrowLeft' && dx < -10) { valid = true; pri = -dx; perp = Math.abs(dy); }\n" +
-                "        else if (dir === 'ArrowDown' && dy > 10) { valid = true; pri = dy; perp = Math.abs(dx); }\n" +
-                "        else if (dir === 'ArrowUp' && dy < -10) { valid = true; pri = -dy; perp = Math.abs(dx); }\n" +
-                "        if (valid && pri <= 450) {\n" +
-                "          var w = (dir === 'ArrowLeft' || dir === 'ArrowRight') ? 3.8 : 2.2;\n" +
-                "          var overlapBonus = 0;\n" +
-                "          if ((dir === 'ArrowLeft' || dir === 'ArrowRight') && c.r.bottom > cr.top && c.r.top < cr.bottom) overlapBonus = -120;\n" +
-                "          if ((dir === 'ArrowUp' || dir === 'ArrowDown') && c.r.right > cr.left && c.r.left < cr.right) overlapBonus = -120;\n" +
-                "          var score = pri + perp * w + overlapBonus;\n" +
-                "          if (score < bestScore) { bestScore = score; best = c.el; }\n" +
-                "        }\n" +
+                "        var d = Math.abs(c.cx - vw * 0.5) + Math.abs(c.cy - vh * 0.5);\n" +
+                "        if (d < bestDist) { bestDist = d; bestCenter = c.el; }\n" +
+                "      }\n" +
+                "      return bestCenter;\n" +
+                "    }\n" +
+                "    var homeCard = document.querySelector('.site-card.focusable');\n" +
+                "    if (homeCard) return homeCard;\n" +
+                "    for (var p = 0; p < candidates.length; p++) {\n" +
+                "      var cp = candidates[p];\n" +
+                "      if (cp.r.top >= 0 && cp.r.bottom <= vh && isPlayControl(cp.el)) return cp.el;\n" +
+                "    }\n" +
+                "    var bestInit = null, bestScore = Infinity;\n" +
+                "    for (var k = 0; k < candidates.length; k++) {\n" +
+                "      var c0 = candidates[k];\n" +
+                "      if (c0.r.top >= 0 && c0.r.bottom <= vh && c0.r.left >= 0 && c0.r.right <= vw) {\n" +
+                "        if (c0.r.left <= 2 && c0.r.top <= 2 && c0.r.width < 48) continue;\n" +
+                "        var sc = c0.r.top * 2 + c0.r.left;\n" +
+                "        if (sc < bestScore) { bestScore = sc; bestInit = c0.el; }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    return bestInit || candidates[0].el;\n" +
+                "  }\n" +
+                "\n" +
+                "  function wakeMobileOverlayIfHidden(fsEl) {\n" +
+                "    if (!fsEl) return false;\n" +
+                "    var ytBg = fsEl.querySelector('#player-control-overlay, ytm-custom-control, .player-controls-background-container, .player-controls-background');\n" +
+                "    if (ytBg) {\n" +
+                "      try { ytBg.click(); } catch(e) {}\n" +
+                "      return true;\n" +
+                "    }\n" +
+                "    return false;\n" +
+                "  }\n" +
+                "\n" +
+                "  window._cleanTvInitFocus = function() {\n" +
+                "    ensureFocusCss();\n" +
+                "    window._cleanTvWakeControls();\n" +
+                "    var fsEl = getFullscreenRoot();\n" +
+                "    if (fsEl && fsEl.tagName === 'IFRAME' && fsEl.contentWindow) {\n" +
+                "      fsEl.contentWindow.postMessage({ type: 'cleanTvCmd', cmd: 'init' }, '*');\n" +
+                "      return 'postmsg';\n" +
+                "    }\n" +
+                "    var vw = window.innerWidth || 1280;\n" +
+                "    var vh = window.innerHeight || 720;\n" +
+                "    var candidates = collectCandidates(fsEl, vw, vh);\n" +
+                "    if (fsEl && candidates.length === 0) {\n" +
+                "      if (wakeMobileOverlayIfHidden(fsEl)) {\n" +
+                "        setTimeout(function() {\n" +
+                "          var c2 = collectCandidates(fsEl, window.innerWidth || 1280, window.innerHeight || 720);\n" +
+                "          var t2 = pickInitialTarget(c2, fsEl, window.innerWidth || 1280, window.innerHeight || 720);\n" +
+                "          if (t2) applyFocus(t2, false);\n" +
+                "        }, 80);\n" +
+                "        return 'waking';\n" +
+                "      }\n" +
+                "      return 'cross-fs';\n" +
+                "    }\n" +
+                "    var target = pickInitialTarget(candidates, fsEl, vw, vh);\n" +
+                "    if (target) { applyFocus(target, false); return true; }\n" +
+                "    return fsEl ? 'cross-fs' : false;\n" +
+                "  };\n" +
+                "\n" +
+                "  window._cleanTvStepFocus = function(dir) {\n" +
+                "    ensureFocusCss();\n" +
+                "    window._cleanTvWakeControls();\n" +
+                "    var fsEl = getFullscreenRoot();\n" +
+                "    if (fsEl && fsEl.tagName === 'IFRAME' && fsEl.contentWindow) {\n" +
+                "      fsEl.contentWindow.postMessage({ type: 'cleanTvCmd', cmd: 'step', dir: dir }, '*');\n" +
+                "      return 'postmsg';\n" +
+                "    }\n" +
+                "    var vw = window.innerWidth || 1280;\n" +
+                "    var vh = window.innerHeight || 720;\n" +
+                "    var candidates = collectCandidates(fsEl, vw, vh);\n" +
+                "    if (fsEl && candidates.length === 0) {\n" +
+                "      if (wakeMobileOverlayIfHidden(fsEl)) {\n" +
+                "        setTimeout(function() {\n" +
+                "          var c2 = collectCandidates(fsEl, window.innerWidth || 1280, window.innerHeight || 720);\n" +
+                "          var t2 = pickInitialTarget(c2, fsEl, window.innerWidth || 1280, window.innerHeight || 720);\n" +
+                "          if (t2) applyFocus(t2, false);\n" +
+                "        }, 80);\n" +
+                "        return 'waking';\n" +
+                "      }\n" +
+                "      return 'cross-fs';\n" +
+                "    }\n" +
+                "    var cur = window._cleanTvFocusEl;\n" +
+                "    if (!cur || !cur.isConnected || !document.contains(cur) || (fsEl && !fsEl.contains(cur))) {\n" +
+                "      cur = document.activeElement;\n" +
+                "    }\n" +
+                "    var cr = null, curInCandidates = false;\n" +
+                "    if (cur && cur !== document.body && cur !== document.documentElement && (!fsEl || fsEl.contains(cur))) {\n" +
+                "      for (var ci = 0; ci < candidates.length; ci++) {\n" +
+                "        if (candidates[ci].el === cur) { cr = candidates[ci].r; curInCandidates = true; break; }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (!curInCandidates || !cr) {\n" +
+                "      var initTarget = pickInitialTarget(candidates, fsEl, vw, vh);\n" +
+                "      if (initTarget) { applyFocus(initTarget, !fsEl); return true; }\n" +
+                "      return fsEl ? 'cross-fs' : false;\n" +
+                "    }\n" +
+                "    var curCx = cr.left + cr.width / 2;\n" +
+                "    var curCy = cr.top + cr.height / 2;\n" +
+                "    var best = null, bestScore = Infinity;\n" +
+                "    for (var j = 0; j < candidates.length; j++) {\n" +
+                "      var c = candidates[j];\n" +
+                "      if (c.el === cur) continue;\n" +
+                "      var dx = c.cx - curCx;\n" +
+                "      var dy = c.cy - curCy;\n" +
+                "      var valid = false, pri = 0, perp = 0;\n" +
+                "      if (dir === 'ArrowRight' && dx > 6) { valid = true; pri = dx; perp = Math.abs(dy); }\n" +
+                "      else if (dir === 'ArrowLeft' && dx < -6) { valid = true; pri = -dx; perp = Math.abs(dy); }\n" +
+                "      else if (dir === 'ArrowDown' && dy > 6) { valid = true; pri = dy; perp = Math.abs(dx); }\n" +
+                "      else if (dir === 'ArrowUp' && dy < -6) { valid = true; pri = -dy; perp = Math.abs(dx); }\n" +
+                "      if (valid && pri <= (fsEl ? 1200 : 520)) {\n" +
+                "        var w = (dir === 'ArrowLeft' || dir === 'ArrowRight') ? 3.5 : 2.2;\n" +
+                "        var overlapBonus = 0;\n" +
+                "        if ((dir === 'ArrowLeft' || dir === 'ArrowRight') && c.r.bottom > cr.top && c.r.top < cr.bottom) overlapBonus = -120;\n" +
+                "        if ((dir === 'ArrowUp' || dir === 'ArrowDown') && c.r.right > cr.left && c.r.left < cr.right) overlapBonus = -120;\n" +
+                "        var score = pri + perp * w + overlapBonus;\n" +
+                "        if (score < bestScore) { bestScore = score; best = c.el; }\n" +
                 "      }\n" +
                 "    }\n" +
                 "    if (best) {\n" +
-                "      best.focus({ preventScroll: true });\n" +
-                "      best.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });\n" +
+                "      applyFocus(best, !fsEl);\n" +
                 "      return true;\n" +
                 "    }\n" +
+                "    if (fsEl) return true;\n" +
                 "    var sx = dir === 'ArrowRight' ? 220 : (dir === 'ArrowLeft' ? -220 : 0);\n" +
                 "    var sy = dir === 'ArrowDown' ? 220 : (dir === 'ArrowUp' ? -220 : 0);\n" +
                 "    var ox = window.scrollX, oy = window.scrollY;\n" +
@@ -371,14 +632,125 @@ public class AdBlockEngine {
                 "    }, 60);\n" +
                 "    return true;\n" +
                 "  };\n" +
+                "\n" +
+                "  function tapElement(ae, fsEl) {\n" +
+                "    var vw = window.innerWidth || 1280;\n" +
+                "    var vh = window.innerHeight || 720;\n" +
+                "    var r = ae.getBoundingClientRect();\n" +
+                "    if (r.width > 2 && r.height > 2) {\n" +
+                "      var nx = Math.max(0.01, Math.min(0.99, (r.left + r.width * 0.5) / vw));\n" +
+                "      var ny = Math.max(0.01, Math.min(0.99, (r.top + r.height * 0.5) / vh));\n" +
+                "      if (window.top === window && window.CleanTvBridge && window.CleanTvBridge.nativeTapNormalized) {\n" +
+                "        window.CleanTvBridge.nativeTapNormalized(nx, ny);\n" +
+                "        return 'native-tap';\n" +
+                "      } else if (window.top !== window) {\n" +
+                "        window.top.postMessage({ type: 'cleanTvCmd', cmd: 'tapNorm', nx: nx, ny: ny, inFs: !!fsEl }, '*');\n" +
+                "        return 'post-tap';\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (typeof ae.click === 'function') { ae.click(); return 'clicked'; }\n" +
+                "    return 'none';\n" +
+                "  }\n" +
+                "\n" +
+                "  window._cleanTvActivateFocused = function() {\n" +
+                "    window._cleanTvWakeControls();\n" +
+                "    var fsEl = getFullscreenRoot();\n" +
+                "    if (fsEl && fsEl.tagName === 'IFRAME' && fsEl.contentWindow) {\n" +
+                "      fsEl.contentWindow.postMessage({ type: 'cleanTvCmd', cmd: 'activate' }, '*');\n" +
+                "      return 'postmsg';\n" +
+                "    }\n" +
+                "    var ae = window._cleanTvFocusEl;\n" +
+                "    if (!ae || !ae.isConnected || (fsEl && !fsEl.contains(ae))) ae = document.activeElement;\n" +
+                "    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {\n" +
+                "      var tp = (ae.type || '').toLowerCase();\n" +
+                "      if (tp !== 'button' && tp !== 'submit' && tp !== 'checkbox' && tp !== 'radio') {\n" +
+                "        ae.removeAttribute('readonly');\n" +
+                "        ae.focus();\n" +
+                "        if (window.top === window && window.CleanTvBridge && window.CleanTvBridge.showSoftKeyboard) window.CleanTvBridge.showSoftKeyboard();\n" +
+                "        else if (window.top !== window) window.top.postMessage({ type: 'cleanTvCmd', cmd: 'keyboard' }, '*');\n" +
+                "        return 'text-input';\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (fsEl && (!ae || ae === document.body || ae === document.documentElement || ae === fsEl)) {\n" +
+                "      var vw = window.innerWidth || 1280, vh = window.innerHeight || 720;\n" +
+                "      var cands = collectCandidates(fsEl, vw, vh);\n" +
+                "      ae = pickInitialTarget(cands, fsEl, vw, vh);\n" +
+                "      if (ae) applyFocus(ae, false);\n" +
+                "    }\n" +
+                "    if (ae && ae !== document.body && ae !== document.documentElement) {\n" +
+                "      var tag = ae.tagName;\n" +
+                "      if (fsEl || tag === 'IFRAME' || tag === 'VIDEO' || (tag !== 'A' && tag !== 'BUTTON' && tag !== 'SELECT' && tag !== 'INPUT')) {\n" +
+                "        var tRes = tapElement(ae, fsEl);\n" +
+                "        if (tRes !== 'none') return tRes;\n" +
+                "      }\n" +
+                "      if (typeof ae.click === 'function') { ae.click(); return 'clicked'; }\n" +
+                "    }\n" +
+                "    return fsEl ? 'cross-fs' : 'none';\n" +
+                "  };\n" +
+                "\n" +
+                "  window.addEventListener('message', function(e) {\n" +
+                "    var d = e.data;\n" +
+                "    if (!d) return;\n" +
+                "    if (d.type === 'cleanTvFocusRect') {\n" +
+                "      var mapped = d.rect;\n" +
+                "      if (Array.isArray(mapped) && mapped.length === 4) {\n" +
+                "        var fsR = getFullscreenRoot();\n" +
+                "        var fList = document.querySelectorAll('iframe');\n" +
+                "        for (var fi = 0; fi < fList.length; fi++) {\n" +
+                "          if (fList[fi].contentWindow === e.source) {\n" +
+                "            if (fsR !== fList[fi]) {\n" +
+                "              var fir = fList[fi].getBoundingClientRect();\n" +
+                "              var fvw = window.innerWidth || 1280, fvh = window.innerHeight || 720;\n" +
+                "              mapped = [\n" +
+                "                (fir.left + mapped[0] * fir.width) / fvw,\n" +
+                "                (fir.top + mapped[1] * fir.height) / fvh,\n" +
+                "                (mapped[2] * fir.width) / fvw,\n" +
+                "                (mapped[3] * fir.height) / fvh\n" +
+                "              ];\n" +
+                "            }\n" +
+                "            break;\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "      emitFocusRectArr(mapped || null);\n" +
+                "      return;\n" +
+                "    }\n" +
+                "    if (d.type !== 'cleanTvCmd') return;\n" +
+                "    if (d.cmd === 'flag') {\n" +
+                "      window._cleanTvSetDpadFlag(!!d.on);\n" +
+                "    } else if (d.cmd === 'init') {\n" +
+                "      window._cleanTvInitFocus();\n" +
+                "    } else if (d.cmd === 'step') {\n" +
+                "      window._cleanTvStepFocus(d.dir);\n" +
+                "    } else if (d.cmd === 'activate') {\n" +
+                "      window._cleanTvActivateFocused();\n" +
+                "    } else if (d.cmd === 'keyboard' && window.top === window && window.CleanTvBridge && window.CleanTvBridge.showSoftKeyboard) {\n" +
+                "      window.CleanTvBridge.showSoftKeyboard();\n" +
+                "    } else if (d.cmd === 'tapNorm' && window.top === window && window.CleanTvBridge && window.CleanTvBridge.nativeTapNormalized) {\n" +
+                "      var tx = d.nx, ty = d.ny;\n" +
+                "      if (!d.inFs) {\n" +
+                "        var vw = window.innerWidth || 1280, vh = window.innerHeight || 720;\n" +
+                "        var ifrs = document.querySelectorAll('iframe');\n" +
+                "        for (var i = 0; i < ifrs.length; i++) {\n" +
+                "          if (ifrs[i].contentWindow === e.source) {\n" +
+                "            var ir = ifrs[i].getBoundingClientRect();\n" +
+                "            tx = (ir.left + ir.width * d.nx) / vw;\n" +
+                "            ty = (ir.top + ir.height * d.ny) / vh;\n" +
+                "            break;\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "      window.CleanTvBridge.nativeTapNormalized(tx, ty);\n" +
+                "    }\n" +
+                "  });\n" +
+                "\n" +
                 "  document.addEventListener('keydown', function(e) {\n" +
                 "    if (!window._cleanTvDpadMode) return;\n" +
                 "    if (e.defaultPrevented) return;\n" +
-                "    var ae = document.activeElement;\n" +
+                "    var ae = window._cleanTvFocusEl || document.activeElement;\n" +
                 "    if (e.key === 'Enter') {\n" +
-                "      if (ae && ae !== document.body && ae.tagName !== 'A' && ae.tagName !== 'BUTTON' && ae.tagName !== 'INPUT' && ae.tagName !== 'SELECT' && ae.tagName !== 'TEXTAREA' && ae.tagName !== 'SUMMARY') {\n" +
-                "        if (typeof ae.click === 'function') { e.preventDefault(); ae.click(); }\n" +
-                "      }\n" +
+                "      var res = window._cleanTvActivateFocused();\n" +
+                "      if (res === 'native-tap' || res === 'post-tap' || res === 'clicked' || res === 'postmsg') e.preventDefault();\n" +
                 "      return;\n" +
                 "    }\n" +
                 "    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;\n" +
@@ -387,12 +759,10 @@ public class AdBlockEngine {
                 "      if (tag === 'CANVAS') return;\n" +
                 "      if ((tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;\n" +
                 "    }\n" +
-                "    if (window._cleanTvStepFocus(e.key)) e.preventDefault();\n" +
+                "    var moved = window._cleanTvStepFocus(e.key);\n" +
+                "    if (moved === true || moved === 'postmsg' || moved === 'waking') e.preventDefault();\n" +
                 "  }, false);\n" +
-                "  window._cleanTvShieldInjected = true;\n" +
                 "})();";
-
-        view.evaluateJavascript(js, null);
     }
 
     /**
