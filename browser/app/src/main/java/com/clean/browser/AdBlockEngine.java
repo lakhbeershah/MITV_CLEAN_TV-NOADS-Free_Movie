@@ -219,6 +219,47 @@ public class AdBlockEngine {
                 "      return false;\n" +
                 "    }\n" +
                 "  };\n" +
+                "\n" +
+                "  // 6. Real-time media playback detector\n" +
+                "  function reportMedia() {\n" +
+                "    var active = !!document.fullscreenElement;\n" +
+                "    try {\n" +
+                "      var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
+                "      if (yt && typeof yt.getPlayerState === 'function') {\n" +
+                "        var s = yt.getPlayerState();\n" +
+                "        if (s === 1 || s === 2 || s === 3) active = true;\n" +
+                "      }\n" +
+                "    } catch(e) {}\n" +
+                "    if (!active) {\n" +
+                "      var vids = document.querySelectorAll('video');\n" +
+                "      for (var i = 0; i < vids.length; i++) {\n" +
+                "        var v = vids[i];\n" +
+                "        if (!v.paused || (v.currentTime > 0 && !v.ended) || v.readyState >= 2) { active = true; break; }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (!active) {\n" +
+                "      var frames = document.querySelectorAll('iframe');\n" +
+                "      for (var j = 0; j < frames.length; j++) {\n" +
+                "        try {\n" +
+                "          var fv = frames[j].contentDocument.querySelector('video');\n" +
+                "          if (fv && (!fv.paused || (fv.currentTime > 0 && !fv.ended) || fv.readyState >= 2)) { active = true; break; }\n" +
+                "        } catch(e) {}\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (!active && (location.pathname.indexOf('/watch') !== -1 || location.pathname.indexOf('/movie/') !== -1 || location.pathname.indexOf('/episode/') !== -1 || location.pathname.indexOf('/tv/') !== -1 || location.pathname.indexOf('/stream/') !== -1)) {\n" +
+                "      if (document.querySelector('video') || document.querySelector('iframe')) {\n" +
+                "        active = true;\n" +
+                "      }\n" +
+                "    }\n" +
+                "    if (window.CleanTvBridge && typeof window.CleanTvBridge.setVideoPlaying === 'function') {\n" +
+                "      window.CleanTvBridge.setVideoPlaying(active);\n" +
+                "    }\n" +
+                "  }\n" +
+                "  setInterval(reportMedia, 1000);\n" +
+                "  document.addEventListener('play', function() { if (window.CleanTvBridge) window.CleanTvBridge.setVideoPlaying(true); }, true);\n" +
+                "  document.addEventListener('playing', function() { if (window.CleanTvBridge) window.CleanTvBridge.setVideoPlaying(true); }, true);\n" +
+                "  document.addEventListener('pause', function() { setTimeout(reportMedia, 400); }, true);\n" +
+                "  document.addEventListener('ended', function() { setTimeout(reportMedia, 400); }, true);\n" +
                 "})();";
 
         view.evaluateJavascript(js, null);

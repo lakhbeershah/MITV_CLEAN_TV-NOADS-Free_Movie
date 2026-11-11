@@ -71,7 +71,32 @@ public class MainActivity extends Activity {
     private boolean isDarkMode = false;
     private boolean isMobileUa = true; // Mobile UA default for smooth H.264 video decoding
     private boolean isVideoActive = false;
+    private volatile boolean isVideoPlaying = false; // Real-time media detector state
     private boolean isMouseMode = true; // Fully mouse by default!
+
+    public class MediaBridge {
+        @android.webkit.JavascriptInterface
+        public void setVideoPlaying(boolean playing) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                isVideoPlaying = playing;
+            });
+        }
+    }
+
+    private boolean isMovieOrVideoActive() {
+        if (customVideoView != null || isVideoActive || isVideoPlaying) {
+            return true;
+        }
+        if (webView != null && webView.getUrl() != null) {
+            String lower = webView.getUrl().toLowerCase();
+            if (lower.contains("youtube.com/watch") || lower.contains("youtu.be/") ||
+                lower.contains("hdmovie2") || lower.contains("/movie/") ||
+                lower.contains("/watch") || lower.contains("/stream") || lower.contains("/video")) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     // D-Pad Mouse movement handler
     private final Handler cursorHandler = new Handler(Looper.getMainLooper());
@@ -98,6 +123,7 @@ public class MainActivity extends Activity {
             backLongHandled = true;
             if (!isMouseMode) {
                 enterMouseMode();
+                cursorView.resetToCenter();
             } else {
                 cursorView.resetToCenter();
                 showHud("🎯", "Cursor Centered");
@@ -108,18 +134,31 @@ public class MainActivity extends Activity {
     private void enterDpadMode() {
         isMouseMode = false;
         cursorView.setPointerVisible(false);
-        showHud("🎮", "D-Pad Mode ON (▲/▼ Vol, ◀/▶ Seek, OK Pause)\nHold BACK to return to Mouse");
+        if (isMovieOrVideoActive()) {
+            showHud("🎬", "Movie Mode (▲/▼ Vol, ◀/▶ Seek, OK Pause)\nHold BACK to return to Mouse");
+        } else {
+            showHud("🎮", "D-Pad Arrow Mode (▲/▼ Scroll, OK Click)\nHold BACK to return to Mouse");
+        }
     }
 
     private void enterMouseMode() {
         isMouseMode = true;
         cursorView.setPointerVisible(true);
-        showHud("🎯", "Mouse Pointer Active (Edge Scroll ON)");
+        showHud("🎯", "Mouse Pointer Active");
     }
 
     private void scrollPageSlow(int deltaY) {
         webView.scrollBy(0, deltaY);
         webView.evaluateJavascript("window.scrollBy(0, " + deltaY + ");", null);
+    }
+
+    private void scrollPageWebpage(int deltaY, boolean isRepeat) {
+        webView.scrollBy(0, deltaY);
+        String behavior = isRepeat ? "auto" : "smooth";
+        webView.evaluateJavascript("window.scrollBy({top: " + deltaY + ", behavior: '" + behavior + "'});", null);
+        if (!isRepeat) {
+            showHud(deltaY < 0 ? "▲" : "▼", deltaY < 0 ? "Scroll Up" : "Scroll Down");
+        }
     }
 
     private final Runnable cursorMoveRunnable = new Runnable() {
@@ -165,6 +204,15 @@ public class MainActivity extends Activity {
         // Check if intent contains URL
         if (getIntent() != null && getIntent().getData() != null) {
             loadUrl(getIntent().getData().toString());
+        }
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent != null && intent.getData() != null) {
+            loadUrl(intent.getData().toString());
         }
     }
 
@@ -218,6 +266,9 @@ public class MainActivity extends Activity {
         s.setUserAgentString(isMobileUa ? UA_MOBILE : UA_DESKTOP);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setRenderPriority(WebSettings.RenderPriority.HIGH);
+
+        webView.addJavascriptInterface(new MediaBridge(), "CleanTvBridge");
 
         applyDarkMode();
 
@@ -240,6 +291,8 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+                isVideoPlaying = false;
+                isVideoActive = false;
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.setProgress(10);
                 AdBlockEngine.injectVideoShield(view);
@@ -489,7 +542,7 @@ public class MainActivity extends Activity {
             if (action == KeyEvent.ACTION_DOWN) {
                 if (event.getRepeatCount() == 0) {
                     backLongHandled = false;
-                    keyHandler.postDelayed(longPressBackRunnable, 600);
+                    keyHandler.postDelayed(longPressBackRunnable, 400);
                 }
                 return true;
             } else if (action == KeyEvent.ACTION_UP) {
@@ -514,7 +567,7 @@ public class MainActivity extends Activity {
             if (action == KeyEvent.ACTION_DOWN) {
                 if (event.getRepeatCount() == 0) {
                     okLongHandled = false;
-                    keyHandler.postDelayed(longPressOkRunnable, 600);
+                    keyHandler.postDelayed(longPressOkRunnable, 400);
                 }
                 return true;
             } else if (action == KeyEvent.ACTION_UP) {
@@ -536,8 +589,12 @@ public class MainActivity extends Activity {
                     return true;
                 }
                 if (!isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
-                    toggleVideoPlayPause();
-                    return true;
+                    if (isMovieOrVideoActive()) {
+                        toggleVideoPlayPause();
+                        return true;
+                    } else {
+                        return super.dispatchKeyEvent(event);
+                    }
                 }
                 if (speedDialView.getVisibility() == View.VISIBLE) {
                     View focused = getCurrentFocus();
@@ -555,18 +612,35 @@ public class MainActivity extends Activity {
             return super.dispatchKeyEvent(event);
         }
 
-        // 4. In-Video & Media Remote Mode (ONLY active when user explicitly enabled D-Pad Mode via menu)
+        // 4. In-Video & Media Remote Mode or Webpage Arrow Mode (when user enabled D-Pad Mode)
         if (!isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
-            if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                if (action == KeyEvent.ACTION_DOWN) {
-                    adjustVolume(keyCode == KeyEvent.KEYCODE_DPAD_UP);
+            if (isMovieOrVideoActive()) {
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        adjustVolume(keyCode == KeyEvent.KEYCODE_DPAD_UP);
+                    }
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        seekVideo(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT);
+                    }
+                    return true;
                 }
-                return true;
-            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                if (action == KeyEvent.ACTION_DOWN) {
-                    seekVideo(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT);
+            } else {
+                // Regular Webpage: D-Pad Arrow Navigation Mode!
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        scrollPageWebpage(-240, event.getRepeatCount() > 0);
+                    }
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        scrollPageWebpage(240, event.getRepeatCount() > 0);
+                    }
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                    return super.dispatchKeyEvent(event);
                 }
-                return true;
             }
         }
 
@@ -618,7 +692,7 @@ public class MainActivity extends Activity {
         if (radialMenuLayout.getVisibility() == View.VISIBLE) {
             hideRadialMenu();
         } else {
-            menuBtnDpadMode.setText(isMouseMode ? "🎮 Turn ON D-Pad" : "🎮 Turn OFF D-Pad");
+            menuBtnDpadMode.setText(isMouseMode ? "🎮 Turn ON D-Pad" : "🎯 Turn ON Mouse");
             textZoomScale.setText(currentZoom + "%");
             menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
             menuBtnUserAgent.setText(isMobileUa ? "📱 Mobile (Smooth)" : "💻 Desktop (Full)");
