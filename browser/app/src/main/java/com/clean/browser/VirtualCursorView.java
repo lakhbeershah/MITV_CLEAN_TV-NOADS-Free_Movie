@@ -32,6 +32,7 @@ public class VirtualCursorView extends View {
 
     private void init() {
         setWillNotDraw(false);
+        setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         cursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         cursorPaint.setColor(0xFF00E5FF); // Bright Cyan

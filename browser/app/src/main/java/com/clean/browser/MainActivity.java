@@ -13,6 +13,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -62,6 +63,7 @@ public class MainActivity extends Activity {
     // Radial Menu
     private View radialMenuLayout;
     private TextView menuBtnZoomIn, menuBtnZoomOut, menuBtnDarkMode, menuBtnUserAgent, menuBtnReload, menuBtnHome;
+    private TextView menuBtnFullscreen, menuBtnScrollDown;
 
     // State
     private int currentZoom = 125; // Default 125% for 10-foot TV viewing
@@ -92,11 +94,23 @@ public class MainActivity extends Activity {
         @Override
         public void run() {
             backLongHandled = true;
-            cursorView.togglePointerVisible();
-            showHud(cursorView.isPointerVisible() ? "🎯" : "🖱️",
-                    cursorView.isPointerVisible() ? "Mouse Cursor: ON" : "Mouse Cursor: OFF");
+            toggleCursorMode();
         }
     };
+
+    private void toggleCursorMode() {
+        cursorView.togglePointerVisible();
+        if (cursorView.isPointerVisible()) {
+            showHud("🎯", "Pointer Mode (Edge Scroll ON)");
+        } else {
+            showHud("🎮", "Video Mode (▲/▼ Vol, ◀/▶ Seek, OK Pause)");
+        }
+    }
+
+    private void scrollPage(int deltaY) {
+        webView.scrollBy(0, deltaY);
+        webView.evaluateJavascript("window.scrollBy({top: " + deltaY + ", behavior: 'instant'});", null);
+    }
 
     private final Runnable cursorMoveRunnable = new Runnable() {
         @Override
@@ -110,6 +124,16 @@ public class MainActivity extends Activity {
             else if (activeDpadCode == KeyEvent.KEYCODE_DPAD_RIGHT) dx = cursorSpeed;
 
             cursorView.moveBy(dx, dy);
+
+            // Smooth Edge Scrolling
+            float curY = cursorView.getCursorY();
+            int viewH = cursorView.getHeight() > 0 ? cursorView.getHeight() : 720;
+            if (dy > 0 && curY >= viewH - 80) {
+                scrollPage(36);
+            } else if (dy < 0 && curY <= 80) {
+                scrollPage(-36);
+            }
+
             cursorHandler.postDelayed(this, 16);
         }
     };
@@ -117,6 +141,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         setContentView(R.layout.activity_main);
 
         loadPreferences();
@@ -156,9 +183,13 @@ public class MainActivity extends Activity {
         menuBtnUserAgent = findViewById(R.id.menuBtnUserAgent);
         menuBtnReload = findViewById(R.id.menuBtnReload);
         menuBtnHome = findViewById(R.id.menuBtnHome);
+        menuBtnFullscreen = findViewById(R.id.menuBtnFullscreen);
+        menuBtnScrollDown = findViewById(R.id.menuBtnScrollDown);
     }
 
     private void setupWebView() {
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -170,6 +201,8 @@ public class MainActivity extends Activity {
         s.setBuiltInZoomControls(false);
         s.setTextZoom(currentZoom);
         s.setUserAgentString(isMobileUa ? UA_MOBILE : UA_DESKTOP);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        s.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         applyDarkMode();
 
@@ -318,6 +351,17 @@ public class MainActivity extends Activity {
             hideRadialMenu();
             openSpeedDial();
         });
+
+        menuBtnFullscreen.setOnClickListener(v -> {
+            hideRadialMenu();
+            webView.evaluateJavascript("if (window._cleanTvVideo) window._cleanTvVideo.fullscreen();", null);
+            showHud("📺", "Fullscreen Video Request");
+        });
+
+        menuBtnScrollDown.setOnClickListener(v -> {
+            scrollPage(280);
+            showHud("📜", "Scrolled Down");
+        });
     }
 
     private void handleSearchOrUrl(String input) {
@@ -370,9 +414,7 @@ public class MainActivity extends Activity {
             if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
                 backLongHandled = true;
                 keyHandler.removeCallbacks(longPressBackRunnable);
-                cursorView.togglePointerVisible();
-                showHud(cursorView.isPointerVisible() ? "🎯" : "🖱️",
-                        cursorView.isPointerVisible() ? "Mouse Cursor: ON" : "Mouse Cursor: OFF");
+                toggleCursorMode();
                 return true;
             }
             if (action == KeyEvent.ACTION_DOWN) {
@@ -461,13 +503,19 @@ public class MainActivity extends Activity {
             }
         }
 
-        // 5. Virtual Cursor Movement via D-Pad
+        // 5. Virtual Cursor Movement & Edge Scrolling via D-Pad
         if (cursorView.isPointerVisible() && speedDialView.getVisibility() != View.VISIBLE) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
                     keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
                 if (action == KeyEvent.ACTION_DOWN) {
                     activeDpadCode = keyCode;
+                    int viewH = cursorView.getHeight() > 0 ? cursorView.getHeight() : 720;
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && cursorView.getCursorY() >= viewH - 90) {
+                        scrollPage(60);
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP && cursorView.getCursorY() <= 90) {
+                        scrollPage(-60);
+                    }
                     if (!isMovingCursor) {
                         isMovingCursor = true;
                         cursorHandler.post(cursorMoveRunnable);
@@ -567,16 +615,16 @@ public class MainActivity extends Activity {
     private void seekVideo(boolean forward) {
         int seconds = forward ? 10 : -10;
         String js = "(function() {\n" +
+                "  if (window._cleanTvVideo && window._cleanTvVideo.seek) {\n" +
+                "    return window._cleanTvVideo.seek(" + seconds + ");\n" +
+                "  }\n" +
+                "  try {\n" +
+                "    var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
+                "    if (yt && typeof yt.seekBy === 'function') { yt.seekBy(" + seconds + "); return 'yt'; }\n" +
+                "  } catch(e) {}\n" +
                 "  var v = document.querySelector('video');\n" +
-                "  if (!v) {\n" +
-                "    var iframes = document.querySelectorAll('iframe');\n" +
-                "    for (var i = 0; i < iframes.length; i++) {\n" +
-                "      try { var iv = iframes[i].contentDocument.querySelector('video'); if (iv) { v = iv; break; } } catch(e) {}\n" +
-                "    }\n" +
-                "  }\n" +
-                "  if (v) {\n" +
-                "    v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (" + seconds + ")));\n" +
-                "  }\n" +
+                "  if (v) { v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (" + seconds + "))); return 'html5'; }\n" +
+                "  return 'none';\n" +
                 "})();";
         webView.evaluateJavascript(js, null);
         showHud(forward ? "⏩" : "⏪", (forward ? "+10s" : "-10s") + " Seek");
@@ -584,29 +632,33 @@ public class MainActivity extends Activity {
 
     private void toggleVideoPlayPause() {
         String js = "(function() {\n" +
-                "  var v = document.querySelector('video');\n" +
-                "  if (!v) {\n" +
-                "    var iframes = document.querySelectorAll('iframe');\n" +
-                "    for (var i = 0; i < iframes.length; i++) {\n" +
-                "      try { var iv = iframes[i].contentDocument.querySelector('video'); if (iv) { v = iv; break; } } catch(e) {}\n" +
-                "    }\n" +
+                "  if (window._cleanTvVideo && window._cleanTvVideo.togglePlayPause) {\n" +
+                "    return window._cleanTvVideo.togglePlayPause();\n" +
                 "  }\n" +
-                "  if (v) {\n" +
-                "    if (v.paused) {\n" +
-                "      v.play();\n" +
-                "      return 'play';\n" +
-                "    } else {\n" +
-                "      v.pause();\n" +
-                "      return 'pause';\n" +
+                "  try {\n" +
+                "    var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
+                "    if (yt && typeof yt.getPlayerState === 'function') {\n" +
+                "      var state = yt.getPlayerState();\n" +
+                "      if (state === 1) { yt.pauseVideo(); return 'pause'; }\n" +
+                "      else { yt.playVideo(); return 'play'; }\n" +
                 "    }\n" +
+                "  } catch(e) {}\n" +
+                "  var btn = document.querySelector('.ytp-play-button, button[aria-label*=\"Play\" i], button[aria-label*=\"Pause\" i]');\n" +
+                "  if (btn) { btn.click(); return 'click'; }\n" +
+                "  var v = document.querySelector('video');\n" +
+                "  if (v) {\n" +
+                "    if (v.paused) { v.play(); return 'play'; }\n" +
+                "    else { v.pause(); return 'pause'; }\n" +
                 "  }\n" +
                 "  return 'none';\n" +
                 "})();";
         webView.evaluateJavascript(js, result -> {
-            if ("\"play\"".equals(result)) {
-                showHud("▶️", "Play");
-            } else if ("\"pause\"".equals(result)) {
-                showHud("⏸️", "Pause");
+            if (result != null && result.contains("pause")) {
+                showHud("⏸️", "Video Paused");
+            } else if (result != null && result.contains("play")) {
+                showHud("▶️", "Video Playing");
+            } else {
+                showHud("⏯️", "Play / Pause");
             }
         });
     }

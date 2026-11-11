@@ -66,7 +66,8 @@ public class AdBlockEngine {
     }
 
     /**
-     * Injects JavaScript to kill in-video ads, skip video timers, and neutralize popups.
+     * Injects JavaScript to kill in-video ads, skip video timers, neutralize popups,
+     * and provide high-performance video seeking/pause APIs.
      */
     public static void injectVideoShield(WebView view) {
         String js = "(function() {\n" +
@@ -79,37 +80,113 @@ public class AdBlockEngine {
                 "  window.adsBlocked = false;\n" +
                 "\n" +
                 "  // 2. Block Popunder / New Tab spam without user gesture\n" +
-                "  var originalOpen = window.open;\n" +
                 "  window.open = function(url, target, features) {\n" +
                 "    console.log('Blocked popup window: ' + url);\n" +
                 "    return null;\n" +
                 "  };\n" +
                 "\n" +
-                "  // 3. Fast Video Ad Skip Loop\n" +
+                "  // 3. Ultra-Safe Video Ad Skipper: Only triggers when player is actively showing an ad\n" +
                 "  setInterval(function() {\n" +
-                "    // YouTube & General Web Video Ad detect\n" +
-                "    var adContainer = document.querySelector('.video-ads, .ytp-ad-module, .ad-container, [class*=\"ad-showing\"]');\n" +
-                "    var video = document.querySelector('video');\n" +
-                "    if (video) {\n" +
-                "      if (adContainer && adContainer.children.length > 0) {\n" +
-                "        video.muted = true;\n" +
-                "        video.playbackRate = 16.0;\n" +
-                "        if (isFinite(video.duration) && video.duration > 0) {\n" +
+                "    try {\n" +
+                "      var adActive = document.querySelector('.ad-showing, .ad-interrupting');\n" +
+                "      if (adActive) {\n" +
+                "        var video = adActive.querySelector('video') || document.querySelector('video');\n" +
+                "        if (video && isFinite(video.duration) && video.duration > 0) {\n" +
+                "          video.muted = true;\n" +
+                "          video.playbackRate = 16.0;\n" +
                 "          video.currentTime = video.duration;\n" +
                 "        }\n" +
+                "        var skipBtns = document.querySelectorAll('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .videoAdUiSkipButton, [class*=\"skip-button\"], [class*=\"ad-skip\"], button[id*=\"skip\"], .ytp-skip-ad-button');\n" +
+                "        for (var i = 0; i < skipBtns.length; i++) {\n" +
+                "          try { skipBtns[i].click(); } catch(e) {}\n" +
+                "        }\n" +
                 "      }\n" +
-                "      // Click any skip button immediately\n" +
-                "      var skipBtns = document.querySelectorAll('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .videoAdUiSkipButton, [class*=\"skip-button\"], [class*=\"ad-skip\"], button[id*=\"skip\"]');\n" +
-                "      for (var i = 0; i < skipBtns.length; i++) {\n" +
-                "        skipBtns[i].click();\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }, 250);\n" +
+                "    } catch(e) {}\n" +
+                "  }, 1000);\n" +
                 "\n" +
                 "  // 4. Cosmetic element blocker\n" +
                 "  var style = document.createElement('style');\n" +
                 "  style.innerHTML = '.ad, .ads, .ad-banner, .popunder, [class*=\"sponsored\"], .ytp-ad-overlay-container, #player-ads { display: none !important; opacity: 0 !important; visibility: hidden !important; }';\n" +
                 "  (document.head || document.documentElement).appendChild(style);\n" +
+                "\n" +
+                "  // 5. Fail-Safe TV Video Remote Controller API\n" +
+                "  window._cleanTvVideo = {\n" +
+                "    seek: function(seconds) {\n" +
+                "      // A. YouTube movie_player native seek\n" +
+                "      try {\n" +
+                "        var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
+                "        if (yt && typeof yt.seekBy === 'function') {\n" +
+                "          yt.seekBy(seconds);\n" +
+                "          return 'yt';\n" +
+                "        }\n" +
+                "      } catch(e) {}\n" +
+                "      // B. Standard HTML5 Video element\n" +
+                "      var v = document.querySelector('video');\n" +
+                "      if (!v) {\n" +
+                "        var iframes = document.querySelectorAll('iframe');\n" +
+                "        for (var i = 0; i < iframes.length; i++) {\n" +
+                "          try { var iv = iframes[i].contentDocument.querySelector('video'); if (iv) { v = iv; break; } } catch(e) {}\n" +
+                "        }\n" +
+                "      }\n" +
+                "      if (v) {\n" +
+                "        var target = Math.max(0, Math.min(v.duration || 999999, v.currentTime + seconds));\n" +
+                "        v.currentTime = target;\n" +
+                "        return 'html5';\n" +
+                "      }\n" +
+                "      // C. Keyboard fallback\n" +
+                "      var code = seconds > 0 ? 39 : 37;\n" +
+                "      var key = seconds > 0 ? 'ArrowRight' : 'ArrowLeft';\n" +
+                "      var ev = new KeyboardEvent('keydown', {key: key, code: key, keyCode: code, which: code, bubbles: true});\n" +
+                "      (document.activeElement || document.body).dispatchEvent(ev);\n" +
+                "      return 'key';\n" +
+                "    },\n" +
+                "\n" +
+                "    togglePlayPause: function() {\n" +
+                "      // A. YouTube movie_player native play/pause\n" +
+                "      try {\n" +
+                "        var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
+                "        if (yt && typeof yt.getPlayerState === 'function') {\n" +
+                "          var state = yt.getPlayerState();\n" +
+                "          if (state === 1) { yt.pauseVideo(); return 'pause'; }\n" +
+                "          else { yt.playVideo(); return 'play'; }\n" +
+                "        }\n" +
+                "      } catch(e) {}\n" +
+                "      // B. Play/Pause UI Button Click\n" +
+                "      var playBtn = document.querySelector('.ytp-play-button, button[aria-label*=\"Play\" i], button[aria-label*=\"Pause\" i], .play-button');\n" +
+                "      if (playBtn) {\n" +
+                "        playBtn.click();\n" +
+                "        return 'click';\n" +
+                "      }\n" +
+                "      // C. Standard HTML5 Video element\n" +
+                "      var v = document.querySelector('video');\n" +
+                "      if (!v) {\n" +
+                "        var iframes = document.querySelectorAll('iframe');\n" +
+                "        for (var i = 0; i < iframes.length; i++) {\n" +
+                "          try { var iv = iframes[i].contentDocument.querySelector('video'); if (iv) { v = iv; break; } } catch(e) {}\n" +
+                "        }\n" +
+                "      }\n" +
+                "      if (v) {\n" +
+                "        if (v.paused) { v.play(); return 'play'; }\n" +
+                "        else { v.pause(); return 'pause'; }\n" +
+                "      }\n" +
+                "      // D. Keyboard shortcut 'k'\n" +
+                "      var ev = new KeyboardEvent('keydown', {key: 'k', code: 'KeyK', keyCode: 75, which: 75, bubbles: true});\n" +
+                "      (document.activeElement || document.body).dispatchEvent(ev);\n" +
+                "      return 'key';\n" +
+                "    },\n" +
+                "\n" +
+                "    fullscreen: function() {\n" +
+                "      var fsBtn = document.querySelector('.ytp-fullscreen-button, button[aria-label*=\"Full screen\" i], .fullscreen-button');\n" +
+                "      if (fsBtn) { fsBtn.click(); return true; }\n" +
+                "      var v = document.querySelector('video');\n" +
+                "      if (v) {\n" +
+                "        if (v.requestFullscreen) v.requestFullscreen();\n" +
+                "        else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();\n" +
+                "        return true;\n" +
+                "      }\n" +
+                "      return false;\n" +
+                "    }\n" +
+                "  };\n" +
                 "})();";
 
         view.evaluateJavascript(js, null);
