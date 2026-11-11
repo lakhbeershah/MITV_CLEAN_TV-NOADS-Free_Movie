@@ -75,24 +75,17 @@ public class SleepTimerManager {
     private static void triggerTvSleep(Activity activity) {
         if (activity == null || activity.isFinishing()) return;
         try {
-            if (HomeKeyService.getInstance() != null) {
-                HomeKeyService.getInstance().performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
-                return;
-            }
-            if (InputKeyService.getInstance() != null) {
-                InputKeyService.getInstance().performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
-                return;
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "Accessibility lock screen failed", t);
-        }
-        try {
-            // Fallback: Send Power keyevent to enter standby
+            // Send KEYCODE_POWER (26) to trigger native TV Standby.
+            // On Android TV, KEYCODE_POWER turns off the screen and puts the TV in low-power standby
+            // while preserving power to the Bluetooth LE controller so the remote can wake the TV.
+            // (GLOBAL_ACTION_LOCK_SCREEN was previously causing Amlogic SoC to force-suspend STR
+            // which cut power to the Bluetooth radio and unpaired the remote).
             new Thread(() -> {
                 try {
-                    Runtime.getRuntime().exec("input keyevent 26");
+                    Process process = Runtime.getRuntime().exec("input keyevent 26");
+                    process.waitFor();
                 } catch (Exception e) {
-                    Log.e(TAG, "Failed to exec power keyevent", e);
+                    Log.e(TAG, "Failed to exec power keyevent 26", e);
                 }
             }).start();
         } catch (Exception e) {
