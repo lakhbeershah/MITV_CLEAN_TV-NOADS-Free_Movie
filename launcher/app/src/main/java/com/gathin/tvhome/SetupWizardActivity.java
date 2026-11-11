@@ -57,12 +57,10 @@ public class SetupWizardActivity extends Activity {
     private int selectedTimeout = 1;
 
     // Step 3: Apps Views
-    private TextView badgeTvBro, badgeSmartTube, badgeStreamHub, badgePlayDeck, badgeFileBox;
+    private TextView badgeTvBro, badgeSmartTube, badgeFileBox;
 
-    private static final String PKG_TVBRO = "com.phlox.tvwebbrowser";
+    private static final String PKG_TVBRO = "com.clean.browser";
     private static final String PKG_SMARTTUBE = "com.teamsmart.videomanager.tv";
-    private static final String PKG_STREAMHUB = "com.example.tvstreamhub";
-    private static final String PKG_PLAYDECK = "com.example.playdeck";
     private static final String PKG_FILEBOX = "com.example.tvfilebox";
 
     @Override
@@ -348,14 +346,10 @@ public class SetupWizardActivity extends Activity {
     private void initStep3Apps() {
         badgeTvBro = findViewById(R.id.badgeTvBro);
         badgeSmartTube = findViewById(R.id.badgeSmartTube);
-        badgeStreamHub = findViewById(R.id.badgeStreamHub);
-        badgePlayDeck = findViewById(R.id.badgePlayDeck);
         badgeFileBox = findViewById(R.id.badgeFileBox);
 
-        findViewById(R.id.cardAppTvBro).setOnClickListener(v -> handleAppClick(PKG_TVBRO, "TVBro.apk"));
+        findViewById(R.id.cardAppTvBro).setOnClickListener(v -> handleAppClick(PKG_TVBRO, "Browser-release.apk"));
         findViewById(R.id.cardAppSmartTube).setOnClickListener(v -> handleAppClick(PKG_SMARTTUBE, "SmartTube.apk"));
-        findViewById(R.id.cardAppStreamHub).setOnClickListener(v -> handleAppClick(PKG_STREAMHUB, "TVStreamHub.apk"));
-        findViewById(R.id.cardAppPlayDeck).setOnClickListener(v -> handleAppClick(PKG_PLAYDECK, "PlayDeck.apk"));
         findViewById(R.id.cardAppFileBox).setOnClickListener(v -> handleAppClick(PKG_FILEBOX, "TVFileBox.apk"));
 
         findViewById(R.id.btnInstallAllApps).setOnClickListener(v -> installAllRemainingApps());
@@ -376,8 +370,6 @@ public class SetupWizardActivity extends Activity {
     private void refreshAppBadges() {
         updateAppBadge(badgeTvBro, isPackageInstalled(PKG_TVBRO));
         updateAppBadge(badgeSmartTube, isPackageInstalled(PKG_SMARTTUBE));
-        updateAppBadge(badgeStreamHub, isPackageInstalled(PKG_STREAMHUB));
-        updateAppBadge(badgePlayDeck, isPackageInstalled(PKG_PLAYDECK));
         updateAppBadge(badgeFileBox, isPackageInstalled(PKG_FILEBOX));
     }
 
@@ -446,8 +438,8 @@ public class SetupWizardActivity extends Activity {
     }
 
     private void installAllRemainingApps() {
-        String[] pkgs = {PKG_TVBRO, PKG_SMARTTUBE, PKG_STREAMHUB, PKG_PLAYDECK, PKG_FILEBOX};
-        String[] apks = {"TVBro.apk", "SmartTube.apk", "TVStreamHub.apk", "PlayDeck.apk", "TVFileBox.apk"};
+        String[] pkgs = {PKG_TVBRO, PKG_SMARTTUBE, PKG_FILEBOX};
+        String[] apks = {"Browser-release.apk", "SmartTube.apk", "TVFileBox.apk"};
 
         for (int i = 0; i < pkgs.length; i++) {
             if (!isPackageInstalled(pkgs[i])) {

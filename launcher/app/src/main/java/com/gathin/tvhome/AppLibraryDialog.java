@@ -228,11 +228,10 @@ final class AppLibraryDialog {
                 for (ResolveInfo info : pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(category), 0)) {
                     if (info.activityInfo == null || !info.activityInfo.exported) continue;
                     String pkg = info.activityInfo.packageName;
-                    boolean isStreamHub = StreamHubActivity.class.getName().equals(info.activityInfo.name);
-                    String key = isStreamHub ? (pkg + "/" + info.activityInfo.name) : pkg;
-                    if (hiddenApps != null && (hiddenApps.contains(pkg) || (isStreamHub && hiddenApps.contains(StreamHubActivity.class.getName())))) continue;
-                    if (Intent.CATEGORY_LEANBACK_LAUNCHER.equals(category)) tv.add(isStreamHub ? key : pkg);
-                    if ((!pkg.equals(self) || isStreamHub) && !unique.containsKey(key)) unique.put(key, info);
+                    if (pkg.equals(self)) continue;
+                    if (hiddenApps != null && hiddenApps.contains(pkg)) continue;
+                    if (Intent.CATEGORY_LEANBACK_LAUNCHER.equals(category)) tv.add(pkg);
+                    if (!unique.containsKey(pkg)) unique.put(pkg, info);
                 }
             }
             Map<String, String> names = new HashMap<>();

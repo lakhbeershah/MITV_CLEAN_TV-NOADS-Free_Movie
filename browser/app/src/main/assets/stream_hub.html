@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <base target="_self" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TV Stream & Play Deck — Android TV & Mobile</title>
+  <style>
+    :root {
+      --bg-primary: #0b0e14;
+      --bg-card: #151a24;
+      --bg-card-hover: #1e2636;
+      --bg-header: rgba(11, 14, 20, 0.95);
+      --text-main: #f3f6fa;
+      --text-muted: #94a3b8;
+      --accent: #00e5ff;
+      --accent-glow: rgba(0, 229, 255, 0.4);
+      --netflix: #e50914;
+      --series: #8b5cf6;
+      --bollywood: #f59e0b;
+      --games: #10b981;
+      --live: #3b82f6;
+      --fav: #fbbf24;
+      --radius: 14px;
+      --transition: 0.16s ease-out;
+    }
+
+    body.lite-mode {
+      --transition: 0s !important;
+      --accent-glow: transparent !important;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    body.lite-mode, body.lite-mode * {
+      scroll-behavior: auto !important;
+      transition: none !important;
+      box-shadow: none !important;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-header);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 24px;
+      backdrop-filter: blur(8px);
+    }
+
+    body.lite-mode header {
+      backdrop-filter: none;
+      background: #0b0e14;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00e5ff, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #06090e;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 680px;
+      justify-content: flex-end;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 360px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #151a24;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 10px 14px 10px 38px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 0.95rem;
+    }
+
+    .action-btn {
+      background: #151a24;
+      color: var(--text-main);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .clock-badge {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      padding: 8px 12px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .category-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 12px 0 4px 0;
+      max-width: 1600px;
+      margin: 0 auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .category-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-pill {
+      background: #151a24;
+      color: var(--text-muted);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .cat-pill.active {
+      background: rgba(0, 229, 255, 0.15);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .focusable:focus,
+    .focusable.tv-focused {
+      outline: none !important;
+      border-color: var(--accent) !important;
+      background-color: var(--bg-card-hover) !important;
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+      transform: scale(1.03);
+      z-index: 10;
+    }
+
+    main {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px 24px 80px 24px;
+    }
+
+    .tv-tip-banner {
+      background: linear-gradient(90deg, rgba(0, 229, 255, 0.1), rgba(59, 130, 246, 0.08));
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+    }
+
+    .kbd-badge {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.8rem;
+    }
+
+    .section-block {
+      margin-bottom: 34px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .site-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 2px solid rgba(255, 255, 255, 0.07);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-decoration: none;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 132px;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition), background-color var(--transition);
+      user-select: none;
+    }
+
+    .site-card:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: var(--bg-card-hover);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .site-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .site-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .site-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .site-domain {
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-family: monospace;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .fav-toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all var(--transition);
+    }
+
+    .fav-toggle.active {
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+      border-color: rgba(251, 191, 36, 0.4);
+    }
+
+    .site-desc {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .tag-chip {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.07);
+      color: #cbd5e1;
+    }
+
+    .open-indicator {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #151a24;
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      max-width: 440px;
+      width: 100%;
+      padding: 22px;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0b0e14;
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+
+    @media (max-width: 640px) {
+      header { padding: 12px 14px; }
+      main { padding: 14px 14px 70px 14px; }
+      .brand-title { font-size: 1.05rem; }
+      .clock-badge { display: none; }
+      .controls-row { width: 100%; max-width: none; }
+      .search-wrap { max-width: none; }
+      .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      .site-card { padding: 12px; min-height: 120px; }
+      .site-avatar { width: 32px; height: 32px; font-size: 0.9rem; }
+      .site-name { font-size: 0.92rem; }
+      .site-desc { font-size: 0.78rem; }
+      .tv-tip-banner { font-size: 0.78rem; padding: 10px 12px; }
+    }
+
+    @media (min-width: 1400px) {
+      .card-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      .site-card { padding: 20px; min-height: 148px; }
+      .site-name { font-size: 1.15rem; }
+      .site-desc { font-size: 0.92rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">TV</div>
+        <div>
+          <span class="brand-title">Stream & Play Deck</span>
+          <span class="brand-sub">CinemaOS & Fast Verified Channels</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="search-wrap">
+          <span class="search-icon">&#128269;</span>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input focusable"
+            placeholder="Search CinemaOS, Hotstar, Games..."
+            autocomplete="off"
+          />
+        </div>
+        <button id="addSiteBtn" class="action-btn focusable" title="Add custom website">
+          + Add Link
+        </button>
+        <button id="liteModeBtn" class="action-btn focusable" title="Toggle Zero-Lag Lite Mode for TV">
+          &#9889; Lite: OFF
+        </button>
+        <div id="clockDisplay" class="clock-badge">00:00</div>
+      </div>
+    </div>
+
+    <nav class="category-bar" id="categoryBar" aria-label="Categories">
+      <button class="cat-pill focusable active" data-cat="all">
+        <span class="cat-dot" style="background: #00e5ff;"></span> All Channels
+      </button>
+      <button class="cat-pill focusable" data-cat="fav">
+        <span class="cat-dot" style="background: #fbbf24;"></span> &#9733; Favorites
+      </button>
+      <button class="cat-pill focusable" data-cat="netflix">
+        <span class="cat-dot" style="background: var(--netflix);"></span> Netflix & Prime Hubs
+      </button>
+      <button class="cat-pill focusable" data-cat="series">
+        <span class="cat-dot" style="background: var(--series);"></span> Web Series
+      </button>
+      <button class="cat-pill focusable" data-cat="bollywood">
+        <span class="cat-dot" style="background: var(--bollywood);"></span> Bollywood & Hindi
+      </button>
+      <button class="cat-pill focusable" data-cat="games">
+        <span class="cat-dot" style="background: var(--games);"></span> TV Games
+      </button>
+      <button class="cat-pill focusable" data-cat="live">
+        <span class="cat-dot" style="background: var(--live);"></span> Live TV & Backups
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="tv-tip-banner">
+      <div>
+        <strong>Remote Controls:</strong> Use <span class="kbd-badge">&#9650; &#9660; &#9664; &#9654;</span> D-Pad to navigate, <span class="kbd-badge">OK</span> to launch in <strong>same tab</strong>, or press <span class="kbd-badge">F</span> to pin Favorites.
+      </div>
+      <div>
+        <strong>Fast TV Bro Mode:</strong> Single tab navigation enabled to minimize RAM usage.
+      </div>
+    </div>
+
+    <div id="sectionsContainer"></div>
+  </main>
+
+  <!-- Add Custom Site Modal -->
+  <div class="modal-backdrop" id="addModal">
+    <div class="modal-box">
+      <div class="modal-title">Add Custom Website Link</div>
+      <div class="form-group">
+        <label for="customName">Site Name</label>
+        <input type="text" id="customName" class="form-input focusable" placeholder="e.g. Reelipse or Stunt Paradise" />
+      </div>
+      <div class="form-group">
+        <label for="customUrl">Website URL</label>
+        <input type="url" id="customUrl" class="form-input focusable" placeholder="https://example.com" />
+      </div>
+      <div class="form-group">
+        <label for="customCat">Category</label>
+        <select id="customCat" class="form-select focusable">
+          <option value="netflix">Netflix & Prime Hubs</option>
+          <option value="series">Web Series</option>
+          <option value="bollywood">Bollywood & Hindi</option>
+          <option value="games">TV Games</option>
+          <option value="live">Live TV & Backups</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="customDesc">Short Note</label>
+        <input type="text" id="customDesc" class="form-input focusable" placeholder="Fast 1080p streaming / D-Pad ready" />
+      </div>
+      <div class="modal-actions">
+        <button id="cancelModalBtn" class="action-btn focusable">Cancel</button>
+        <button id="saveSiteBtn" class="action-btn focusable" style="border-color: var(--accent); color: var(--accent);">Save Link</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // VERIFIED FASTEST & WORKING SITES (Dead/error domains removed, CinemaOS #1 on top, fast sorted)
+    const DEFAULT_SITES = [
+      // 1. NETFLIX, PRIME & ALL-IN-ONE OTT HUBS (CinemaOS #1 Top)
+      { id: "n1", name: "CinemaOS", url: "https://cinemaos.live", cat: "netflix", tag: "Netflix / Prime Filter", desc: "Dedicated Providers tab to switch between Netflix, Prime Video, and Disney+ in one click.", color: "#e50914" },
+      { id: "n2", name: "FlyX", url: "https://tv.vynx.cc", cat: "netflix", tag: "Auto-Failover • Fast", desc: "Dark-mode TV layout with automatic server switching and instant stream response.", color: "#e50914" },
+      { id: "n3", name: "VidBox", url: "https://vidbox.dev", cat: "netflix", tag: "AutoEmbed / VidSrc", desc: "Lightweight streaming frontend with instant multi-server switching and big poster cards.", color: "#e50914" },
+
+      // 2. WEB SERIES & BINGE WATCHING
+      { id: "s1", name: "Goojara", url: "https://goojara.to", cat: "series", tag: "Ultra-Lite • Fast", desc: "Uses almost zero RAM; ideal for TV browsers that struggle with heavy scripts.", color: "#8b5cf6" },
+      { id: "s2", name: "ShuttleTV", url: "https://shuttletv.su", cat: "series", tag: "Trending Shows", desc: "Great for trending web series, sitcoms, and anime with a clean dark player.", color: "#8b5cf6" },
+      { id: "s3", name: "SpenFlix", url: "https://spenflix.ru", cat: "series", tag: "Auto-Next Episode", desc: "Fast series player with automatic episode progression and browser resume support.", color: "#8b5cf6" },
+
+      // 3. BOLLYWOOD, HINDI SERIES & SOUTH DUBBED
+      { id: "b1", name: "JioHotstar Free", url: "https://www.hotstar.com/in", cat: "bollywood", tag: "Ultra-Fast 100ms", desc: "Watch selected Hindi movies, serials, and cricket highlights without a paid plan.", color: "#f59e0b" },
+      { id: "b2", name: "Reelipse", url: "https://reelipse.com", cat: "bollywood", tag: "Multi-Server Hub", desc: "Trending streaming frontend with multi-audio Hindi server options.", color: "#f59e0b" },
+      { id: "b3", name: "YouTube Free Movies", url: "https://www.youtube.com/feed/storefront?bp=ogUCKAU%3D", cat: "bollywood", tag: "Goldmines / Shemaroo", desc: "Direct link to free full-length official movies and classics.", color: "#f59e0b" },
+      { id: "b4", name: "HDMovie2", url: "https://hdmovie2.vg", cat: "bollywood", tag: "Latest Bollywood/Dub", desc: "Huge catalog of new Bollywood & Dual-Audio releases (Use with TV Bro AdBlock).", color: "#f59e0b" },
+      { id: "b5", name: "Waves OTT (Prasar)", url: "https://wavespb.com", cat: "bollywood", tag: "Official Indian OTT", desc: "Free Indian family entertainment, classic cinema, and live Indian TV channels.", color: "#f59e0b" },
+      { id: "b6", name: "Amazon MX Player", url: "https://www.mxplayer.in", cat: "bollywood", tag: "Official Free Hindi", desc: "100% free & legal Hindi web series, Bollywood & Hollywood Hindi-dubbed movies.", color: "#f59e0b" },
+
+      // 4. ANDROID TV BROWSER GAMES
+      { id: "g1", name: "Slow Roads", url: "https://slowroads.io", cat: "games", tag: "Chill Driving • 120ms", desc: "Relaxing endless driving game with a low-graphics toggle so your TV stays cool.", color: "#10b981" },
+      { id: "g2", name: "2048 Original", url: "https://play2048.co", cat: "games", tag: "D-Pad Arrow Keys", desc: "Uses under 2MB RAM and responds directly to Up, Down, Left, Right on your TV remote.", color: "#10b981" },
+      { id: "g3", name: "CrazyGames Controller", url: "https://www.crazygames.com/t/controller", cat: "games", tag: "Gamepad & D-Pad", desc: "Pre-filtered browser games supporting Bluetooth controllers and directional keys.", color: "#10b981" },
+      { id: "g4", name: "Poki Arcade", url: "https://poki.com", cat: "games", tag: "Instant Arcade", desc: "Clean tile grid with Subway Surfers, Temple Run 2, and Crossy Road.", color: "#10b981" },
+      { id: "g5", name: "RetroGames Emulator", url: "https://www.retrogames.cc", cat: "games", tag: "Retro Classics", desc: "Play classic 8-bit and 16-bit arcade & console games directly in the browser.", color: "#10b981" },
+      { id: "g6", name: "Pac-Man HTML5", url: "https://pacman.live", cat: "games", tag: "Remote Friendly", desc: "Classic arcade Pac-Man that plays smoothly using TV remote directional arrows.", color: "#10b981" },
+      { id: "g7", name: "Hextris Puzzle", url: "https://hextris.io", cat: "games", tag: "Left/Right Keys", desc: "Fast hexagonal puzzle game controlled with just Left and Right remote keys.", color: "#10b981" },
+      { id: "g8", name: "Stunt Paradise / WebGames", url: "https://web-games.io", cat: "games", tag: "Car & Stunt Games", desc: "Lightweight car stunt, racing, and physics games without sign-ups.", color: "#10b981" },
+      { id: "g9", name: "Play.Works TV", url: "https://play.works/games", cat: "games", tag: "Built for TV Remote", desc: "Designed specifically for Smart TV D-Pad remotes (Pac-Man, Trivia, Space Invaders).", color: "#10b981" },
+
+      // 5. LIVE TV & AUTO-UPDATING BACKUP DIRECTORIES
+      { id: "l1", name: "TBCPL Couch Potato List", url: "https://tbcpl.lol", cat: "live", tag: "Master TV Directory", desc: "Visual dashboard of all working movie, series, anime, and live sports sites.", color: "#3b82f6" },
+      { id: "l2", name: "TV Garden", url: "https://tv.garden", cat: "live", tag: "Global & Indian Live TV", desc: "Watch free live TV channels from India and worldwide in a lightweight interface.", color: "#3b82f6" },
+      { id: "l3", name: "FMHY Video Guide", url: "https://fmhy.net/videopiracyguide", cat: "live", tag: "Daily Verified Mirrors", desc: "The internet's largest daily-verified index of ad-free streaming frontends.", color: "#3b82f6" },
+      { id: "l4", name: "Tubi TV", url: "https://tubitv.com", cat: "live", tag: "100% Legal & Free", desc: "Official ad-supported platform with thousands of high-speed HD movies and shows.", color: "#3b82f6" },
+      { id: "l5", name: "Pluto TV", url: "https://pluto.tv", cat: "live", tag: "24/7 Live Channels", desc: "Official free streaming service with 100+ live movie, sitcom, and action channels.", color: "#3b82f6" }
+    ];
+
+    const CATEGORY_META = {
+      fav: { title: "Pinned Favorites", color: "#fbbf24" },
+      netflix: { title: "Netflix, Prime Video & All-in-One OTT Hubs", color: "#e50914" },
+      series: { title: "Web Series & Binge-Watching Portals", color: "#8b5cf6" },
+      bollywood: { title: "Bollywood, Hindi Web Series & South Dubbed", color: "#f59e0b" },
+      games: { title: "Fast Browser Games (D-Pad & Controller Ready)", color: "#10b981" },
+      live: { title: "Live TV & Auto-Updating Backup Directories", color: "#3b82f6" }
+    };
+
+    // State Management (CinemaOS is pinned Favorite #1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewMode = urlParams.get("view") || (window.location.hash ? window.location.hash.replace("#", "") : "");
+
+    let customSites = JSON.parse(localStorage.getItem("tv_hub_custom_sites") || "[]");
+    let favIds = JSON.parse(localStorage.getItem("tv_hub_fav_ids") || '["n1","b1","g1","l1","n2"]');
+    let liteMode = localStorage.getItem("tv_hub_lite_mode") === "true";
+    let activeCategory = viewMode === "games" ? "games" : "all";
+    let searchQuery = "";
+
+    const sectionsContainer = document.getElementById("sectionsContainer");
+    const searchInput = document.getElementById("searchInput");
+    const liteModeBtn = document.getElementById("liteModeBtn");
+    const addSiteBtn = document.getElementById("addSiteBtn");
+    const addModal = document.getElementById("addModal");
+    const cancelModalBtn = document.getElementById("cancelModalBtn");
+    const saveSiteBtn = document.getElementById("saveSiteBtn");
+
+    function getAllSites() {
+      return [...DEFAULT_SITES, ...customSites];
+    }
+
+    function getDomain(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, "");
+      } catch (e) {
+        return url;
+      }
+    }
+
+    function toggleFavorite(id, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (favIds.includes(id)) {
+        favIds = favIds.filter(item => item !== id);
+      } else {
+        favIds.push(id);
+      }
+      localStorage.setItem("tv_hub_fav_ids", JSON.stringify(favIds));
+      renderHub();
+    }
+
+    function applyLiteMode() {
+      if (liteMode) {
+        document.body.classList.add("lite-mode");
+        liteModeBtn.innerHTML = "&#9889; Lite: ON";
+        liteModeBtn.style.borderColor = "#10b981";
+        liteModeBtn.style.color = "#10b981";
+      } else {
+        document.body.classList.remove("lite-mode");
+        liteModeBtn.innerHTML = "&#9889; Lite: OFF";
+        liteModeBtn.style.borderColor = "";
+        liteModeBtn.style.color = "";
+      }
+    }
+
+    // Opens strictly in the SAME TAB (target="_self", no target="_blank")
+    function createCardHTML(site) {
+      const isFav = favIds.includes(site.id);
+      const initial = site.name.charAt(0).toUpperCase();
+      const domain = getDomain(site.url);
+
+      return `
+        <a
+          href="${site.url}"
+          target="_self"
+          class="site-card focusable"
+          data-id="${site.id}"
+          tabindex="0"
+        >
+          <div>
+            <div class="card-top">
+              <div class="site-badge-group">
+                <div class="site-avatar" style="background: ${site.color || '#3b82f6'}">
+                  ${initial}
+                </div>
+                <div>
+                  <div class="site-name">${site.name}</div>
+                  <span class="site-domain">${domain}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="fav-toggle ${isFav ? 'active' : ''}"
+                onclick="toggleFavorite('${site.id}', event)"
+                title="Pin/Unpin Favorite (press F when focused)"
+                tabindex="-1"
+              >
+                &#9733;
+              </button>
+            </div>
+            <p class="site-desc">${site.desc}</p>
+          </div>
+          <div class="card-footer">
+            <span class="tag-chip">${site.tag || 'Fast Stream'}</span>
+            <span class="open-indicator">Open &#8594;</span>
+          </div>
+        </a>
+      `;
+    }
+
+    function renderHub() {
+      const allSites = getAllSites();
+      const q = searchQuery.trim().toLowerCase();
+
+      const filtered = allSites.filter(site => {
+        const matchesSearch =
+          !q ||
+          site.name.toLowerCase().includes(q) ||
+          site.desc.toLowerCase().includes(q) ||
+          site.tag.toLowerCase().includes(q) ||
+          site.url.toLowerCase().includes(q);
+        if (!matchesSearch) return false;
+        if (activeCategory === "all") return true;
+        if (activeCategory === "fav") return favIds.includes(site.id);
+        return site.cat === activeCategory;
+      });
+
+      if (filtered.length === 0) {
+        sectionsContainer.innerHTML = `
+          <div class="empty-state">
+            <h3>No matching websites found</h3>
+            <p style="margin-top: 8px;">Try clearing the search filter or add a custom URL using the "+ Add Link" button above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+
+      if (viewMode === "movies" || viewMode === "stream") {
+        document.title = "TV Stream Play — Movies, Series & Live TV";
+        const brandTitle = document.querySelector(".brand-title");
+        if (brandTitle) brandTitle.textContent = "TV Stream Play";
+        const brandIcon = document.querySelector(".brand-icon");
+        if (brandIcon) brandIcon.textContent = "📡";
+        const gamesPill = document.querySelector('.cat-pill[data-cat="games"]');
+        if (gamesPill) gamesPill.remove();
+      } else if (viewMode === "games") {
+        document.title = "TV Game Links — Fast Browser Games";
+        const brandTitle = document.querySelector(".brand-title");
+        if (brandTitle) brandTitle.textContent = "TV Game Links";
+        const brandIcon = document.querySelector(".brand-icon");
+        if (brandIcon) brandIcon.textContent = "🎮";
+        const catBar = document.getElementById("categoryBar");
+        if (catBar) {
+          catBar.innerHTML = `
+            <button class="cat-pill focusable active" data-cat="games">
+              <span class="cat-dot" style="background: #10b981;"></span> 🎮 All Fast TV Games &amp; Arcade
+            </button>
+          `;
+        }
+      }
+
+      if (activeCategory === "all" && !q && favIds.length > 0) {
+        let favSites = allSites.filter(s => favIds.includes(s.id));
+        if (viewMode === "movies" || viewMode === "stream") {
+          favSites = favSites.filter(s => s.cat !== "games");
+        } else if (viewMode === "games") {
+          favSites = favSites.filter(s => s.cat === "games");
+        }
+        if (favSites.length > 0) {
+          html += `
+            <section class="section-block">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <span class="cat-dot" style="background: #fbbf24; width: 12px; height: 12px;"></span>
+                  ${CATEGORY_META.fav.title}
+                </h2>
+                <span class="section-count">${favSites.length} Pinned</span>
+              </div>
+              <div class="card-grid">
+                ${favSites.map(createCardHTML).join("")}
+              </div>
+            </section>
+          `;
+        }
+      }
+
+      let categoriesToRender;
+      if (activeCategory === "all") {
+        if (viewMode === "movies" || viewMode === "stream") {
+          categoriesToRender = ["netflix", "series", "bollywood", "live"];
+        } else if (viewMode === "games") {
+          categoriesToRender = ["games"];
+        } else {
+          categoriesToRender = ["netflix", "series", "bollywood", "games", "live"];
+        }
+      } else {
+        categoriesToRender = [activeCategory];
+      }
+
+      categoriesToRender.forEach(catKey => {
+        const groupSites =
+          catKey === "fav"
+            ? filtered.filter(s => favIds.includes(s.id))
+            : filtered.filter(s => s.cat === catKey);
+
+        if (groupSites.length === 0) return;
+        const meta = CATEGORY_META[catKey];
+
+        html += `
+          <section class="section-block">
+            <div class="section-header">
+              <h2 class="section-title">
+                <span class="cat-dot" style="background: ${meta.color}; width: 12px; height: 12px;"></span>
+                ${meta.title}
+              </h2>
+              <span class="section-count">${groupSites.length} Fast Channels</span>
+            </div>
+            <div class="card-grid">
+              ${groupSites.map(createCardHTML).join("")}
+            </div>
+          </section>
+        `;
+      });
+
+      sectionsContainer.innerHTML = html;
+    }
+
+    document.querySelectorAll(".cat-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".cat-pill").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCategory = btn.getAttribute("data-cat");
+        renderHub();
+      });
+    });
+
+    searchInput.addEventListener("input", e => {
+      searchQuery = e.target.value;
+      renderHub();
+    });
+
+    liteModeBtn.addEventListener("click", () => {
+      liteMode = !liteMode;
+      localStorage.setItem("tv_hub_lite_mode", String(liteMode));
+      applyLiteMode();
+    });
+
+    addSiteBtn.addEventListener("click", () => {
+      addModal.classList.add("open");
+      document.getElementById("customName").focus();
+    });
+
+    cancelModalBtn.addEventListener("click", () => {
+      addModal.classList.remove("open");
+      addSiteBtn.focus();
+    });
+
+    saveSiteBtn.addEventListener("click", () => {
+      const name = document.getElementById("customName").value.trim();
+      let url = document.getElementById("customUrl").value.trim();
+      const cat = document.getElementById("customCat").value;
+      const desc = document.getElementById("customDesc").value.trim() || "Custom user bookmark";
+
+      if (!name || !url) {
+        alert("Please enter both a Site Name and URL.");
+        return;
+      }
+      if (!/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+      }
+
+      const colorMap = {
+        netflix: "#e50914",
+        series: "#8b5cf6",
+        bollywood: "#f59e0b",
+        games: "#10b981",
+        live: "#3b82f6"
+      };
+
+      const newSite = {
+        id: "cust_" + Date.now(),
+        name,
+        url,
+        cat,
+        tag: "Custom Link",
+        desc,
+        color: colorMap[cat] || "#00e5ff"
+      };
+
+      customSites.push(newSite);
+      localStorage.setItem("tv_hub_custom_sites", JSON.stringify(customSites));
+      addModal.classList.remove("open");
+
+      document.getElementById("customName").value = "";
+      document.getElementById("customUrl").value = "";
+      document.getElementById("customDesc").value = "";
+
+      renderHub();
+      addSiteBtn.focus();
+    });
+
+    // 2D Spatial Remote D-Pad Navigation Engine
+    function getFocusableElements() {
+      if (addModal.classList.contains("open")) {
+        return Array.from(addModal.querySelectorAll(".focusable"));
+      }
+      return Array.from(document.querySelectorAll(".focusable")).filter(el => {
+        return el.offsetParent !== null && !addModal.contains(el);
+      });
+    }
+
+    function moveFocusSpatially(direction) {
+      const focusables = getFocusableElements();
+      if (!focusables.length) return;
+
+      const current = document.activeElement;
+      if (!focusables.includes(current)) {
+        const firstCard = document.querySelector(".site-card.focusable") || focusables[0];
+        firstCard.focus();
+        return;
+      }
+
+      const curRect = current.getBoundingClientRect();
+      const curCenterX = curRect.left + curRect.width / 2;
+      const curCenterY = curRect.top + curRect.height / 2;
+
+      let bestCandidate = null;
+      let bestScore = Infinity;
+
+      focusables.forEach(candidate => {
+        if (candidate === current) return;
+        const rect = candidate.getBoundingClientRect();
+        const candCenterX = rect.left + rect.width / 2;
+        const candCenterY = rect.top + rect.height / 2;
+
+        const dx = candCenterX - curCenterX;
+        const dy = candCenterY - curCenterY;
+
+        let isValidDirection = false;
+        let primaryDist = 0;
+        let perpDist = 0;
+
+        if (direction === "ArrowRight" && dx > 15) {
+          isValidDirection = true;
+          primaryDist = dx;
+          perpDist = Math.abs(dy);
+        } else if (direction === "ArrowLeft" && dx < -15) {
+          isValidDirection = true;
+          primaryDist = -dx;
+          perpDist = Math.abs(dy);
+        } else if (direction === "ArrowDown" && dy > 15) {
+          isValidDirection = true;
+          primaryDist = dy;
+          perpDist = Math.abs(dx);
+        } else if (direction === "ArrowUp" && dy < -15) {
+          isValidDirection = true;
+          primaryDist = -dy;
+          perpDist = Math.abs(dx);
+        }
+
+        if (isValidDirection) {
+          const weight = (direction === "ArrowLeft" || direction === "ArrowRight") ? 4.2 : 2.0;
+          const score = primaryDist + perpDist * weight;
+          if (score < bestScore) {
+            bestScore = score;
+            bestCandidate = candidate;
+          }
+        }
+      });
+
+      if (bestCandidate) {
+        bestCandidate.focus({ preventScroll: true });
+        bestCandidate.scrollIntoView({
+          behavior: liteMode ? "auto" : "smooth",
+          block: "center",
+          inline: "center"
+        });
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      const active = document.activeElement;
+      const isTextInput = active && (active.tagName === "INPUT" || active.tagName === "SELECT");
+
+      if (!isTextInput && (e.key === "f" || e.key === "F")) {
+        if (active && active.classList.contains("site-card")) {
+          const siteId = active.getAttribute("data-id");
+          if (siteId) {
+            e.preventDefault();
+            toggleFavorite(siteId);
+            const restored = document.querySelector(`.site-card[data-id="${siteId}"]`);
+            if (restored) restored.focus();
+          }
+        }
+        return;
+      }
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        if (isTextInput && (e.key === "ArrowLeft" || e.key === "ArrowRight") && active.value.length > 0) {
+          return;
+        }
+        e.preventDefault();
+        moveFocusSpatially(e.key);
+      } else if (e.key === "Escape") {
+        if (addModal.classList.contains("open")) {
+          addModal.classList.remove("open");
+          addSiteBtn.focus();
+        } else if (isTextInput) {
+          active.blur();
+        }
+      }
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const mins = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById("clockDisplay").textContent = `${hours}:${mins}`;
+    }
+    setInterval(updateClock, 15000);
+    updateClock();
+
+    applyLiteMode();
+    renderHub();
+
+    window.addEventListener("load", () => {
+      const firstCard = document.querySelector(".site-card.focusable");
+      if (firstCard && window.innerWidth >= 768) {
+        firstCard.focus({ preventScroll: true });
+      }
+    });
+  </script>
+</body>
+</html>

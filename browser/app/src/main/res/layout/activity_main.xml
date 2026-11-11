@@ -84,12 +84,12 @@
                 android:layout_width="720dp"
                 android:layout_height="52dp"
                 android:layout_marginTop="28dp"
-                android:background="@drawable/bg_card_selector"
-                android:clickable="true"
-                android:focusable="true"
+                android:background="@drawable/bg_hud_pill"
+                android:clickable="false"
+                android:focusable="false"
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:paddingEnd="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -102,10 +102,18 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginStart="12dp"
+                    android:layout_marginEnd="10dp"
                     android:layout_weight="1"
                     android:background="@null"
-                    android:hint="@string/search_hint"
-                    android:imeOptions="actionGo"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:hint="Search Google or enter web URL..."
+                    android:imeOptions="actionSearch"
+                    android:inputType="textUri|text"
+                    android:maxLines="1"
+                    android:nextFocusDown="@+id/cardHdMovie2"
+                    android:nextFocusRight="@+id/btnGoSearch"
                     android:singleLine="true"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
@@ -114,26 +122,27 @@
                 <TextView
                     android:id="@+id/btnGoSearch"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_hud_pill"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_menu_item"
                     android:clickable="true"
                     android:focusable="true"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="GO ➔"
+                    android:gravity="center"
+                    android:nextFocusDown="@+id/cardYouTube"
+                    android:nextFocusLeft="@+id/editSearchUrl"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:text="Search ➔"
                     android:textColor="@color/accent_blue"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Quick Cards Row 1: Stream & Movies -->
+            <!-- Quick Cards: Pinned Streaming & Entertainment (HDMovie2, Stream Play, Game Links, YouTube) -->
             <TextView
                 android:layout_width="720dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="STREAMING &amp; ENTERTAINMENT"
+                android:text="PINNED TV HUBS &amp; ENTERTAINMENT"
                 android:textColor="@color/accent_blue"
                 android:textSize="13sp"
                 android:textStyle="bold"
@@ -145,6 +154,7 @@
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal">
 
+                <!-- 1. HDMovie2 -->
                 <LinearLayout
                     android:id="@+id/cardHdMovie2"
                     android:layout_width="0dp"
@@ -154,6 +164,8 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
+                    android:nextFocusUp="@+id/editSearchUrl"
+                    android:nextFocusRight="@+id/cardStreamPlay"
                     android:orientation="vertical">
 
                     <requestFocus />
@@ -174,8 +186,9 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
+                <!-- 2. Stream Play (Movies, Series, Bollywood, Live TV) -->
                 <LinearLayout
-                    android:id="@+id/cardNetMirror"
+                    android:id="@+id/cardStreamPlay"
                     android:layout_width="0dp"
                     android:layout_height="90dp"
                     android:layout_marginStart="14dp"
@@ -184,24 +197,60 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
+                    android:nextFocusUp="@+id/editSearchUrl"
+                    android:nextFocusLeft="@+id/cardHdMovie2"
+                    android:nextFocusRight="@+id/cardGameLinks"
                     android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎬"
+                        android:text="📡"
                         android:textSize="24sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="NetMirror TV"
+                        android:text="Stream Play"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
+                <!-- 3. Game Links (TV Games, Poki, Retro Arcade) -->
+                <LinearLayout
+                    android:id="@+id/cardGameLinks"
+                    android:layout_width="0dp"
+                    android:layout_height="90dp"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:nextFocusUp="@+id/editSearchUrl"
+                    android:nextFocusLeft="@+id/cardStreamPlay"
+                    android:nextFocusRight="@+id/cardYouTube"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎮"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Game Links"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- 4. YouTube -->
                 <LinearLayout
                     android:id="@+id/cardYouTube"
                     android:layout_width="0dp"
@@ -212,6 +261,8 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
+                    android:nextFocusUp="@+id/btnGoSearch"
+                    android:nextFocusLeft="@+id/cardGameLinks"
                     android:orientation="vertical">
 
                     <TextView
@@ -224,161 +275,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="YouTube Web"
+                        android:text="YouTube"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/cardHotstar"
-                    android:layout_width="0dp"
-                    android:layout_height="90dp"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_card_selector"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⭐"
-                        android:textSize="24sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="JioCinema / Hotstar"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Quick Cards Row 2: Search & Utility -->
-            <TextView
-                android:layout_width="720dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="ESSENTIALS &amp; PORTALS"
-                android:textColor="@color/accent_blue"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.05" />
-
-            <LinearLayout
-                android:layout_width="720dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/cardGoogle"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_card_selector"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="G"
-                        android:textColor="#4285F4"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Google"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/cardWikipedia"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_card_selector"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📖"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wikipedia"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/cardDuckDuckGo"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_card_selector"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🦆"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DuckDuckGo"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/cardClearCache"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_card_selector"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🧹"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Clear RAM"
-                        android:textColor="#00E676"
-                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -463,11 +362,100 @@
             android:textStyle="bold"
             android:letterSpacing="0.05" />
 
-        <!-- Row 1: Zoom In / Zoom Out -->
+        <!-- Row 1: Speed Dial & Reload Page -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/menuBtnHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnHome"
+                android:nextFocusLeft="@+id/menuBtnHome"
+                android:nextFocusRight="@+id/menuBtnReload"
+                android:nextFocusDown="@+id/menuBtnDpadMode"
+                android:text="🏠 Speed Dial"
+                android:textColor="@color/accent_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/menuBtnReload"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnReload"
+                android:nextFocusLeft="@+id/menuBtnHome"
+                android:nextFocusRight="@+id/menuBtnReload"
+                android:nextFocusDown="@+id/menuBtnUserAgent"
+                android:text="🔄 Reload Page"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Row 2: Turn ON/OFF D-Pad Mode & Mobile/Desktop -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/menuBtnDpadMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnHome"
+                android:nextFocusLeft="@+id/menuBtnDpadMode"
+                android:nextFocusRight="@+id/menuBtnUserAgent"
+                android:nextFocusDown="@+id/menuBtnZoomIn"
+                android:text="🎮 Turn ON D-Pad"
+                android:textColor="@color/accent_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/menuBtnUserAgent"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnReload"
+                android:nextFocusLeft="@+id/menuBtnDpadMode"
+                android:nextFocusRight="@+id/menuBtnUserAgent"
+                android:nextFocusDown="@+id/menuBtnZoomOut"
+                android:text="📱 Mobile (Smooth)"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Row 3: Zoom In, 100% Scale, Zoom Out -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
             android:orientation="horizontal">
 
             <TextView
@@ -479,28 +467,49 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnDpadMode"
+                android:nextFocusLeft="@+id/menuBtnZoomIn"
+                android:nextFocusRight="@+id/menuBtnZoomOut"
+                android:nextFocusDown="@+id/menuBtnDarkMode"
                 android:text="🔍 Zoom In (+)"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/textZoomScale"
+                android:layout_width="74dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_hud_pill"
+                android:focusable="false"
+                android:gravity="center"
+                android:text="125%"
+                android:textColor="@color/accent_blue"
+                android:textSize="13.5sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/menuBtnZoomOut"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_menu_item"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnUserAgent"
+                android:nextFocusLeft="@+id/menuBtnZoomIn"
+                android:nextFocusRight="@+id/menuBtnZoomOut"
+                android:nextFocusDown="@+id/menuBtnSettings"
                 android:text="🔎 Zoom Out (-)"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Row 2: Dark Mode & User-Agent -->
+        <!-- Row 4: Dark Mode & Settings / Clear RAM -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="44dp"
@@ -516,13 +525,17 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnZoomIn"
+                android:nextFocusLeft="@+id/menuBtnDarkMode"
+                android:nextFocusRight="@+id/menuBtnSettings"
+                android:nextFocusDown="@+id/menuBtnDarkMode"
                 android:text="🌙 Force Dark: OFF"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/menuBtnUserAgent"
+                android:id="@+id/menuBtnSettings"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginStart="10dp"
@@ -531,81 +544,12 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:text="📱 Mobile (Smooth)"
+                android:nextFocusUp="@+id/menuBtnZoomOut"
+                android:nextFocusLeft="@+id/menuBtnDarkMode"
+                android:nextFocusRight="@+id/menuBtnSettings"
+                android:nextFocusDown="@+id/menuBtnSettings"
+                android:text="🧹 Settings &amp; Clean"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Row 3: Reload & Home -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/menuBtnReload"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/bg_menu_item"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="🔄 Reload Page"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/menuBtnHome"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_menu_item"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="🏠 Speed Dial"
-                android:textColor="@color/accent_blue"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Row 4: Fullscreen Video & Scroll Page Down -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/menuBtnFullscreen"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/bg_menu_item"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="📺 Fullscreen Video"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/menuBtnDpadMode"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_menu_item"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="🎮 Turn ON D-Pad Mode"
-                android:textColor="@color/accent_blue"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>

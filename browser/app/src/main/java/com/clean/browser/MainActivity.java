@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -46,7 +47,7 @@ public class MainActivity extends Activity {
     private WebChromeClient.CustomViewCallback customViewCallback;
     private View customVideoView;
 
-    private View speedDialView;
+    private ViewGroup speedDialView;
     private EditText editSearchUrl;
     private ProgressBar progressBar;
     private VirtualCursorView cursorView;
@@ -62,8 +63,8 @@ public class MainActivity extends Activity {
 
     // Radial Menu
     private View radialMenuLayout;
-    private TextView menuBtnZoomIn, menuBtnZoomOut, menuBtnDarkMode, menuBtnUserAgent, menuBtnReload, menuBtnHome;
-    private TextView menuBtnFullscreen, menuBtnDpadMode;
+    private TextView menuBtnZoomIn, menuBtnZoomOut, textZoomScale, menuBtnDarkMode, menuBtnUserAgent, menuBtnReload, menuBtnHome;
+    private TextView menuBtnDpadMode, menuBtnSettings;
 
     // State
     private int currentZoom = 125; // Default 125% for 10-foot TV viewing
@@ -186,14 +187,15 @@ public class MainActivity extends Activity {
         hudText = findViewById(R.id.hudText);
 
         radialMenuLayout = findViewById(R.id.radialMenuLayout);
+        menuBtnHome = findViewById(R.id.menuBtnHome);
+        menuBtnReload = findViewById(R.id.menuBtnReload);
+        menuBtnDpadMode = findViewById(R.id.menuBtnDpadMode);
+        menuBtnUserAgent = findViewById(R.id.menuBtnUserAgent);
         menuBtnZoomIn = findViewById(R.id.menuBtnZoomIn);
+        textZoomScale = findViewById(R.id.textZoomScale);
         menuBtnZoomOut = findViewById(R.id.menuBtnZoomOut);
         menuBtnDarkMode = findViewById(R.id.menuBtnDarkMode);
-        menuBtnUserAgent = findViewById(R.id.menuBtnUserAgent);
-        menuBtnReload = findViewById(R.id.menuBtnReload);
-        menuBtnHome = findViewById(R.id.menuBtnHome);
-        menuBtnFullscreen = findViewById(R.id.menuBtnFullscreen);
-        menuBtnDpadMode = findViewById(R.id.menuBtnDpadMode);
+        menuBtnSettings = findViewById(R.id.menuBtnSettings);
     }
 
     private void setupWebView() {
@@ -203,6 +205,10 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
+        s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
@@ -288,57 +294,90 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void showKeyboard(View view) {
+        if (view == null) return;
+        view.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+
+    private void hideKeyboard(View view) {
+        if (view == null) return;
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
     private void setupSpeedDial() {
-        editSearchUrl.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH) {
-                handleSearchOrUrl(editSearchUrl.getText().toString());
-                return true;
+        editSearchUrl.setOnClickListener(v -> showKeyboard(editSearchUrl));
+        editSearchUrl.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                showKeyboard(editSearchUrl);
+            }
+        });
+
+        editSearchUrl.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_UP &&
+                    (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) {
+                String text = editSearchUrl.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    hideKeyboard(editSearchUrl);
+                    handleSearchOrUrl(text);
+                    return true;
+                }
             }
             return false;
         });
 
-        findViewById(R.id.btnGoSearch).setOnClickListener(v -> handleSearchOrUrl(editSearchUrl.getText().toString()));
-
-        findViewById(R.id.cardHdMovie2).setOnClickListener(v -> loadUrl("https://www.google.com/search?q=hdmovie2"));
-        findViewById(R.id.cardNetMirror).setOnClickListener(v -> loadUrl("https://netmirror.app"));
-        findViewById(R.id.cardYouTube).setOnClickListener(v -> loadUrl("https://m.youtube.com"));
-        findViewById(R.id.cardHotstar).setOnClickListener(v -> loadUrl("https://www.hotstar.com"));
-
-        findViewById(R.id.cardGoogle).setOnClickListener(v -> loadUrl("https://www.google.com"));
-        findViewById(R.id.cardWikipedia).setOnClickListener(v -> loadUrl("https://www.wikipedia.org"));
-        findViewById(R.id.cardDuckDuckGo).setOnClickListener(v -> loadUrl("https://duckduckgo.com"));
-
-        findViewById(R.id.cardClearCache).setOnClickListener(v -> {
-            webView.clearCache(true);
-            webView.clearHistory();
-            System.gc();
-            showHud("🧹", "Memory & Cache Cleaned!");
-            Toast.makeText(this, "Browser Cache Cleared ✓", Toast.LENGTH_SHORT).show();
+        editSearchUrl.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH
+                    || actionId == EditorInfo.IME_ACTION_DONE) {
+                String text = editSearchUrl.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    hideKeyboard(editSearchUrl);
+                    handleSearchOrUrl(text);
+                    return true;
+                }
+            }
+            return false;
         });
+
+        findViewById(R.id.btnGoSearch).setOnClickListener(v -> {
+            hideKeyboard(editSearchUrl);
+            handleSearchOrUrl(editSearchUrl.getText().toString());
+        });
+
+        // 4 Pinned Cards
+        findViewById(R.id.cardHdMovie2).setOnClickListener(v -> loadUrl("https://hdmovie2.vg"));
+        findViewById(R.id.cardStreamPlay).setOnClickListener(v -> loadUrl("file:///android_asset/stream_hub.html?view=movies"));
+        findViewById(R.id.cardGameLinks).setOnClickListener(v -> loadUrl("file:///android_asset/stream_hub.html?view=games"));
+        findViewById(R.id.cardYouTube).setOnClickListener(v -> loadUrl("https://m.youtube.com"));
     }
 
     private void setupRadialMenu() {
-        menuBtnZoomIn.setOnClickListener(v -> {
-            currentZoom = Math.min(200, currentZoom + 25);
-            webView.getSettings().setTextZoom(currentZoom);
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(KEY_ZOOM, currentZoom).apply();
-            showHud("🔍", "Zoom: " + currentZoom + "%");
+        // Row 1: Speed Dial & Reload
+        menuBtnHome.setOnClickListener(v -> {
+            hideRadialMenu();
+            openSpeedDial();
         });
 
-        menuBtnZoomOut.setOnClickListener(v -> {
-            currentZoom = Math.max(75, currentZoom - 25);
-            webView.getSettings().setTextZoom(currentZoom);
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(KEY_ZOOM, currentZoom).apply();
-            showHud("🔎", "Zoom: " + currentZoom + "%");
+        menuBtnReload.setOnClickListener(v -> {
+            hideRadialMenu();
+            webView.reload();
+            showHud("🔄", "Reloading...");
         });
 
-        menuBtnDarkMode.setOnClickListener(v -> {
-            isDarkMode = !isDarkMode;
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(KEY_DARK, isDarkMode).apply();
-            applyDarkMode();
-            AdBlockEngine.applyForcedDarkMode(webView, isDarkMode);
-            menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
-            showHud(isDarkMode ? "🌙" : "☀️", isDarkMode ? "Dark Mode: ON" : "Dark Mode: OFF");
+        // Row 2: Turn ON/OFF D-Pad Mode & Mobile/Desktop
+        menuBtnDpadMode.setOnClickListener(v -> {
+            hideRadialMenu();
+            if (isMouseMode) {
+                enterDpadMode();
+            } else {
+                enterMouseMode();
+            }
         });
 
         menuBtnUserAgent.setOnClickListener(v -> {
@@ -350,26 +389,41 @@ public class MainActivity extends Activity {
             webView.reload();
         });
 
-        menuBtnReload.setOnClickListener(v -> {
-            hideRadialMenu();
-            webView.reload();
-            showHud("🔄", "Reloading...");
+        // Row 3: Zoom In, Scale Indicator, Zoom Out
+        textZoomScale.setText(currentZoom + "%");
+        menuBtnZoomIn.setOnClickListener(v -> {
+            currentZoom = Math.min(200, currentZoom + 25);
+            webView.getSettings().setTextZoom(currentZoom);
+            textZoomScale.setText(currentZoom + "%");
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(KEY_ZOOM, currentZoom).apply();
+            showHud("🔍", "Zoom: " + currentZoom + "%");
         });
 
-        menuBtnHome.setOnClickListener(v -> {
-            hideRadialMenu();
-            openSpeedDial();
+        menuBtnZoomOut.setOnClickListener(v -> {
+            currentZoom = Math.max(75, currentZoom - 25);
+            webView.getSettings().setTextZoom(currentZoom);
+            textZoomScale.setText(currentZoom + "%");
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(KEY_ZOOM, currentZoom).apply();
+            showHud("🔎", "Zoom: " + currentZoom + "%");
         });
 
-        menuBtnFullscreen.setOnClickListener(v -> {
-            hideRadialMenu();
-            webView.evaluateJavascript("if (window._cleanTvVideo) window._cleanTvVideo.fullscreen();", null);
-            showHud("📺", "Fullscreen Video Request");
+        // Row 4: Dark Mode & Settings / Clear RAM
+        menuBtnDarkMode.setOnClickListener(v -> {
+            isDarkMode = !isDarkMode;
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(KEY_DARK, isDarkMode).apply();
+            applyDarkMode();
+            AdBlockEngine.applyForcedDarkMode(webView, isDarkMode);
+            menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
+            showHud(isDarkMode ? "🌙" : "☀️", isDarkMode ? "Dark Mode: ON" : "Dark Mode: OFF");
         });
 
-        menuBtnDpadMode.setOnClickListener(v -> {
+        menuBtnSettings.setOnClickListener(v -> {
             hideRadialMenu();
-            enterDpadMode();
+            webView.clearCache(true);
+            webView.clearHistory();
+            System.gc();
+            showHud("🧹", "Memory & Cache Cleaned!");
+            Toast.makeText(this, "Memory & Cache Cleaned ✓", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -400,7 +454,7 @@ public class MainActivity extends Activity {
         speedDialView.setVisibility(View.VISIBLE);
         cursorView.setPointerVisible(false);
         isMouseMode = true;
-        findViewById(R.id.searchBarContainer).requestFocus();
+        findViewById(R.id.cardHdMovie2).requestFocus();
     }
 
     private void applyDarkMode() {
@@ -564,16 +618,27 @@ public class MainActivity extends Activity {
         if (radialMenuLayout.getVisibility() == View.VISIBLE) {
             hideRadialMenu();
         } else {
+            menuBtnDpadMode.setText(isMouseMode ? "🎮 Turn ON D-Pad" : "🎮 Turn OFF D-Pad");
+            textZoomScale.setText(currentZoom + "%");
+            menuBtnDarkMode.setText(isDarkMode ? "☀️ Force Dark: ON" : "🌙 Force Dark: OFF");
+            menuBtnUserAgent.setText(isMobileUa ? "📱 Mobile (Smooth)" : "💻 Desktop (Full)");
+
+            speedDialView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+            webView.setFocusable(false);
+
             radialMenuLayout.setVisibility(View.VISIBLE);
-            menuBtnZoomIn.requestFocus();
+            menuBtnHome.requestFocus();
         }
     }
 
     private void hideRadialMenu() {
         radialMenuLayout.setVisibility(View.GONE);
+        speedDialView.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        webView.setFocusable(true);
+
         if (speedDialView.getVisibility() == View.VISIBLE) {
             findViewById(R.id.cardHdMovie2).requestFocus();
-        } else if (cursorView.isPointerVisible()) {
+        } else if (isMouseMode && cursorView.isPointerVisible()) {
             cursorView.requestFocus();
         } else {
             webView.requestFocus();
