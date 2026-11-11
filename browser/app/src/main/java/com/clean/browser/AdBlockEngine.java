@@ -31,7 +31,12 @@ public class AdBlockEngine {
                 "admob.com", "moatads.com", "adform.net", "casalemedia.com",
                 "betweendigital.com", "smartadserver.com", "advertising.com",
                 "adtrue.com", "monetag.com", "hilltopads.net", "yllix.com",
-                "ad-maven.com", "clickadu.com", "richads.com", "evadav.com"
+                "ad-maven.com", "clickadu.com", "richads.com", "evadav.com",
+                // Movie streaming ad & popunder networks
+                "popcash.net", "adcash.com", "exdynsrv.com", "tsyndicate.com",
+                "alwingulla.com", "highcpmgate.com", "creativecdn.com", "delivery.ad",
+                "onclickperformance.com", "in-page-push.com", "onclickgate.com",
+                "whos.amung.us", "histats.com", "mobicow.com", "syndication.exdynsrv.com"
         };
         for (String d : domains) {
             BLOCKED_DOMAINS.add(d);
@@ -85,7 +90,27 @@ public class AdBlockEngine {
                 "    return null;\n" +
                 "  };\n" +
                 "\n" +
-                "  // 3. Ultra-Safe Video Ad Skipper: Only triggers when player is actively showing an ad\n" +
+                "  // 3. Force Hardware H.264 Video Decoding: Disable software-heavy AV1 and VP9 codecs\n" +
+                "  try {\n" +
+                "    var origIsTypeSupported = window.MediaSource ? window.MediaSource.isTypeSupported : null;\n" +
+                "    if (window.MediaSource && origIsTypeSupported) {\n" +
+                "      window.MediaSource.isTypeSupported = function(type) {\n" +
+                "        if (type && (type.indexOf('av01') !== -1 || type.indexOf('av1') !== -1 || type.indexOf('vp09') !== -1 || type.indexOf('vp9') !== -1)) {\n" +
+                "          return false;\n" +
+                "        }\n" +
+                "        return origIsTypeSupported.apply(this, arguments);\n" +
+                "      };\n" +
+                "    }\n" +
+                "    var origCanPlay = HTMLMediaElement.prototype.canPlayType;\n" +
+                "    HTMLMediaElement.prototype.canPlayType = function(type) {\n" +
+                "      if (type && (type.indexOf('av01') !== -1 || type.indexOf('av1') !== -1 || type.indexOf('vp09') !== -1 || type.indexOf('vp9') !== -1)) {\n" +
+                "        return '';\n" +
+                "      }\n" +
+                "      return origCanPlay.apply(this, arguments);\n" +
+                "    };\n" +
+                "  } catch(e) {}\n" +
+                "\n" +
+                "  // 4. Ultra-Safe Video Ad Skipper: Only triggers when player is actively showing an ad\n" +
                 "  setInterval(function() {\n" +
                 "    try {\n" +
                 "      var adActive = document.querySelector('.ad-showing, .ad-interrupting');\n" +
@@ -99,6 +124,13 @@ public class AdBlockEngine {
                 "        var skipBtns = document.querySelectorAll('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .videoAdUiSkipButton, [class*=\"skip-button\"], [class*=\"ad-skip\"], button[id*=\"skip\"], .ytp-skip-ad-button');\n" +
                 "        for (var i = 0; i < skipBtns.length; i++) {\n" +
                 "          try { skipBtns[i].click(); } catch(e) {}\n" +
+                "        }\n" +
+                "      }\n" +
+                "      // Remove invisible clickjack overlays on movie streaming sites\n" +
+                "      var overlays = document.querySelectorAll('div[style*=\"z-index: 2147483647\"], div[style*=\"z-index: 999999\"], a[target=\"_blank\"][style*=\"position: fixed\"]');\n" +
+                "      for (var j = 0; j < overlays.length; j++) {\n" +
+                "        if (!overlays[j].querySelector('video')) {\n" +
+                "          overlays[j].remove();\n" +
                 "        }\n" +
                 "      }\n" +
                 "    } catch(e) {}\n" +

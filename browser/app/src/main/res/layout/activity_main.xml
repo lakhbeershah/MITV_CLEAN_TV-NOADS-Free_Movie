@@ -595,7 +595,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/menuBtnScrollDown"
+                android:id="@+id/menuBtnDpadMode"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginStart="10dp"
@@ -604,8 +604,8 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:text="📜 Scroll Page Down"
-                android:textColor="@color/text_primary"
+                android:text="🎮 Turn ON D-Pad Mode"
+                android:textColor="@color/accent_blue"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>

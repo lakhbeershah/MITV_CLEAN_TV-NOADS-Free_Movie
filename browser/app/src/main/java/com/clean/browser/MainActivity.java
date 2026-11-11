@@ -63,13 +63,14 @@ public class MainActivity extends Activity {
     // Radial Menu
     private View radialMenuLayout;
     private TextView menuBtnZoomIn, menuBtnZoomOut, menuBtnDarkMode, menuBtnUserAgent, menuBtnReload, menuBtnHome;
-    private TextView menuBtnFullscreen, menuBtnScrollDown;
+    private TextView menuBtnFullscreen, menuBtnDpadMode;
 
     // State
     private int currentZoom = 125; // Default 125% for 10-foot TV viewing
     private boolean isDarkMode = false;
     private boolean isMobileUa = true; // Mobile UA default for smooth H.264 video decoding
     private boolean isVideoActive = false;
+    private boolean isMouseMode = true; // Fully mouse by default!
 
     // D-Pad Mouse movement handler
     private final Handler cursorHandler = new Handler(Looper.getMainLooper());
@@ -94,28 +95,36 @@ public class MainActivity extends Activity {
         @Override
         public void run() {
             backLongHandled = true;
-            toggleCursorMode();
+            if (!isMouseMode) {
+                enterMouseMode();
+            } else {
+                cursorView.resetToCenter();
+                showHud("🎯", "Cursor Centered");
+            }
         }
     };
 
-    private void toggleCursorMode() {
-        cursorView.togglePointerVisible();
-        if (cursorView.isPointerVisible()) {
-            showHud("🎯", "Pointer Mode (Edge Scroll ON)");
-        } else {
-            showHud("🎮", "Video Mode (▲/▼ Vol, ◀/▶ Seek, OK Pause)");
-        }
+    private void enterDpadMode() {
+        isMouseMode = false;
+        cursorView.setPointerVisible(false);
+        showHud("🎮", "D-Pad Mode ON (▲/▼ Vol, ◀/▶ Seek, OK Pause)\nHold BACK to return to Mouse");
     }
 
-    private void scrollPage(int deltaY) {
+    private void enterMouseMode() {
+        isMouseMode = true;
+        cursorView.setPointerVisible(true);
+        showHud("🎯", "Mouse Pointer Active (Edge Scroll ON)");
+    }
+
+    private void scrollPageSlow(int deltaY) {
         webView.scrollBy(0, deltaY);
-        webView.evaluateJavascript("window.scrollBy({top: " + deltaY + ", behavior: 'instant'});", null);
+        webView.evaluateJavascript("window.scrollBy(0, " + deltaY + ");", null);
     }
 
     private final Runnable cursorMoveRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!isMovingCursor || !cursorView.isPointerVisible()) return;
+            if (!isMovingCursor || !isMouseMode || !cursorView.isPointerVisible()) return;
 
             float dx = 0, dy = 0;
             if (activeDpadCode == KeyEvent.KEYCODE_DPAD_UP) dy = -cursorSpeed;
@@ -125,13 +134,13 @@ public class MainActivity extends Activity {
 
             cursorView.moveBy(dx, dy);
 
-            // Smooth Edge Scrolling
+            // Gentle continuous edge scrolling: 8px per frame, keeping cursor visible at edge
             float curY = cursorView.getCursorY();
             int viewH = cursorView.getHeight() > 0 ? cursorView.getHeight() : 720;
-            if (dy > 0 && curY >= viewH - 80) {
-                scrollPage(36);
-            } else if (dy < 0 && curY <= 80) {
-                scrollPage(-36);
+            if (dy > 0 && curY >= viewH - 45) {
+                scrollPageSlow(8);
+            } else if (dy < 0 && curY <= 45) {
+                scrollPageSlow(-8);
             }
 
             cursorHandler.postDelayed(this, 16);
@@ -184,11 +193,11 @@ public class MainActivity extends Activity {
         menuBtnReload = findViewById(R.id.menuBtnReload);
         menuBtnHome = findViewById(R.id.menuBtnHome);
         menuBtnFullscreen = findViewById(R.id.menuBtnFullscreen);
-        menuBtnScrollDown = findViewById(R.id.menuBtnScrollDown);
+        menuBtnDpadMode = findViewById(R.id.menuBtnDpadMode);
     }
 
     private void setupWebView() {
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        webView.setLayerType(View.LAYER_TYPE_NONE, null);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
@@ -358,9 +367,9 @@ public class MainActivity extends Activity {
             showHud("📺", "Fullscreen Video Request");
         });
 
-        menuBtnScrollDown.setOnClickListener(v -> {
-            scrollPage(280);
-            showHud("📜", "Scrolled Down");
+        menuBtnDpadMode.setOnClickListener(v -> {
+            hideRadialMenu();
+            enterDpadMode();
         });
     }
 
@@ -379,7 +388,7 @@ public class MainActivity extends Activity {
     public void loadUrl(String url) {
         speedDialView.setVisibility(View.GONE);
         webView.setVisibility(View.VISIBLE);
-        cursorView.setPointerVisible(true);
+        enterMouseMode();
         webView.loadUrl(url);
     }
 
@@ -390,6 +399,7 @@ public class MainActivity extends Activity {
         }
         speedDialView.setVisibility(View.VISIBLE);
         cursorView.setPointerVisible(false);
+        isMouseMode = true;
         findViewById(R.id.searchBarContainer).requestFocus();
     }
 
@@ -409,12 +419,17 @@ public class MainActivity extends Activity {
         int keyCode = event.getKeyCode();
         int action = event.getAction();
 
-        // 1. Long-press BACK detection -> Toggle Mouse Cursor
+        // 1. Long-press BACK detection -> Return to Mouse Pointer Mode
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
                 backLongHandled = true;
                 keyHandler.removeCallbacks(longPressBackRunnable);
-                toggleCursorMode();
+                if (!isMouseMode) {
+                    enterMouseMode();
+                } else {
+                    cursorView.resetToCenter();
+                    showHud("🎯", "Cursor Centered");
+                }
                 return true;
             }
             if (action == KeyEvent.ACTION_DOWN) {
@@ -462,11 +477,11 @@ public class MainActivity extends Activity {
                     }
                     return super.dispatchKeyEvent(event);
                 }
-                if (cursorView.isPointerVisible() && speedDialView.getVisibility() != View.VISIBLE) {
+                if (isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
                     dispatchClickAtCursor();
                     return true;
                 }
-                if (!cursorView.isPointerVisible() && speedDialView.getVisibility() != View.VISIBLE) {
+                if (!isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
                     toggleVideoPlayPause();
                     return true;
                 }
@@ -486,10 +501,8 @@ public class MainActivity extends Activity {
             return super.dispatchKeyEvent(event);
         }
 
-        // 4. In-Video & Media Remote Control Mode:
-        // Active when: in fullscreen video, or when cursor is toggled OFF while browsing a page
-        boolean inVideoControls = isVideoActive || (!cursorView.isPointerVisible() && speedDialView.getVisibility() != View.VISIBLE);
-        if (inVideoControls) {
+        // 4. In-Video & Media Remote Mode (ONLY active when user explicitly enabled D-Pad Mode via menu)
+        if (!isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
                 if (action == KeyEvent.ACTION_DOWN) {
                     adjustVolume(keyCode == KeyEvent.KEYCODE_DPAD_UP);
@@ -503,19 +516,13 @@ public class MainActivity extends Activity {
             }
         }
 
-        // 5. Virtual Cursor Movement & Edge Scrolling via D-Pad
-        if (cursorView.isPointerVisible() && speedDialView.getVisibility() != View.VISIBLE) {
+        // 5. Virtual Cursor Movement & Gentle Edge Scrolling (Active by default in Mouse Mode)
+        if (isMouseMode && speedDialView.getVisibility() != View.VISIBLE) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
                     keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
                 if (action == KeyEvent.ACTION_DOWN) {
                     activeDpadCode = keyCode;
-                    int viewH = cursorView.getHeight() > 0 ? cursorView.getHeight() : 720;
-                    if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && cursorView.getCursorY() >= viewH - 90) {
-                        scrollPage(60);
-                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP && cursorView.getCursorY() <= 90) {
-                        scrollPage(-60);
-                    }
                     if (!isMovingCursor) {
                         isMovingCursor = true;
                         cursorHandler.post(cursorMoveRunnable);
