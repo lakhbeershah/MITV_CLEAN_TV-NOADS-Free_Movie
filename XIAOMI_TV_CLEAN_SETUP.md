@@ -68,7 +68,8 @@ Replaces laggy PatchWall, removes preloaded bloatware and telemetry, frees up ov
 Every package was safely disabled using `pm disable-user --user 0` (never uninstalled, 100% reversible via `tools/restore.ps1`):
 * **PatchWall & Ads:** `com.mitv.tvhome.atv`, `com.glance.tv`, `co.sensara.tv.mitv`, `com.xm.webcontent`, `com.xiaomi.floatingframe`
 * **Xiaomi & Google Telemetry:** `com.miui.tv.analytics`, `com.xiaomi.statistic`, `com.google.android.feedback`, `com.google.android.tv.bugreportsender`
-* **Unused Bloat Apps:** `com.amazon.amazonvideo.livingroom` (Prime Video), `com.mitv.dream` (Wallpaper app), `com.xiaomi.mitv.mediaexplorer` (Media player), `com.mitv.milinkservice` (Mi Link), `com.google.android.apps.mediashell` (Chromecast built-in)
+* **Unused Bloat Apps:** `com.amazon.amazonvideo.livingroom` (Prime Video), `com.xiaomi.mitv.mediaexplorer` (Media player), `com.mitv.milinkservice` (Mi Link), `com.google.android.apps.mediashell` (Chromecast built-in)
+* **Essential Kept Services:** `com.mitv.dream` (Mi TV Standby & Daydream Service — REQUIRED to keep Bluetooth LE active during sleep so remote wake-up works)
 * **Partner Bloat:** `com.fancode.tv`, `com.suntv.sunnxt.mitv`, `com.eros.mitv`, `com.discoveryplus.mitv`, `com.ddnational.prasarbharati`, `net.aljazeera.english`
 
 ---
