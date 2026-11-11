@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Outer Glow Circle -->
+    <path
+        android:fillColor="#1500E5FF"
+        android:pathData="M48,8 A40,40 0 1 0 48,88 A40,40 0 1 0 48,8 Z" />
+    <!-- Main Planet Body -->
+    <path
+        android:fillColor="#0D1B2A"
+        android:pathData="M48,16 A32,32 0 1 0 48,80 A32,32 0 1 0 48,16 Z" />
+    <!-- Equator and Latitude lines -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.5"
+        android:pathData="M16,48 L80,48 M21,32 Q48,38 75,32 M21,64 Q48,58 75,64" />
+    <!-- Prime Meridian and Longitude Arcs -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.5"
+        android:pathData="M48,16 L48,80 M48,16 C30,16 30,80 48,80 M48,16 C66,16 66,80 48,80" />
+    <!-- Outer Ring -->
+    <path
+        android:strokeColor="#38EF7D"
+        android:strokeWidth="3"
+        android:pathData="M48,16 A32,32 0 1 0 48,80 A32,32 0 1 0 48,16 Z" />
+</vector>
