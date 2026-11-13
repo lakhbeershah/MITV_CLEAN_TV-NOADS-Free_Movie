@@ -70,6 +70,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.PopupWindow;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -1019,6 +1020,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             adapter.notifyDataSetChanged();
         }
         recalculateBottomDock();
+        applyHomeClockSettings();
+    }
+
+    public void applyHomeClockSettings() {
+        try {
+            TextClock clock = findViewById(R.id.clock);
+            TextClock date = findViewById(R.id.date);
+            ClockHelper.applyHomeClock(this, clock, date, clockBlock);
+        } catch (Throwable ignored) {}
     }
 
     public void refreshApps() {

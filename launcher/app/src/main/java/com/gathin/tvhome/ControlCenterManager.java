@@ -826,6 +826,105 @@ public class ControlCenterManager {
             activity.startActivity(new Intent(activity, ClockActivity.class));
         });
 
+        // Screensaver Clock Style (Digital vs Analog)
+        TextView btnSsClockDigital = root.findViewById(R.id.ccBtnSsStyleDigital);
+        TextView btnSsClockAnalog = root.findViewById(R.id.ccBtnSsStyleAnalog);
+        String currentSsStyle = customPrefs.getString(ClockHelper.KEY_SS_STYLE, "digital");
+        if (btnSsClockDigital != null) {
+            btnSsClockDigital.setSelected("digital".equals(currentSsStyle));
+            btnSsClockDigital.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_SS_STYLE, "digital").apply();
+                btnSsClockDigital.setSelected(true);
+                if (btnSsClockAnalog != null) btnSsClockAnalog.setSelected(false);
+            });
+        }
+        if (btnSsClockAnalog != null) {
+            btnSsClockAnalog.setSelected("analog".equals(currentSsStyle));
+            btnSsClockAnalog.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_SS_STYLE, "analog").apply();
+                btnSsClockAnalog.setSelected(true);
+                if (btnSsClockDigital != null) btnSsClockDigital.setSelected(false);
+            });
+        }
+
+        // Screensaver Time Format
+        TextView[] ssTimeBtns = {
+                root.findViewById(R.id.ccBtnSsTime12Sec),
+                root.findViewById(R.id.ccBtnSsTime12Clean),
+                root.findViewById(R.id.ccBtnSsTime24Sec),
+                root.findViewById(R.id.ccBtnSsTime24Clean)
+        };
+        String[] ssTimeFmts = {
+                ClockHelper.FMT_12_SEC,
+                ClockHelper.FMT_12_CLEAN,
+                ClockHelper.FMT_24_SEC,
+                ClockHelper.FMT_24_CLEAN
+        };
+        String currentSsTime = customPrefs.getString(ClockHelper.KEY_SS_TIME_FMT, ClockHelper.FMT_12_SEC);
+        for (int i = 0; i < ssTimeBtns.length; i++) {
+            final int idx = i;
+            TextView b = ssTimeBtns[i];
+            if (b == null) continue;
+            b.setSelected(ssTimeFmts[i].equals(currentSsTime));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_SS_TIME_FMT, ssTimeFmts[idx]).apply();
+                for (int j = 0; j < ssTimeBtns.length; j++) {
+                    if (ssTimeBtns[j] != null) ssTimeBtns[j].setSelected(j == idx);
+                }
+            });
+        }
+
+        // Screensaver Date Preset
+        TextView[] ssDateBtns = {
+                root.findViewById(R.id.ccBtnSsDateVerbal),
+                root.findViewById(R.id.ccBtnSsDateFull),
+                root.findViewById(R.id.ccBtnSsDateDmySlash),
+                root.findViewById(R.id.ccBtnSsDateDmyDash),
+                root.findViewById(R.id.ccBtnSsDateNone)
+        };
+        String[] ssDateFmts = {
+                ClockHelper.DATE_VERBAL_STD,
+                ClockHelper.DATE_VERBAL_FULL,
+                ClockHelper.DATE_DMY_SLASH,
+                ClockHelper.DATE_DMY_DASH,
+                ClockHelper.DATE_HIDDEN
+        };
+        String currentSsDate = customPrefs.getString(ClockHelper.KEY_SS_DATE_FMT, ClockHelper.DATE_VERBAL_STD);
+        for (int i = 0; i < ssDateBtns.length; i++) {
+            final int idx = i;
+            TextView b = ssDateBtns[i];
+            if (b == null) continue;
+            b.setSelected(ssDateFmts[i].equals(currentSsDate));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_SS_DATE_FMT, ssDateFmts[idx]).apply();
+                for (int j = 0; j < ssDateBtns.length; j++) {
+                    if (ssDateBtns[j] != null) ssDateBtns[j].setSelected(j == idx);
+                }
+            });
+        }
+
+        // Screensaver Position
+        TextView[] ssPosBtns = {
+                root.findViewById(R.id.ccBtnSsPosBottomRight),
+                root.findViewById(R.id.ccBtnSsPosCenter),
+                root.findViewById(R.id.ccBtnSsPosTopRight),
+                root.findViewById(R.id.ccBtnSsPosBottomLeft)
+        };
+        String[] ssPosKeys = {"bottom_right", "center", "top_right", "bottom_left"};
+        String currentSsPos = customPrefs.getString(ClockHelper.KEY_SS_POS, "bottom_right");
+        for (int i = 0; i < ssPosBtns.length; i++) {
+            final int idx = i;
+            TextView b = ssPosBtns[i];
+            if (b == null) continue;
+            b.setSelected(ssPosKeys[i].equals(currentSsPos));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_SS_POS, ssPosKeys[idx]).apply();
+                for (int j = 0; j < ssPosBtns.length; j++) {
+                    if (ssPosBtns[j] != null) ssPosBtns[j].setSelected(j == idx);
+                }
+            });
+        }
+
         updateScreensaverFolderStats();
     }
 
@@ -1121,6 +1220,86 @@ public class ControlCenterManager {
             btnDim75.setOnClickListener(v -> {
                 selectDimBtn(btnDim75, btnDim0, btnDim25, btnDim50);
                 activity.setCustomDimmingPercent(75);
+            });
+        }
+
+        // Home Time Format
+        TextView[] homeTimeBtns = {
+                root.findViewById(R.id.ccBtnHomeTime12Sec),
+                root.findViewById(R.id.ccBtnHomeTime12Clean),
+                root.findViewById(R.id.ccBtnHomeTime24Sec),
+                root.findViewById(R.id.ccBtnHomeTime24Clean)
+        };
+        String[] homeTimeFmts = {
+                ClockHelper.FMT_12_SEC,
+                ClockHelper.FMT_12_CLEAN,
+                ClockHelper.FMT_24_SEC,
+                ClockHelper.FMT_24_CLEAN
+        };
+        String currentHomeTime = customPrefs.getString(ClockHelper.KEY_HOME_TIME_FMT, ClockHelper.FMT_12_SEC);
+        for (int i = 0; i < homeTimeBtns.length; i++) {
+            final int idx = i;
+            TextView b = homeTimeBtns[i];
+            if (b == null) continue;
+            b.setSelected(homeTimeFmts[i].equals(currentHomeTime));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_HOME_TIME_FMT, homeTimeFmts[idx]).apply();
+                for (int j = 0; j < homeTimeBtns.length; j++) {
+                    if (homeTimeBtns[j] != null) homeTimeBtns[j].setSelected(j == idx);
+                }
+                activity.applyHomeClockSettings();
+            });
+        }
+
+        // Home Date Preset
+        TextView[] homeDateBtns = {
+                root.findViewById(R.id.ccBtnHomeDateVerbal),
+                root.findViewById(R.id.ccBtnHomeDateFull),
+                root.findViewById(R.id.ccBtnHomeDateDmySlash),
+                root.findViewById(R.id.ccBtnHomeDateDmyDash),
+                root.findViewById(R.id.ccBtnHomeDateNone)
+        };
+        String[] homeDateFmts = {
+                ClockHelper.DATE_VERBAL_STD,
+                ClockHelper.DATE_VERBAL_FULL,
+                ClockHelper.DATE_DMY_SLASH,
+                ClockHelper.DATE_DMY_DASH,
+                ClockHelper.DATE_HIDDEN
+        };
+        String currentHomeDate = customPrefs.getString(ClockHelper.KEY_HOME_DATE_FMT, ClockHelper.DATE_VERBAL_STD);
+        for (int i = 0; i < homeDateBtns.length; i++) {
+            final int idx = i;
+            TextView b = homeDateBtns[i];
+            if (b == null) continue;
+            b.setSelected(homeDateFmts[i].equals(currentHomeDate));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_HOME_DATE_FMT, homeDateFmts[idx]).apply();
+                for (int j = 0; j < homeDateBtns.length; j++) {
+                    if (homeDateBtns[j] != null) homeDateBtns[j].setSelected(j == idx);
+                }
+                activity.applyHomeClockSettings();
+            });
+        }
+
+        // Home Position
+        TextView[] homePosBtns = {
+                root.findViewById(R.id.ccBtnHomePosRight),
+                root.findViewById(R.id.ccBtnHomePosCenter),
+                root.findViewById(R.id.ccBtnHomePosLeft)
+        };
+        String[] homePosKeys = {"top_right", "center", "top_left"};
+        String currentHomePos = customPrefs.getString(ClockHelper.KEY_HOME_POS, "top_right");
+        for (int i = 0; i < homePosBtns.length; i++) {
+            final int idx = i;
+            TextView b = homePosBtns[i];
+            if (b == null) continue;
+            b.setSelected(homePosKeys[i].equals(currentHomePos));
+            b.setOnClickListener(v -> {
+                customPrefs.edit().putString(ClockHelper.KEY_HOME_POS, homePosKeys[idx]).apply();
+                for (int j = 0; j < homePosBtns.length; j++) {
+                    if (homePosBtns[j] != null) homePosBtns[j].setSelected(j == idx);
+                }
+                activity.applyHomeClockSettings();
             });
         }
 

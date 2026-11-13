@@ -17,6 +17,7 @@ public class ClockDream extends DreamService {
         setFullscreen(true);
         setScreenBright(false);
         setContentView(R.layout.dream_clock);
+        ClockHelper.applyScreensaverClock(this, findViewById(R.id.clock), findViewById(R.id.date), findViewById(R.id.analogClock), findViewById(R.id.dreamContent));
         photoSlider = findViewById(R.id.dreamPhotoSlider);
         if (photoSlider != null) {
             photoSlider.setClickable(false);

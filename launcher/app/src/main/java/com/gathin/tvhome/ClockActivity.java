@@ -48,6 +48,7 @@ public class ClockActivity extends Activity {
             photoSlider.setOnClickListener(null);
         }
         dreamContent = findViewById(R.id.dreamContent);
+        ClockHelper.applyScreensaverClock(this, findViewById(R.id.clock), findViewById(R.id.date), findViewById(R.id.analogClock), dreamContent);
         applyDimming();
     }
 
