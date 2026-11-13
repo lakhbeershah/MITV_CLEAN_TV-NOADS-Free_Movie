@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "browser_prefs";
     private static final String KEY_ZOOM = "page_zoom";
     private static final String KEY_DARK = "dark_mode";
+    private static final String KEY_BG_AUDIO = "bg_audio_enabled";
     private static final String KEY_UA_MOBILE = "ua_mobile";
     private static final String KEY_CURSOR_SPEED = "cursor_speed";
     private static final String KEY_CURSOR_ACCEL = "cursor_accel";
@@ -78,7 +79,7 @@ public class MainActivity extends Activity {
     private TextView menuBtnHome, menuBtnReload;
     private TextView menuBtnModeMouse, menuBtnModeDpad, menuBtnModeMovie;
     private TextView menuBtnZoomIn, textZoomScale, menuBtnZoomOut;
-    private TextView menuBtnUserAgent, menuBtnDarkMode, menuBtnSettings;
+    private TextView menuBtnUserAgent, menuBtnDarkMode, menuBtnBgAudio, menuBtnSettings;
 
     private View settingsMenuLayout;
     private TextView btnSpeedDown, textSettingSpeed, btnSpeedUp;
@@ -89,6 +90,7 @@ public class MainActivity extends Activity {
     // State
     private int currentZoom = 125; // Default 125% for 10-foot TV viewing
     private boolean isDarkMode = false;
+    private boolean isBgAudioEnabled = false; // Default OFF as requested
     private boolean isMobileUa = true; // Mobile UA default for smooth H.264 video decoding
     private boolean isVideoActive = false;
     private volatile boolean isVideoPlaying = false; // Real-time media detector state
@@ -132,12 +134,14 @@ public class MainActivity extends Activity {
                 isVideoPlaying = playing;
                 if (playing) {
                     bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
-                    acquireWakeLock();
-                    if (!isActivityResumed) {
-                        BackgroundAudioService.start(MainActivity.this);
+                    if (isBgAudioEnabled) {
+                        acquireWakeLock();
+                        if (!isActivityResumed) {
+                            BackgroundAudioService.start(MainActivity.this);
+                        }
                     }
                 } else {
-                    if (!isActivityResumed) {
+                    if (!isActivityResumed && isBgAudioEnabled) {
                         // When in background, media pause might be temporary buffering or track transition.
                         // Wait 15 seconds before stopping the foreground service and dropping CPU priority!
                         bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
@@ -485,15 +489,21 @@ public class MainActivity extends Activity {
         super.onPause();
         isActivityResumed = false;
         if (webView != null) {
-            webView.setKeepBackgroundMediaActive(true);
-            webView.resumeTimers();
+            webView.setKeepBackgroundMediaActive(isBgAudioEnabled);
+            if (isBgAudioEnabled) webView.resumeTimers();
         }
-        android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        boolean isMusicActive = (am != null && am.isMusicActive());
-        if (isVideoPlaying || isVideoActive || isMusicActive) {
+        if (isBgAudioEnabled) {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            boolean isMusicActive = (am != null && am.isMusicActive());
+            if (isVideoPlaying || isVideoActive || isMusicActive) {
+                bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
+                acquireWakeLock();
+                BackgroundAudioService.start(this);
+            }
+        } else {
             bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
-            acquireWakeLock();
-            BackgroundAudioService.start(this);
+            BackgroundAudioService.stop(this);
+            releaseWakeLock();
         }
     }
 
@@ -501,15 +511,21 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         if (webView != null) {
-            webView.setKeepBackgroundMediaActive(true);
-            webView.resumeTimers();
+            webView.setKeepBackgroundMediaActive(isBgAudioEnabled);
+            if (isBgAudioEnabled) webView.resumeTimers();
         }
-        android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        boolean isMusicActive = (am != null && am.isMusicActive());
-        if (isVideoPlaying || isVideoActive || isMusicActive) {
+        if (isBgAudioEnabled) {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            boolean isMusicActive = (am != null && am.isMusicActive());
+            if (isVideoPlaying || isVideoActive || isMusicActive) {
+                bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
+                acquireWakeLock();
+                BackgroundAudioService.start(this);
+            }
+        } else {
             bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
-            acquireWakeLock();
-            BackgroundAudioService.start(this);
+            BackgroundAudioService.stop(this);
+            releaseWakeLock();
         }
     }
 
@@ -534,9 +550,30 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (webView != null) {
+            webView.freeMemory();
+            if (level >= TRIM_MEMORY_MODERATE) {
+                webView.clearCache(false);
+            }
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (webView != null) {
+            webView.freeMemory();
+            webView.clearCache(false);
+        }
+    }
+
     private void loadPreferences() {
         currentZoom = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getInt(KEY_ZOOM, 125);
         isDarkMode = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(KEY_DARK, false);
+        isBgAudioEnabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(KEY_BG_AUDIO, false);
         isMobileUa = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(KEY_UA_MOBILE, true);
         pointerSpeedLevel = Math.max(1, Math.min(10, getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getInt(KEY_CURSOR_SPEED, 4)));
         pointerAccelLevel = Math.max(0, Math.min(10, getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getInt(KEY_CURSOR_ACCEL, 4)));
@@ -566,6 +603,7 @@ public class MainActivity extends Activity {
         textZoomScale = findViewById(R.id.textZoomScale);
         menuBtnZoomOut = findViewById(R.id.menuBtnZoomOut);
         menuBtnDarkMode = findViewById(R.id.menuBtnDarkMode);
+        menuBtnBgAudio = findViewById(R.id.menuBtnBgAudio);
         menuBtnSettings = findViewById(R.id.menuBtnSettings);
 
         settingsMenuLayout = findViewById(R.id.settingsMenuLayout);
@@ -604,6 +642,8 @@ public class MainActivity extends Activity {
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setRenderPriority(WebSettings.RenderPriority.HIGH);
+        s.setOffscreenPreRaster(false);
+        s.setGeolocationEnabled(false);
 
         webView.addJavascriptInterface(new MediaBridge(), "CleanTvBridge");
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
@@ -895,11 +935,29 @@ public class MainActivity extends Activity {
             showHud(isDarkMode ? "🌙" : "☀️", isDarkMode ? "Dark Mode: ON" : "Dark Mode: OFF");
         });
 
-        // Row 5: TV Bro-Style Settings Overlay
+        // Row 5: Background Audio On/Off & Settings
+        updateBgAudioButtonState();
+        if (menuBtnBgAudio != null) {
+            menuBtnBgAudio.setOnClickListener(v -> {
+                isBgAudioEnabled = !isBgAudioEnabled;
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(KEY_BG_AUDIO, isBgAudioEnabled).apply();
+                updateBgAudioButtonState();
+                showHud("📻", isBgAudioEnabled ? "Background Audio: ON" : "Background Audio: OFF");
+            });
+        }
+
+        // TV Bro-Style Settings Overlay
         menuBtnSettings.setOnClickListener(v -> {
             radialMenuLayout.setVisibility(View.GONE);
             openSettingsMenu();
         });
+    }
+
+    private void updateBgAudioButtonState() {
+        if (menuBtnBgAudio != null) {
+            menuBtnBgAudio.setText(isBgAudioEnabled ? "📻 Bg Audio: ON" : "📻 Bg Audio: OFF");
+            menuBtnBgAudio.setSelected(isBgAudioEnabled);
+        }
     }
 
     private void updatePointerSettingsUi() {
@@ -1000,6 +1058,9 @@ public class MainActivity extends Activity {
         webView.setVisibility(View.GONE);
         if (customViewContainer != null && customViewContainer.getVisibility() == View.VISIBLE) {
             customViewContainer.setVisibility(View.GONE);
+        }
+        if (webView != null) {
+            webView.freeMemory();
         }
         speedDialView.setVisibility(View.VISIBLE);
         controlMode = MODE_MOUSE;

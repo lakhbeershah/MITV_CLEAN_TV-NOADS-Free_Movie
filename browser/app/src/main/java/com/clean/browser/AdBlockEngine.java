@@ -45,7 +45,7 @@ public class AdBlockEngine {
 
     public static boolean isAdUrl(String url) {
         if (url == null || url.isEmpty()) return false;
-        // Fast-path zero-overhead bypass for video streams, DASH/HLS segments and audio chunks
+        // 1. Fast-path zero-overhead bypass for video streams, DASH/HLS segments and audio chunks
         if (url.contains("videoplayback") || url.contains(".m4s") || url.contains(".ts")
                 || url.contains(".m3u8") || url.contains(".mpd") || url.contains(".mp4")
                 || url.contains(".webm") || url.contains(".mp3") || url.contains(".m4a")
@@ -54,21 +54,39 @@ public class AdBlockEngine {
                 || url.contains("audio/") || url.contains("audio=")) {
             return false;
         }
-        try {
-            Uri uri = Uri.parse(url);
-            String host = uri.getHost();
-            if (host == null) return false;
-            host = host.toLowerCase();
 
-            for (String blocked : BLOCKED_DOMAINS) {
-                if (host.equals(blocked) || host.endsWith("." + blocked)) {
-                    return true;
-                }
+        // 2. Fast-path allow popular CDNs and high-volume asset sources without parsing overhead
+        if (url.contains(".gstatic.com") || url.contains(".googleapis.com") || url.contains(".google.com")
+                || url.contains(".ytimg.com") || url.contains("cloudflare.com") || url.contains("cdnjs.cloudflare.com")
+                || url.contains("unpkg.com") || url.contains("jsdelivr.net") || url.contains(".fastly.net")
+                || url.contains(".akamaihd.net") || url.contains("fonts.googleapis.com")) {
+            return false;
+        }
+
+        try {
+            // Ultra-fast substring host extraction avoiding Uri.parse() regex allocations
+            int schemeEnd = url.indexOf("://");
+            if (schemeEnd == -1) return false;
+            int hostStart = schemeEnd + 3;
+            int hostEnd = url.indexOf('/', hostStart);
+            if (hostEnd == -1) hostEnd = url.indexOf('?', hostStart);
+            if (hostEnd == -1) hostEnd = url.length();
+            int colon = url.indexOf(':', hostStart);
+            if (colon != -1 && colon < hostEnd) hostEnd = colon;
+            if (hostEnd <= hostStart) return false;
+            String host = url.substring(hostStart, hostEnd).toLowerCase();
+
+            // O(1) Hash-Set lookup with sub-domain stripping
+            if (BLOCKED_DOMAINS.contains(host)) return true;
+            int dot = host.indexOf('.');
+            while (dot != -1 && dot < host.length() - 1) {
+                String parent = host.substring(dot + 1);
+                if (BLOCKED_DOMAINS.contains(parent)) return true;
+                dot = host.indexOf('.', dot + 1);
             }
 
             // Keyword pattern checks
-            String path = uri.getPath();
-            if (path != null && (path.contains("/ad/") || path.contains("/ads/") || path.contains("/popunder") || path.contains("/adbanner"))) {
+            if (url.contains("/ad/") || url.contains("/ads/") || url.contains("/popunder") || url.contains("/adbanner")) {
                 return true;
             }
         } catch (Exception ignored) {}
@@ -298,8 +316,7 @@ public class AdBlockEngine {
                 "  }, false);\n" +
                 "\n" +
                 "  window._cleanTvShieldInjected = true;\n" +
-                "})();\n" +
-                getSubframeNavScript();
+                "})();";
 
         view.evaluateJavascript(js, null);
     }

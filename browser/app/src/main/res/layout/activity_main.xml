@@ -583,7 +583,7 @@
                 android:nextFocusUp="@+id/menuBtnZoomIn"
                 android:nextFocusLeft="@+id/menuBtnUserAgent"
                 android:nextFocusRight="@+id/menuBtnDarkMode"
-                android:nextFocusDown="@+id/menuBtnSettings"
+                android:nextFocusDown="@+id/menuBtnBgAudio"
                 android:text="📱 Mobile (Smooth)"
                 android:textColor="@color/menu_item_text"
                 android:textSize="13sp"
@@ -609,24 +609,50 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Row 5: Pointer & Browser Settings -->
-        <TextView
-            android:id="@+id/menuBtnSettings"
+        <!-- Row 5: Background Audio On/Off & Pointer Settings -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="42dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_menu_item"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:nextFocusUp="@+id/menuBtnUserAgent"
-            android:nextFocusLeft="@+id/menuBtnSettings"
-            android:nextFocusRight="@+id/menuBtnSettings"
-            android:nextFocusDown="@+id/menuBtnSettings"
-            android:text="⚙️ Settings (Pointer Speed, Accel &amp; Clean)"
-            android:textColor="@color/menu_item_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/menuBtnBgAudio"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnUserAgent"
+                android:nextFocusLeft="@+id/menuBtnBgAudio"
+                android:nextFocusRight="@+id/menuBtnSettings"
+                android:nextFocusDown="@+id/menuBtnBgAudio"
+                android:text="📻 Bg Audio: OFF"
+                android:textColor="@color/menu_item_text"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/menuBtnSettings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_menu_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusUp="@+id/menuBtnDarkMode"
+                android:nextFocusLeft="@+id/menuBtnBgAudio"
+                android:nextFocusRight="@+id/menuBtnSettings"
+                android:nextFocusDown="@+id/menuBtnSettings"
+                android:text="⚙️ Pointer Settings"
+                android:textColor="@color/menu_item_text"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- TV Bro-Style Pointer & Browser Settings Overlay -->
