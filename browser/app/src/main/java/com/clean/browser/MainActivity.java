@@ -92,6 +92,14 @@ public class MainActivity extends Activity {
     private boolean isMobileUa = true; // Mobile UA default for smooth H.264 video decoding
     private boolean isVideoActive = false;
     private volatile boolean isVideoPlaying = false; // Real-time media detector state
+    private boolean isActivityResumed = true;
+    private final Handler bgServiceHandler = new Handler(Looper.getMainLooper());
+    private final Runnable stopBgServiceRunnable = () -> {
+        if (!isActivityResumed && !isVideoPlaying) {
+            BackgroundAudioService.stop(MainActivity.this);
+            releaseWakeLock();
+        }
+    };
     private int controlMode = MODE_MOUSE; // Always Mouse by default
     private String lastMainUrl = "";
 
@@ -123,9 +131,21 @@ public class MainActivity extends Activity {
             new Handler(Looper.getMainLooper()).post(() -> {
                 isVideoPlaying = playing;
                 if (playing) {
+                    bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
                     acquireWakeLock();
+                    if (!isActivityResumed) {
+                        BackgroundAudioService.start(MainActivity.this);
+                    }
                 } else {
-                    releaseWakeLock();
+                    if (!isActivityResumed) {
+                        // When in background, media pause might be temporary buffering or track transition.
+                        // Wait 15 seconds before stopping the foreground service and dropping CPU priority!
+                        bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
+                        bgServiceHandler.postDelayed(stopBgServiceRunnable, 15000);
+                    } else {
+                        releaseWakeLock();
+                        BackgroundAudioService.stop(MainActivity.this);
+                    }
                 }
             });
         }
@@ -463,11 +483,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        isActivityResumed = false;
         if (webView != null) {
             webView.setKeepBackgroundMediaActive(true);
+            webView.resumeTimers();
         }
-        if (isVideoPlaying || isVideoActive) {
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        boolean isMusicActive = (am != null && am.isMusicActive());
+        if (isVideoPlaying || isVideoActive || isMusicActive) {
+            bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
             acquireWakeLock();
+            BackgroundAudioService.start(this);
         }
     }
 
@@ -476,23 +502,34 @@ public class MainActivity extends Activity {
         super.onStop();
         if (webView != null) {
             webView.setKeepBackgroundMediaActive(true);
+            webView.resumeTimers();
         }
-        if (isVideoPlaying || isVideoActive) {
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        boolean isMusicActive = (am != null && am.isMusicActive());
+        if (isVideoPlaying || isVideoActive || isMusicActive) {
+            bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
             acquireWakeLock();
+            BackgroundAudioService.start(this);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        isActivityResumed = true;
         if (webView != null) {
             webView.setKeepBackgroundMediaActive(true);
+            webView.resumeTimers();
             webView.onResume();
         }
+        bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
+        BackgroundAudioService.stop(this);
     }
 
     @Override
     protected void onDestroy() {
+        bgServiceHandler.removeCallbacks(stopBgServiceRunnable);
+        BackgroundAudioService.stop(this);
         releaseWakeLock();
         super.onDestroy();
     }

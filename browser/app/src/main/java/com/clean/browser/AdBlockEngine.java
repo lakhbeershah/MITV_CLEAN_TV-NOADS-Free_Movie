@@ -48,8 +48,10 @@ public class AdBlockEngine {
         // Fast-path zero-overhead bypass for video streams, DASH/HLS segments and audio chunks
         if (url.contains("videoplayback") || url.contains(".m4s") || url.contains(".ts")
                 || url.contains(".m3u8") || url.contains(".mpd") || url.contains(".mp4")
-                || url.contains(".webm") || url.contains("range=") || url.contains("mime=video")
-                || url.contains("mime=audio")) {
+                || url.contains(".webm") || url.contains(".mp3") || url.contains(".m4a")
+                || url.contains(".aac") || url.contains(".ogg") || url.contains(".opus")
+                || url.contains("range=") || url.contains("mime=video") || url.contains("mime=audio")
+                || url.contains("audio/") || url.contains("audio=")) {
             return false;
         }
         try {
@@ -268,20 +270,14 @@ public class AdBlockEngine {
                 "      }\n" +
                 "    } catch(e) {}\n" +
                 "    if (!active) {\n" +
-                "      var vids = document.querySelectorAll('video');\n" +
-                "      for (var i = 0; i < vids.length; i++) {\n" +
-                "        var v = vids[i];\n" +
-                "        if (!v.paused && v.currentTime > 0 && !v.ended && v.readyState >= 2) { active = true; break; }\n" +
+                "      var mediaEls = document.querySelectorAll('video, audio');\n" +
+                "      for (var i = 0; i < mediaEls.length; i++) {\n" +
+                "        var m = mediaEls[i];\n" +
+                "        if (!m.paused && (m.currentTime > 0 || m.readyState >= 1) && !m.ended) { active = true; break; }\n" +
                 "      }\n" +
                 "    }\n" +
-                "    if (!active) {\n" +
-                "      var frames = document.querySelectorAll('iframe');\n" +
-                "      for (var j = 0; j < frames.length; j++) {\n" +
-                "        try {\n" +
-                "          var fv = frames[j].contentDocument.querySelector('video');\n" +
-                "          if (fv && (!fv.paused && fv.currentTime > 0 && !fv.ended && fv.readyState >= 2)) { active = true; break; }\n" +
-                "        } catch(e) {}\n" +
-                "      }\n" +
+                "    if (!active && window._cleanTvSubframeMediaPlaying) {\n" +
+                "      active = true;\n" +
                 "    }\n" +
                 "    if (window.CleanTvBridge && typeof window.CleanTvBridge.setVideoPlaying === 'function') {\n" +
                 "      window.CleanTvBridge.setVideoPlaying(active);\n" +
@@ -294,6 +290,12 @@ public class AdBlockEngine {
                 "  document.addEventListener('playing', function() { if (window.CleanTvBridge && location.href.indexOf('stream_hub.html') === -1) window.CleanTvBridge.setVideoPlaying(true); }, true);\n" +
                 "  document.addEventListener('pause', function() { setTimeout(reportMedia, 400); }, true);\n" +
                 "  document.addEventListener('ended', function() { setTimeout(reportMedia, 400); }, true);\n" +
+                "  window.addEventListener('message', function(e) {\n" +
+                "    if (e && e.data && e.data.type === 'cleanTvMediaState') {\n" +
+                "      window._cleanTvSubframeMediaPlaying = !!e.data.playing;\n" +
+                "      reportMedia();\n" +
+                "    }\n" +
+                "  }, false);\n" +
                 "\n" +
                 "  window._cleanTvShieldInjected = true;\n" +
                 "})();\n" +
@@ -329,6 +331,48 @@ public class AdBlockEngine {
                 "    window.addEventListener('focusout', stopVis, true);\n" +
                 "    window.addEventListener('pagehide', stopVis, true);\n" +
                 "  } catch(e) {}\n" +
+                "\n" +
+                "  // 1b. Web Audio Background Clock & Timer Throttle Exemption\n" +
+                "  try {\n" +
+                "    var AudioCtx = window.AudioContext || window.webkitAudioContext;\n" +
+                "    if (AudioCtx) {\n" +
+                "      var bgAudioCtx = null;\n" +
+                "      var ensureAudioClock = function() {\n" +
+                "        try {\n" +
+                "          if (!bgAudioCtx) {\n" +
+                "            bgAudioCtx = new AudioCtx();\n" +
+                "            var silentBuf = bgAudioCtx.createBuffer(1, 2205, 22050);\n" +
+                "            var src = bgAudioCtx.createBufferSource();\n" +
+                "            src.buffer = silentBuf;\n" +
+                "            src.loop = true;\n" +
+                "            var gain = bgAudioCtx.createGain();\n" +
+                "            gain.gain.value = 0.00001;\n" +
+                "            src.connect(gain);\n" +
+                "            gain.connect(bgAudioCtx.destination);\n" +
+                "            src.start(0);\n" +
+                "          }\n" +
+                "          if (bgAudioCtx.state === 'suspended') {\n" +
+                "            bgAudioCtx.resume();\n" +
+                "          }\n" +
+                "        } catch(e) {}\n" +
+                "      };\n" +
+                "      document.addEventListener('play', ensureAudioClock, true);\n" +
+                "      document.addEventListener('playing', ensureAudioClock, true);\n" +
+                "      document.addEventListener('pointerdown', ensureAudioClock, true);\n" +
+                "      document.addEventListener('keydown', ensureAudioClock, true);\n" +
+                "    }\n" +
+                "  } catch(e) {}\n" +
+                "\n" +
+                "  // 1c. Subframe Media State Forwarder to Top Frame\n" +
+                "  if (window.top !== window) {\n" +
+                "    var postMedia = function(playing) {\n" +
+                "      try { window.top.postMessage({ type: 'cleanTvMediaState', playing: playing }, '*'); } catch(e) {}\n" +
+                "    };\n" +
+                "    document.addEventListener('play', function() { postMedia(true); }, true);\n" +
+                "    document.addEventListener('playing', function() { postMedia(true); }, true);\n" +
+                "    document.addEventListener('pause', function() { postMedia(false); }, true);\n" +
+                "    document.addEventListener('ended', function() { postMedia(false); }, true);\n" +
+                "  }\n" +
                 "\n" +
                 "  // 2. Hardware 1080p H.264 Codec Preference: Fixes green/pink line VP9/AV1 stride bug\n" +
                 "  try {\n" +
