@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -53,7 +54,7 @@ public class MainActivity extends Activity {
     private static final String UA_MOBILE = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36";
 
     // Views
-    private WebView webView;
+    private CleanTvWebView webView;
     private FrameLayout customViewContainer;
     private WebChromeClient.CustomViewCallback customViewCallback;
     private View customVideoView;
@@ -119,7 +120,14 @@ public class MainActivity extends Activity {
 
         @android.webkit.JavascriptInterface
         public void setVideoPlaying(boolean playing) {
-            new Handler(Looper.getMainLooper()).post(() -> isVideoPlaying = playing);
+            new Handler(Looper.getMainLooper()).post(() -> {
+                isVideoPlaying = playing;
+                if (playing) {
+                    acquireWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+            });
         }
 
         @android.webkit.JavascriptInterface
@@ -312,7 +320,7 @@ public class MainActivity extends Activity {
         webView.scrollBy(0, deltaY);
         String behavior = isRepeat ? "auto" : "smooth";
         webView.evaluateJavascript("window.scrollBy({top: " + deltaY + ", behavior: '" + behavior + "'});", null);
-        if (!isRepeat) {
+        if (controlMode == MODE_DPAD && !isRepeat) {
             showHud(deltaY < 0 ? "▲" : "▼", deltaY < 0 ? "Scroll Up" : "Scroll Down",
                     deltaY < 0 ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL));
         }
@@ -352,33 +360,17 @@ public class MainActivity extends Activity {
                 dispatchHoverToActive(curX, curY);
             }
 
-            // Tunable continuous edge scrolling while in pointer mode
+            // Tunable continuous edge scrolling while in pointer mode (smooth scrolling without hud popup)
             int edgeStep = getEdgeScrollStep();
             if (dy > 0 && curY >= viewH - 45) {
                 scrollPageSlow(edgeStep);
-                if (now - lastEdgeHudTime > 800) {
-                    lastEdgeHudTime = now;
-                    showHud("▼", "Scroll Down", Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-                }
             } else if (dy < 0 && curY <= 45) {
                 scrollPageSlow(-edgeStep);
-                if (now - lastEdgeHudTime > 800) {
-                    lastEdgeHudTime = now;
-                    showHud("▲", "Scroll Up", Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-                }
             }
             if (dx > 0 && curX >= viewW - 45) {
                 scrollPageSlowH(edgeStep);
-                if (now - lastEdgeHudTime > 800) {
-                    lastEdgeHudTime = now;
-                    showHud("▶", "Scroll Right", Gravity.CENTER_VERTICAL | Gravity.END);
-                }
             } else if (dx < 0 && curX <= 45) {
                 scrollPageSlowH(-edgeStep);
-                if (now - lastEdgeHudTime > 800) {
-                    lastEdgeHudTime = now;
-                    showHud("◀", "Scroll Left", Gravity.CENTER_VERTICAL | Gravity.START);
-                }
             }
 
             cursorHandler.postDelayed(this, 16);
@@ -425,25 +417,65 @@ public class MainActivity extends Activity {
         }
     }
 
+    private PowerManager.WakeLock wakeLock;
+
+    private void acquireWakeLock() {
+        try {
+            if (wakeLock == null) {
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                if (pm != null) {
+                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CleanTvBrowser:BgPlayback");
+                }
+            }
+            if (wakeLock != null && !wakeLock.isHeld()) {
+                wakeLock.acquire(120 * 60 * 1000L); // 2h safe timeout
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void releaseWakeLock() {
+        try {
+            if (wakeLock != null && wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+        } catch (Exception ignored) {}
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
-        // Background play: Do NOT pause webView or pause timers if video is playing/active.
-        // Audio and decoding continue seamlessly in the background when HOME is pressed.
+        if (webView != null) {
+            webView.setKeepBackgroundMediaActive(true);
+        }
+        if (isVideoPlaying || isVideoActive) {
+            acquireWakeLock();
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Background play: Keep webView running in background
+        if (webView != null) {
+            webView.setKeepBackgroundMediaActive(true);
+        }
+        if (isVideoPlaying || isVideoActive) {
+            acquireWakeLock();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (webView != null) {
+            webView.setKeepBackgroundMediaActive(true);
             webView.onResume();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        releaseWakeLock();
+        super.onDestroy();
     }
 
     private void loadPreferences() {
@@ -1294,6 +1326,7 @@ public class MainActivity extends Activity {
     }
 
     private void adjustVolume(boolean up) {
+        if (controlMode != MODE_MOVIE) return;
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) return;
 
@@ -1315,6 +1348,7 @@ public class MainActivity extends Activity {
     }
 
     private void seekVideo(boolean forward) {
+        if (controlMode != MODE_MOVIE) return;
         int seconds = forward ? 10 : -10;
         String js = "(function() {\n" +
                 "  if (window._cleanTvVideo && window._cleanTvVideo.seek) {\n" +
@@ -1322,10 +1356,22 @@ public class MainActivity extends Activity {
                 "  }\n" +
                 "  try {\n" +
                 "    var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
-                "    if (yt && typeof yt.seekBy === 'function') { yt.seekBy(" + seconds + "); return 'yt'; }\n" +
+                "    if (yt) {\n" +
+                "      if (typeof yt.seekBy === 'function') { yt.seekBy(" + seconds + "); return 'yt'; }\n" +
+                "      if (typeof yt.seekTo === 'function') {\n" +
+                "        var ct = typeof yt.getCurrentTime === 'function' ? yt.getCurrentTime() : 0;\n" +
+                "        yt.seekTo(ct + (" + seconds + "), true);\n" +
+                "        return 'yt-seekto';\n" +
+                "      }\n" +
+                "    }\n" +
                 "  } catch(e) {}\n" +
                 "  var v = document.querySelector('video');\n" +
-                "  if (v) { v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (" + seconds + "))); return 'html5'; }\n" +
+                "  if (v) {\n" +
+                "    var target = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (" + seconds + ")));\n" +
+                "    if (typeof v.fastSeek === 'function') { try { v.fastSeek(target); } catch(e) { v.currentTime = target; } }\n" +
+                "    else { v.currentTime = target; }\n" +
+                "    return 'html5';\n" +
+                "  }\n" +
                 "  return 'none';\n" +
                 "})();";
         webView.evaluateJavascript(js, null);
@@ -1334,6 +1380,7 @@ public class MainActivity extends Activity {
     }
 
     private void toggleVideoPlayPause() {
+        if (controlMode != MODE_MOVIE) return;
         String js = "(function() {\n" +
                 "  if (window._cleanTvVideo && window._cleanTvVideo.togglePlayPause) {\n" +
                 "    return window._cleanTvVideo.togglePlayPause();\n" +
@@ -1372,7 +1419,7 @@ public class MainActivity extends Activity {
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) hudOverlay.getLayoutParams();
         lp.gravity = gravity;
-        int m = (int) (42 * getResources().getDisplayMetrics().density);
+        int m = (int) (18 * getResources().getDisplayMetrics().density);
 
         boolean isTop = (gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.TOP;
         boolean isBottom = (gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM;
@@ -1393,7 +1440,7 @@ public class MainActivity extends Activity {
 
         hudOverlay.setVisibility(View.VISIBLE);
         hudHandler.removeCallbacks(hideHudRunnable);
-        hudHandler.postDelayed(hideHudRunnable, 1200);
+        hudHandler.postDelayed(hideHudRunnable, 850);
     }
 
     private void showHud(String icon, String text) {

@@ -45,6 +45,13 @@ public class AdBlockEngine {
 
     public static boolean isAdUrl(String url) {
         if (url == null || url.isEmpty()) return false;
+        // Fast-path zero-overhead bypass for video streams, DASH/HLS segments and audio chunks
+        if (url.contains("videoplayback") || url.contains(".m4s") || url.contains(".ts")
+                || url.contains(".m3u8") || url.contains(".mpd") || url.contains(".mp4")
+                || url.contains(".webm") || url.contains("range=") || url.contains("mime=video")
+                || url.contains("mime=audio")) {
+            return false;
+        }
         try {
             Uri uri = Uri.parse(url);
             String host = uri.getHost();
@@ -158,15 +165,22 @@ public class AdBlockEngine {
                 "  // 5. Fail-Safe TV Video Remote Controller API\n" +
                 "  window._cleanTvVideo = {\n" +
                 "    seek: function(seconds) {\n" +
-                "      // A. YouTube movie_player native seek\n" +
+                "      // A. YouTube movie_player native seek & mobile seekTo\n" +
                 "      try {\n" +
                 "        var yt = document.getElementById('movie_player') || document.querySelector('.html5-video-player');\n" +
-                "        if (yt && typeof yt.seekBy === 'function') {\n" +
-                "          yt.seekBy(seconds);\n" +
-                "          return 'yt';\n" +
+                "        if (yt) {\n" +
+                "          if (typeof yt.seekBy === 'function') {\n" +
+                "            yt.seekBy(seconds);\n" +
+                "            return 'yt';\n" +
+                "          }\n" +
+                "          if (typeof yt.seekTo === 'function') {\n" +
+                "            var ct = typeof yt.getCurrentTime === 'function' ? yt.getCurrentTime() : 0;\n" +
+                "            yt.seekTo(ct + seconds, true);\n" +
+                "            return 'yt-seekto';\n" +
+                "          }\n" +
                 "        }\n" +
                 "      } catch(e) {}\n" +
-                "      // B. Standard HTML5 Video element\n" +
+                "      // B. Standard HTML5 Video element with instant keyframe fastSeek & preloading\n" +
                 "      var v = document.querySelector('video');\n" +
                 "      if (!v) {\n" +
                 "        var iframes = document.querySelectorAll('iframe');\n" +
@@ -176,7 +190,12 @@ public class AdBlockEngine {
                 "      }\n" +
                 "      if (v) {\n" +
                 "        var target = Math.max(0, Math.min(v.duration || 999999, v.currentTime + seconds));\n" +
-                "        v.currentTime = target;\n" +
+                "        if (typeof v.fastSeek === 'function') {\n" +
+                "          try { v.fastSeek(target); } catch(e) { v.currentTime = target; }\n" +
+                "        } else {\n" +
+                "          v.currentTime = target;\n" +
+                "        }\n" +
+                "        if (v.preload !== 'auto') { try { v.preload = 'auto'; } catch(e) {} }\n" +
                 "        return 'html5';\n" +
                 "      }\n" +
                 "      // C. Keyboard fallback\n" +
@@ -300,11 +319,15 @@ public class AdBlockEngine {
                 "    Object.defineProperty(document, 'hidden', { get: function() { return false; }, configurable: true });\n" +
                 "    Object.defineProperty(document, 'visibilityState', { get: function() { return 'visible'; }, configurable: true });\n" +
                 "    Object.defineProperty(document, 'webkitVisibilityState', { get: function() { return 'visible'; }, configurable: true });\n" +
+                "    document.hasFocus = function() { return true; };\n" +
                 "    var stopVis = function(e) { e.stopImmediatePropagation(); };\n" +
                 "    window.addEventListener('visibilitychange', stopVis, true);\n" +
                 "    document.addEventListener('visibilitychange', stopVis, true);\n" +
                 "    window.addEventListener('webkitvisibilitychange', stopVis, true);\n" +
                 "    document.addEventListener('webkitvisibilitychange', stopVis, true);\n" +
+                "    window.addEventListener('blur', stopVis, true);\n" +
+                "    window.addEventListener('focusout', stopVis, true);\n" +
+                "    window.addEventListener('pagehide', stopVis, true);\n" +
                 "  } catch(e) {}\n" +
                 "\n" +
                 "  // 2. Hardware 1080p H.264 Codec Preference: Fixes green/pink line VP9/AV1 stride bug\n" +

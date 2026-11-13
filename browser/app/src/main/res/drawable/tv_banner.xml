@@ -5,68 +5,70 @@
     android:viewportWidth="320"
     android:viewportHeight="180">
 
-    <!-- Dual-Tone Background: Deep Midnight Navy to Dark Cyan Abyss -->
+    <!-- Light Aesthetic Background: Clean Crisp Sky & Azure Dual-Tone -->
     <path
-        android:fillColor="#0D1624"
+        android:fillColor="#F0F7FF"
         android:pathData="M16,6 C10.5,6 6,10.5 6,16 L6,164 C6,169.5 10.5,174 16,174 L304,174 C309.5,174 314,169.5 314,164 L314,16 C314,10.5 309.5,6 304,6 Z" />
     <path
-        android:fillColor="#072B3E"
-        android:pathData="M6,105 L6,164 C6,169.5 10.5,174 16,174 L304,174 C309.5,174 314,169.5 314,164 L314,105 Z" />
+        android:fillColor="#D8ECF8"
+        android:pathData="M6,100 L6,164 C6,169.5 10.5,174 16,174 L304,174 C309.5,174 314,169.5 314,164 L314,100 Z" />
 
-    <!-- Dual-Tone Cyan Border Accent -->
+    <!-- Vibrant Sky Blue Border Accent -->
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#38BDF8"
         android:strokeWidth="2.5"
         android:pathData="M16,7 C11,7 7,11 7,16 L7,164 C7,169 11,173 16,173 L304,173 C309,173 313,169 313,164 L313,16 C313,11 309,7 304,7 Z" />
 
-    <!-- Centered Minimal Thick Earth Icon (Center: 160, 90; Radius: 38) -->
-    <!-- 1. Outer Globe Ring (Thick Pure White) -->
+    <!-- Centered High-Contrast Tri-Color Earth Icon (Center: 160, 90; Radius: 38) -->
+    <!-- 1. Outer Globe Ring (Deep Modern Navy, Thick 5dp) -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeColor="#0A2540"
+        android:strokeWidth="5.0"
         android:strokeLineCap="round"
         android:pathData="M160,52 A38,38 0 1,1 159.99,52 Z" />
 
-    <!-- 2. Prime Meridian (Vertical Axis) -->
+    <!-- 2. Prime Meridian (Vertical Axis - Electric Blue, Thick 4dp) -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="4.0"
         android:strokeLineCap="round"
         android:pathData="M160,52 L160,128" />
 
-    <!-- 3. Equator (Horizontal Line) -->
+    <!-- 3. Equator (Horizontal Latitude - Deep Navy, Thick 4dp) -->
     <path
-        android:strokeColor="#00E5FF"
-        android:strokeWidth="5"
+        android:strokeColor="#0A2540"
+        android:strokeWidth="4.0"
         android:strokeLineCap="round"
         android:pathData="M122,90 L198,90" />
 
-    <!-- 4. Left Elliptical Meridian Arc -->
+    <!-- 4. Left Meridian Arc (Vibrant Cobalt Blue, Thick 4dp) -->
     <path
-        android:strokeColor="#00E5FF"
-        android:strokeWidth="4.2"
+        android:strokeColor="#2563EB"
+        android:strokeWidth="4.0"
         android:strokeLineCap="round"
-        android:pathData="M160,52 C144,64 144,116 160,128" />
+        android:pathData="M160,52 C140,64 140,116 160,128" />
 
-    <!-- 5. Right Elliptical Meridian Arc -->
+    <!-- 5. Right Meridian Arc (Vibrant Cobalt Blue, Thick 4dp) -->
     <path
-        android:strokeColor="#00E5FF"
-        android:strokeWidth="4.2"
+        android:strokeColor="#2563EB"
+        android:strokeWidth="4.0"
         android:strokeLineCap="round"
-        android:pathData="M160,52 C176,64 176,116 160,128" />
+        android:pathData="M160,52 C180,64 180,116 160,128" />
 
-    <!-- 6. Upper Parallel Arc -->
+    <!-- 6. Northern & Southern Latitude Arcs (Turquoise / Emerald Accents, Thick 3.5dp) -->
     <path
-        android:strokeColor="#80D8FF"
-        android:strokeWidth="4"
+        android:strokeColor="#0D9488"
+        android:strokeWidth="3.5"
         android:strokeLineCap="round"
-        android:pathData="M132,71 C145,76 175,76 188,71" />
-
-    <!-- 7. Lower Parallel Arc -->
+        android:pathData="M132,70 C146,78 174,78 188,70" />
     <path
-        android:strokeColor="#80D8FF"
-        android:strokeWidth="4"
+        android:strokeColor="#0D9488"
+        android:strokeWidth="3.5"
         android:strokeLineCap="round"
-        android:pathData="M132,109 C145,104 175,104 188,109" />
+        android:pathData="M132,110 C146,102 174,102 188,110" />
 
+    <!-- 7. Center Core Focus Accent -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M160,86 A4,4 0 1,1 159.99,86 Z" />
 </vector>
