@@ -150,14 +150,14 @@
                 android:letterSpacing="0.05" />
 
             <LinearLayout
-                android:layout_width="720dp"
+                android:layout_width="760dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal">
 
-                <!-- 1. HDMovie2 -->
+                <!-- 1. Last / Active Page -->
                 <LinearLayout
-                    android:id="@+id/cardHdMovie2"
+                    android:id="@+id/cardLastActivePage"
                     android:layout_width="0dp"
                     android:layout_height="90dp"
                     android:layout_weight="1"
@@ -166,6 +166,39 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:nextFocusUp="@+id/editSearchUrl"
+                    android:nextFocusRight="@+id/cardHdMovie2"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⏱️"
+                        android:textSize="22sp" />
+
+                    <TextView
+                        android:id="@+id/txtLastPageTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Active Page"
+                        android:textColor="@color/accent_blue"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- 2. HDMovie2 (Google Search Query) -->
+                <LinearLayout
+                    android:id="@+id/cardHdMovie2"
+                    android:layout_width="0dp"
+                    android:layout_height="90dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:nextFocusUp="@+id/editSearchUrl"
+                    android:nextFocusLeft="@+id/cardLastActivePage"
                     android:nextFocusRight="@+id/cardStreamPlay"
                     android:orientation="vertical">
 
@@ -175,7 +208,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🍿"
-                        android:textSize="24sp" />
+                        android:textSize="22sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -183,16 +216,16 @@
                         android:layout_marginTop="4dp"
                         android:text="HDMovie2"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- 2. Stream Play (Movies, Series, Bollywood, Live TV) -->
+                <!-- 3. Stream Play (Movies, Series, Bollywood, Live TV) -->
                 <LinearLayout
                     android:id="@+id/cardStreamPlay"
                     android:layout_width="0dp"
                     android:layout_height="90dp"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card_selector"
                     android:clickable="true"
@@ -207,7 +240,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📡"
-                        android:textSize="24sp" />
+                        android:textSize="22sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -215,16 +248,16 @@
                         android:layout_marginTop="4dp"
                         android:text="Stream Play"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- 3. Game Links (TV Games, Poki, Retro Arcade) -->
+                <!-- 4. Game Links (TV Games, Poki, Retro Arcade) -->
                 <LinearLayout
                     android:id="@+id/cardGameLinks"
                     android:layout_width="0dp"
                     android:layout_height="90dp"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card_selector"
                     android:clickable="true"
@@ -239,7 +272,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🎮"
-                        android:textSize="24sp" />
+                        android:textSize="22sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -247,16 +280,16 @@
                         android:layout_marginTop="4dp"
                         android:text="Game Links"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- 4. YouTube -->
+                <!-- 5. YouTube -->
                 <LinearLayout
                     android:id="@+id/cardYouTube"
                     android:layout_width="0dp"
                     android:layout_height="90dp"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card_selector"
                     android:clickable="true"
@@ -270,7 +303,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📺"
-                        android:textSize="24sp" />
+                        android:textSize="22sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -278,7 +311,7 @@
                         android:layout_marginTop="4dp"
                         android:text="YouTube"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>

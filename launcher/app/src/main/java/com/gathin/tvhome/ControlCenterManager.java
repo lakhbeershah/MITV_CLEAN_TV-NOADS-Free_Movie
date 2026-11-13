@@ -650,7 +650,7 @@ public class ControlCenterManager {
         if (btnOpenMargin != null) {
             btnOpenMargin.setOnClickListener(v -> {
                 lastOpenedSubView = viewMargin;
-                switchToView(viewMargin, "HOME APPS & STUDIO");
+                switchToView(viewMargin, "LAUNCHER STUDIO");
                 View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
                 if (plus != null) plus.requestFocus();
             });
@@ -672,10 +672,14 @@ public class ControlCenterManager {
         switchToView(viewScreensaver, "SCREENSAVER & SYNC");
     }
 
+    public void openLauncherStudio() {
+        openHomeStudio();
+    }
+
     public void openHomeStudio() {
         if (viewMargin != null) {
             lastOpenedSubView = viewMargin;
-            switchToView(viewMargin, "HOME APPS & STUDIO");
+            switchToView(viewMargin, "LAUNCHER STUDIO");
             View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
             if (plus != null) plus.requestFocus();
         }

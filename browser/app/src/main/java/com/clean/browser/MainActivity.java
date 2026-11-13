@@ -346,7 +346,8 @@ public class MainActivity extends Activity {
             long now = SystemClock.uptimeMillis();
 
             // Wake up auto-hiding fullscreen/player controls while moving cursor over video
-            if (now - lastHoverMoveTime > 120) {
+            long hoverInterval = (isVideoPlaying || isVideoActive) ? 450 : 120;
+            if (now - lastHoverMoveTime > hoverInterval) {
                 lastHoverMoveTime = now;
                 dispatchHoverToActive(curX, curY);
             }
@@ -412,6 +413,36 @@ public class MainActivity extends Activity {
         setIntent(intent);
         if (intent != null && intent.getData() != null) {
             loadUrl(intent.getData().toString());
+        } else {
+            // Re-opened from Home: If video is playing/active, ensure webView is visible!
+            if (isVideoActive || isVideoPlaying) {
+                if (speedDialView != null && speedDialView.getVisibility() == View.VISIBLE) {
+                    speedDialView.setVisibility(View.GONE);
+                    webView.setVisibility(View.VISIBLE);
+                    enterMouseMode(true);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Background play: Do NOT pause webView or pause timers if video is playing/active.
+        // Audio and decoding continue seamlessly in the background when HOME is pressed.
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Background play: Keep webView running in background
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null) {
+            webView.onResume();
         }
     }
 
@@ -683,8 +714,28 @@ public class MainActivity extends Activity {
             handleSearchOrUrl(editSearchUrl.getText().toString());
         });
 
-        // 4 Pinned Cards
-        findViewById(R.id.cardHdMovie2).setOnClickListener(v -> loadUrl("https://hdmovie2.vg"));
+        // 5 Pinned Cards
+        final String hdMovieSearchUrl = "https://www.google.com/search?q=hdmovie2&rlz=1C1GCEA_enIN1163IN1163&oq=hdmo&gs_lcrp=EgZjaHJvbWUqBggBECMYJzIGCAAQRRg5MgYIARAjGCcyBggCEEUYOzIGCAMQIxgnMgYIBBBFGEEyBggFEEUYQTIGCAYQRRhBMgYIBxBFGDzSAQgzOTg2ajBqN6gCCLACAfEF_YIRJvXL-AA&sourceid=chrome&source=chrome.ob&ie=UTF-8";
+
+        View cardLastActivePage = findViewById(R.id.cardLastActivePage);
+        if (cardLastActivePage != null) {
+            cardLastActivePage.setOnClickListener(v -> {
+                hideKeyboard(editSearchUrl);
+                String current = (webView != null) ? webView.getUrl() : null;
+                if (current != null && !current.isEmpty() && !current.equals("about:blank")) {
+                    speedDialView.setVisibility(View.GONE);
+                    webView.setVisibility(View.VISIBLE);
+                    enterMouseMode(true);
+                    showHud("⏱️", "Resumed Active Page");
+                } else if (lastMainUrl != null && !lastMainUrl.isEmpty() && !lastMainUrl.equals("about:blank")) {
+                    loadUrl(lastMainUrl);
+                } else {
+                    loadUrl("https://www.google.com");
+                }
+            });
+        }
+
+        findViewById(R.id.cardHdMovie2).setOnClickListener(v -> loadUrl(hdMovieSearchUrl));
         findViewById(R.id.cardStreamPlay).setOnClickListener(v -> loadUrl("file:///android_asset/stream_hub.html?view=movies"));
         findViewById(R.id.cardGameLinks).setOnClickListener(v -> loadUrl("file:///android_asset/stream_hub.html?view=games"));
         findViewById(R.id.cardYouTube).setOnClickListener(v -> loadUrl("https://m.youtube.com"));
@@ -868,7 +919,9 @@ public class MainActivity extends Activity {
         cursorView.setFocusBoxVisible(false);
         cursorView.clearFocusRect();
         updateModeSelectionUi();
-        findViewById(R.id.cardHdMovie2).requestFocus();
+        View targetFocus = (webView != null && webView.getUrl() != null && !webView.getUrl().isEmpty() && !webView.getUrl().equals("about:blank"))
+                ? findViewById(R.id.cardLastActivePage) : findViewById(R.id.cardHdMovie2);
+        if (targetFocus != null) targetFocus.requestFocus();
     }
 
     private void applyDarkMode() {

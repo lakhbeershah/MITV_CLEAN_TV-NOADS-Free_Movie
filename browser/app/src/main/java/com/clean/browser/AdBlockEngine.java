@@ -295,6 +295,46 @@ public class AdBlockEngine {
                 "  window._cleanTvFocusEl = null;\n" +
                 "  window._cleanTvWakeTick = false;\n" +
                 "\n" +
+                "  // 1. Background Audio/Video Playback: Prevent pause on HOME or minimize\n" +
+                "  try {\n" +
+                "    Object.defineProperty(document, 'hidden', { get: function() { return false; }, configurable: true });\n" +
+                "    Object.defineProperty(document, 'visibilityState', { get: function() { return 'visible'; }, configurable: true });\n" +
+                "    Object.defineProperty(document, 'webkitVisibilityState', { get: function() { return 'visible'; }, configurable: true });\n" +
+                "    var stopVis = function(e) { e.stopImmediatePropagation(); };\n" +
+                "    window.addEventListener('visibilitychange', stopVis, true);\n" +
+                "    document.addEventListener('visibilitychange', stopVis, true);\n" +
+                "    window.addEventListener('webkitvisibilitychange', stopVis, true);\n" +
+                "    document.addEventListener('webkitvisibilitychange', stopVis, true);\n" +
+                "  } catch(e) {}\n" +
+                "\n" +
+                "  // 2. Hardware 1080p H.264 Codec Preference: Fixes green/pink line VP9/AV1 stride bug\n" +
+                "  try {\n" +
+                "    if (window.MediaSource && typeof window.MediaSource.isTypeSupported === 'function') {\n" +
+                "      var origIsType = window.MediaSource.isTypeSupported;\n" +
+                "      window.MediaSource.isTypeSupported = function(type) {\n" +
+                "        if (type) {\n" +
+                "          var lt = type.toLowerCase();\n" +
+                "          if (lt.indexOf('vp9') !== -1 || lt.indexOf('vp09') !== -1 || lt.indexOf('av01') !== -1 || lt.indexOf('av1') !== -1) {\n" +
+                "            return false;\n" +
+                "          }\n" +
+                "        }\n" +
+                "        return origIsType.call(window.MediaSource, type);\n" +
+                "      };\n" +
+                "    }\n" +
+                "    if (window.HTMLMediaElement && window.HTMLMediaElement.prototype && typeof window.HTMLMediaElement.prototype.canPlayType === 'function') {\n" +
+                "      var origCanPlay = window.HTMLMediaElement.prototype.canPlayType;\n" +
+                "      window.HTMLMediaElement.prototype.canPlayType = function(type) {\n" +
+                "        if (type) {\n" +
+                "          var lt = type.toLowerCase();\n" +
+                "          if (lt.indexOf('vp9') !== -1 || lt.indexOf('vp09') !== -1 || lt.indexOf('av01') !== -1 || lt.indexOf('av1') !== -1) {\n" +
+                "            return '';\n" +
+                "          }\n" +
+                "        }\n" +
+                "        return origCanPlay.call(this, type);\n" +
+                "      };\n" +
+                "    }\n" +
+                "  } catch(e) {}\n" +
+                "\n" +
                 "  function ensureFocusCss() {\n" +
                 "    try {\n" +
                 "      var focusTarget = document.head || document.body || document.documentElement;\n" +
@@ -302,7 +342,8 @@ public class AdBlockEngine {
                 "        var fStyle = document.createElement('style');\n" +
                 "        fStyle.id = 'clean_tv_focus_css';\n" +
                 "        fStyle.innerHTML = '[data-clean-focused=\"1\"] { outline: 3px solid #00E5FF !important; outline-offset: -2px !important; box-shadow: inset 0 0 0 2px #00E5FF, 0 0 14px rgba(0, 229, 255, 0.95) !important; } ' +\n" +
-                "          'body.clean-tv-dpad video::-webkit-media-controls-panel { opacity: 1 !important; pointer-events: auto !important; }';\n" +
+                "          'body.clean-tv-dpad video::-webkit-media-controls-panel { opacity: 1 !important; pointer-events: auto !important; } ' +\n" +
+                "          'video { object-fit: contain !important; overflow: hidden !important; }';\n" +
                 "        focusTarget.appendChild(fStyle);\n" +
                 "      }\n" +
                 "    } catch(e) {}\n" +

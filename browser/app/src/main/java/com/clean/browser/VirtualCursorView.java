@@ -104,11 +104,21 @@ public class VirtualCursorView extends View {
     }
 
     public void moveBy(float dx, float dy) {
+        float oldX = cursorX;
+        float oldY = cursorY;
         float maxW = getWidth() > 2 ? getWidth() - 2 : 1278;
         float maxH = getHeight() > 2 ? getHeight() - 2 : 718;
         cursorX = Math.max(0, Math.min(maxW, cursorX + dx));
         cursorY = Math.max(0, Math.min(maxH, cursorY + dy));
-        invalidate();
+
+        // High-performance dirty-rect invalidation: Repaints only the cursor's bounding box
+        // instead of the entire 1080p/720p screen, eliminating video playback cursor lag.
+        int pad = 46;
+        int l = (int) Math.min(oldX, cursorX) - 4;
+        int t = (int) Math.min(oldY, cursorY) - 4;
+        int r = (int) Math.max(oldX, cursorX) + pad;
+        int b = (int) Math.max(oldY, cursorY) + pad;
+        invalidate(Math.max(0, l), Math.max(0, t), Math.min((int) maxW + 6, r), Math.min((int) maxH + 6, b));
     }
 
     public float getCursorX() {

@@ -1,23 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Dark Tech Gradient Background -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="135"
-                android:startColor="#091428"
-                android:centerColor="#0A2540"
-                android:endColor="#05101A" />
-            <corners android:radius="14dp" />
-            <stroke
-                android:width="1.5dp"
-                android:color="#3300E5FF" />
-        </shape>
-    </item>
-    <!-- Centered Glowing Vector Icon -->
-    <item
-        android:width="76dp"
-        android:height="76dp"
-        android:gravity="center"
-        android:drawable="@drawable/ic_browser_logo" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Dual-Tone Background: Deep Midnight Navy to Dark Cyan Abyss -->
+    <path
+        android:fillColor="#0D1624"
+        android:pathData="M16,6 C10.5,6 6,10.5 6,16 L6,164 C6,169.5 10.5,174 16,174 L304,174 C309.5,174 314,169.5 314,164 L314,16 C314,10.5 309.5,6 304,6 Z" />
+    <path
+        android:fillColor="#072B3E"
+        android:pathData="M6,105 L6,164 C6,169.5 10.5,174 16,174 L304,174 C309.5,174 314,169.5 314,164 L314,105 Z" />
+
+    <!-- Dual-Tone Cyan Border Accent -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.5"
+        android:pathData="M16,7 C11,7 7,11 7,16 L7,164 C7,169 11,173 16,173 L304,173 C309,173 313,169 313,164 L313,16 C313,11 309,7 304,7 Z" />
+
+    <!-- Centered Minimal Thick Earth Icon (Center: 160, 90; Radius: 38) -->
+    <!-- 1. Outer Globe Ring (Thick Pure White) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M160,52 A38,38 0 1,1 159.99,52 Z" />
+
+    <!-- 2. Prime Meridian (Vertical Axis) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M160,52 L160,128" />
+
+    <!-- 3. Equator (Horizontal Line) -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M122,90 L198,90" />
+
+    <!-- 4. Left Elliptical Meridian Arc -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round"
+        android:pathData="M160,52 C144,64 144,116 160,128" />
+
+    <!-- 5. Right Elliptical Meridian Arc -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round"
+        android:pathData="M160,52 C176,64 176,116 160,128" />
+
+    <!-- 6. Upper Parallel Arc -->
+    <path
+        android:strokeColor="#80D8FF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M132,71 C145,76 175,76 188,71" />
+
+    <!-- 7. Lower Parallel Arc -->
+    <path
+        android:strokeColor="#80D8FF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M132,109 C145,104 175,104 188,109" />
+
+</vector>

@@ -290,166 +290,6 @@
                         android:textSize="11sp" />
                 </LinearLayout>
 
-                <!-- Section: Sound Profile -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔊 SOUND PROFILE"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="2dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:id="@+id/ccBtnSoundStandard"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Standard"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="10sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnSoundVoice"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Voice"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="10sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnSoundCinema"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Cinema"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="10sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnSoundMusic"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Music"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="10sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnSoundNight"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Night"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="10sp" />
-                </LinearLayout>
-
-                <!-- Section: Private DNS (Ad-Block) -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🛡️ PRIVATE DNS (AD-BLOCK)"
-                    android:textColor="#88FFFFFF"
-                    android:textSize="11sp"
-                    android:fontFamily="@string/font_medium"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="2dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:id="@+id/ccBtnDnsOff"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Off"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnDnsAdguard"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1.2"
-                        android:layout_marginStart="3dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="🛡️ AdGuard"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnDnsCloudflare"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1.2"
-                        android:layout_marginStart="3dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="⚡ 1.1.1.1"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/ccBtnDnsGoogle"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_weight="1.1"
-                        android:layout_marginStart="3dp"
-                        android:background="@drawable/cc_pill_bg"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:text="Google"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
                 <!-- Section Divider -->
                 <View
                     android:layout_width="match_parent"
@@ -512,7 +352,7 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- Section 3: Home App Layout & Apps Studio Tile -->
+                <!-- Section 3: Launcher Studio Tile -->
                 <LinearLayout
                     android:id="@+id/ccBtnOpenMargin"
                     android:layout_width="match_parent"
@@ -532,7 +372,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📐"
+                        android:text="🎨"
                         android:textSize="17sp"
                         android:layout_marginEnd="10dp" />
 
@@ -545,7 +385,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="HOME LAYOUT &amp; APPS STUDIO"
+                            android:text="LAUNCHER STUDIO"
                             android:textColor="#FFFFFFFF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -554,7 +394,7 @@
                             android:id="@+id/ccMainMarginSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Columns • Tile Size • Corner Radius • Hidden Apps"
+                            android:text="Layout • Columns • Sound Profile • Private DNS • Theme"
                             android:textColor="#99FFFFFF"
                             android:textSize="10sp"
                             android:layout_marginTop="1dp" />
@@ -1007,7 +847,7 @@
 
 
             <!-- ======================================================== -->
-            <!-- 3. SUB-VIEW: Home Layout & Apps Studio (Live Preview)    -->
+            <!-- 3. SUB-VIEW: Launcher Studio (Live Preview)              -->
             <!-- ======================================================== -->
             <LinearLayout
                 android:id="@+id/ccViewMargin"
@@ -1376,6 +1216,174 @@
                         android:text="🔄 Reset Defaults"
                         android:textColor="#FFFF5252"
                         android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Section Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#20FFFFFF"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- 7. Sound Profile -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔊 SOUND PROFILE"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="2dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnSoundStandard"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Standard"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSoundVoice"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Voice"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSoundCinema"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Cinema"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSoundMusic"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Music"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnSoundNight"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Night"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <!-- 8. Private DNS (Ad-Block) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛡️ PRIVATE DNS (AD-BLOCK)"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@string/font_medium"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="2dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/ccBtnDnsOff"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Off"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnDnsAdguard"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1.2"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="🛡️ AdGuard"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnDnsCloudflare"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1.2"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="⚡ 1.1.1.1"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/ccBtnDnsGoogle"
+                        android:layout_width="0dp"
+                        android:layout_height="30dp"
+                        android:layout_weight="1.1"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/cc_pill_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="Google"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
 
