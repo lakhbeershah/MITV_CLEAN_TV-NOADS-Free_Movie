@@ -326,7 +326,7 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:text="💡 Remote Shortcuts: Hold OK = Quick Menu  •  Hold BACK = Toggle Mouse Cursor  •  Video: ▲/▼ Volume, ◀/▶ Seek"
+                android:text="💡 Remote Shortcuts: Hold OK = Quick Menu  •  Hold BACK = Forward ➔ / Mouse Mode  •  Video: ▲/▼ Volume, ◀/▶ Seek"
                 android:textColor="#AAFFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>

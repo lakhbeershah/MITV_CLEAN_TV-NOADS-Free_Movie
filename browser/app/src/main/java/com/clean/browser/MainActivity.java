@@ -206,20 +206,39 @@ public class MainActivity extends Activity {
     private final Runnable longPressBackRunnable = new Runnable() {
         @Override
         public void run() {
-            backLongHandled = true;
-            if (isModalVisible()) {
-                hideAllModals();
-                return;
-            }
-            if (controlMode != MODE_MOUSE) {
-                enterMouseMode(true);
-                cursorView.resetToCenter();
-            } else {
-                cursorView.resetToCenter();
-                showHud("🎯", "Cursor Centered");
-            }
+            handleLongBack();
         }
     };
+
+    private void handleLongBack() {
+        backLongHandled = true;
+        keyHandler.removeCallbacks(longPressBackRunnable);
+        if (isModalVisible()) {
+            hideAllModals();
+            return;
+        }
+        // Holding BACK moves FORWARD in webpage history if available
+        if (speedDialView != null && speedDialView.getVisibility() != View.VISIBLE && webView != null && webView.canGoForward()) {
+            webView.goForward();
+            if (controlMode != MODE_MOUSE) {
+                enterMouseMode(false);
+            }
+            showHud("⏩", "Forward ➔");
+            return;
+        }
+        // If in D-Pad or Movie mode, holding BACK turns it off and returns to default Mouse mode
+        if (controlMode != MODE_MOUSE) {
+            enterMouseMode(true);
+            cursorView.resetToCenter();
+            return;
+        }
+        if (speedDialView != null && speedDialView.getVisibility() != View.VISIBLE) {
+            showHud("ℹ️", "No Forward History");
+        } else {
+            cursorView.resetToCenter();
+            showHud("🎯", "Cursor Centered");
+        }
+    }
 
     private void updateModeSelectionUi() {
         if (menuBtnModeMouse != null) menuBtnModeMouse.setSelected(controlMode == MODE_MOUSE);
@@ -1008,7 +1027,7 @@ public class MainActivity extends Activity {
         int keyCode = event.getKeyCode();
         int action = event.getAction();
 
-        // 1. Long-press BACK detection -> Return to Mouse Pointer Mode
+        // 1. Long-press BACK detection -> Move Forward in Webpage / Return to Mouse Pointer Mode
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (backLongHandled && action == KeyEvent.ACTION_DOWN) {
                 return true;
@@ -1016,17 +1035,7 @@ public class MainActivity extends Activity {
 
             if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
                 if (!backLongHandled) {
-                    backLongHandled = true;
-                    keyHandler.removeCallbacks(longPressBackRunnable);
-                    if (isModalVisible()) {
-                        hideAllModals();
-                    } else if (controlMode != MODE_MOUSE) {
-                        enterMouseMode(true);
-                        cursorView.resetToCenter();
-                    } else {
-                        cursorView.resetToCenter();
-                        showHud("🎯", "Cursor Centered");
-                    }
+                    handleLongBack();
                 }
                 return true;
             }
