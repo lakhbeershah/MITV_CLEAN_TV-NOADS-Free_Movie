@@ -1223,6 +1223,33 @@ public class ControlCenterManager {
             });
         }
 
+        // Live Clock & Date Preview Card
+        TextView txtClockPreviewOutput = root.findViewById(R.id.ccTxtClockPreviewOutput);
+        TextView txtClockPreviewSub = root.findViewById(R.id.ccTxtClockPreviewSub);
+
+        final String[] curTime = {customPrefs.getString(ClockHelper.KEY_HOME_TIME_FMT, ClockHelper.FMT_12_SEC)};
+        final String[] curDate = {customPrefs.getString(ClockHelper.KEY_HOME_DATE_FMT, ClockHelper.DATE_VERBAL_STD)};
+        final String[] curPos = {customPrefs.getString(ClockHelper.KEY_HOME_POS, "top_right")};
+
+        Runnable refreshPreview = () -> {
+            if (txtClockPreviewOutput != null) {
+                String timeStr = ClockHelper.getFormattedSampleTime(curTime[0]);
+                String dateStr = ClockHelper.getFormattedSampleDate(curDate[0]);
+                if (ClockHelper.DATE_HIDDEN.equals(curDate[0])) {
+                    txtClockPreviewOutput.setText(timeStr);
+                } else {
+                    txtClockPreviewOutput.setText(timeStr + "  •  " + dateStr);
+                }
+            }
+            if (txtClockPreviewSub != null) {
+                String posDesc = "center".equals(curPos[0]) ? "Center Hero" : ("top_left".equals(curPos[0]) ? "Top Left" : "Top Right");
+                txtClockPreviewSub.setText("Active: " + posDesc + " • " + (ClockHelper.DATE_HIDDEN.equals(curDate[0]) ? "Date Hidden" : "Date Visible"));
+                txtClockPreviewSub.setTextColor(0xFFB0BEC5);
+            }
+        };
+
+        refreshPreview.run();
+
         // Home Time Format
         TextView[] homeTimeBtns = {
                 root.findViewById(R.id.ccBtnHomeTime12Sec),
@@ -1236,18 +1263,40 @@ public class ControlCenterManager {
                 ClockHelper.FMT_24_SEC,
                 ClockHelper.FMT_24_CLEAN
         };
-        String currentHomeTime = customPrefs.getString(ClockHelper.KEY_HOME_TIME_FMT, ClockHelper.FMT_12_SEC);
+        String[] homeTimeLabels = {"12h (Sec)", "12h (Clean)", "24h (Sec)", "24h (Clean)"};
+
         for (int i = 0; i < homeTimeBtns.length; i++) {
             final int idx = i;
             TextView b = homeTimeBtns[i];
             if (b == null) continue;
-            b.setSelected(homeTimeFmts[i].equals(currentHomeTime));
+            b.setSelected(homeTimeFmts[i].equals(curTime[0]));
+            b.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    if (txtClockPreviewOutput != null) {
+                        String timeStr = ClockHelper.getFormattedSampleTime(homeTimeFmts[idx]);
+                        String dateStr = ClockHelper.getFormattedSampleDate(curDate[0]);
+                        txtClockPreviewOutput.setText(ClockHelper.DATE_HIDDEN.equals(curDate[0]) ? timeStr : (timeStr + "  •  " + dateStr));
+                    }
+                    if (txtClockPreviewSub != null) {
+                        txtClockPreviewSub.setText("🔍 Hover: " + homeTimeLabels[idx] + " ➔ e.g. " + ClockHelper.getFormattedSampleTime(homeTimeFmts[idx]));
+                        txtClockPreviewSub.setTextColor(0xFF00E5FF);
+                    }
+                } else {
+                    refreshPreview.run();
+                }
+            });
             b.setOnClickListener(v -> {
+                curTime[0] = homeTimeFmts[idx];
                 customPrefs.edit().putString(ClockHelper.KEY_HOME_TIME_FMT, homeTimeFmts[idx]).apply();
                 for (int j = 0; j < homeTimeBtns.length; j++) {
                     if (homeTimeBtns[j] != null) homeTimeBtns[j].setSelected(j == idx);
                 }
                 activity.applyHomeClockSettings();
+                refreshPreview.run();
+                if (txtClockPreviewSub != null) {
+                    txtClockPreviewSub.setText("✅ " + homeTimeLabels[idx] + " applied to Home!");
+                    txtClockPreviewSub.setTextColor(0xFF00E676);
+                }
             });
         }
 
@@ -1266,18 +1315,41 @@ public class ControlCenterManager {
                 ClockHelper.DATE_DMY_DASH,
                 ClockHelper.DATE_HIDDEN
         };
-        String currentHomeDate = customPrefs.getString(ClockHelper.KEY_HOME_DATE_FMT, ClockHelper.DATE_VERBAL_STD);
+        String[] homeDateLabels = {"Verbal Date", "Full Date", "DD/MM/YY", "DD-MM-YY", "Hide Date"};
+
         for (int i = 0; i < homeDateBtns.length; i++) {
             final int idx = i;
             TextView b = homeDateBtns[i];
             if (b == null) continue;
-            b.setSelected(homeDateFmts[i].equals(currentHomeDate));
+            b.setSelected(homeDateFmts[i].equals(curDate[0]));
+            b.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    if (txtClockPreviewOutput != null) {
+                        String timeStr = ClockHelper.getFormattedSampleTime(curTime[0]);
+                        String dateStr = ClockHelper.getFormattedSampleDate(homeDateFmts[idx]);
+                        txtClockPreviewOutput.setText(ClockHelper.DATE_HIDDEN.equals(homeDateFmts[idx]) ? timeStr : (timeStr + "  •  " + dateStr));
+                    }
+                    if (txtClockPreviewSub != null) {
+                        String sample = ClockHelper.getFormattedSampleDate(homeDateFmts[idx]);
+                        txtClockPreviewSub.setText("🔍 Hover: " + homeDateLabels[idx] + " ➔ " + sample);
+                        txtClockPreviewSub.setTextColor(0xFF00E5FF);
+                    }
+                } else {
+                    refreshPreview.run();
+                }
+            });
             b.setOnClickListener(v -> {
+                curDate[0] = homeDateFmts[idx];
                 customPrefs.edit().putString(ClockHelper.KEY_HOME_DATE_FMT, homeDateFmts[idx]).apply();
                 for (int j = 0; j < homeDateBtns.length; j++) {
                     if (homeDateBtns[j] != null) homeDateBtns[j].setSelected(j == idx);
                 }
                 activity.applyHomeClockSettings();
+                refreshPreview.run();
+                if (txtClockPreviewSub != null) {
+                    txtClockPreviewSub.setText("✅ " + homeDateLabels[idx] + " applied to Home!");
+                    txtClockPreviewSub.setTextColor(0xFF00E676);
+                }
             });
         }
 
@@ -1288,18 +1360,35 @@ public class ControlCenterManager {
                 root.findViewById(R.id.ccBtnHomePosLeft)
         };
         String[] homePosKeys = {"top_right", "center", "top_left"};
-        String currentHomePos = customPrefs.getString(ClockHelper.KEY_HOME_POS, "top_right");
+        String[] homePosLabels = {"Top Right Corner", "Center Above Dock", "Top Left Corner"};
+
         for (int i = 0; i < homePosBtns.length; i++) {
             final int idx = i;
             TextView b = homePosBtns[i];
             if (b == null) continue;
-            b.setSelected(homePosKeys[i].equals(currentHomePos));
+            b.setSelected(homePosKeys[i].equals(curPos[0]));
+            b.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    if (txtClockPreviewSub != null) {
+                        txtClockPreviewSub.setText("🔍 Hover: " + homePosLabels[idx] + " (Moves clock live)");
+                        txtClockPreviewSub.setTextColor(0xFF00E5FF);
+                    }
+                } else {
+                    refreshPreview.run();
+                }
+            });
             b.setOnClickListener(v -> {
+                curPos[0] = homePosKeys[idx];
                 customPrefs.edit().putString(ClockHelper.KEY_HOME_POS, homePosKeys[idx]).apply();
                 for (int j = 0; j < homePosBtns.length; j++) {
                     if (homePosBtns[j] != null) homePosBtns[j].setSelected(j == idx);
                 }
                 activity.applyHomeClockSettings();
+                refreshPreview.run();
+                if (txtClockPreviewSub != null) {
+                    txtClockPreviewSub.setText("✅ Position set to " + homePosLabels[idx]);
+                    txtClockPreviewSub.setTextColor(0xFF00E676);
+                }
             });
         }
 

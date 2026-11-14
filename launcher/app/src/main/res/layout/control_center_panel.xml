@@ -1456,6 +1456,51 @@
                         android:textSize="11sp" />
                 </LinearLayout>
 
+                <!-- LIVE CLOCK & DATE PREVIEW CARD (HOVER & SELECTION) -->
+                <LinearLayout
+                    android:id="@+id/ccHomeClockPreviewBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/cc_card_bg"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/ccTxtClockPreviewTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LIVE PREVIEW • HOVER &amp; SELECTION"
+                        android:textColor="#80D8FF"
+                        android:textSize="10sp"
+                        android:fontFamily="@string/font_medium"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/ccTxtClockPreviewOutput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="4:42:15 PM  •  SAT, 14 NOV 2026"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@string/font_medium" />
+
+                    <TextView
+                        android:id="@+id/ccTxtClockPreviewSub"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Active: Top Right • Date Visible"
+                        android:textColor="#B0BEC5"
+                        android:textSize="10.5sp" />
+                </LinearLayout>
+
                 <!-- 6. Home Clock Time Format -->
                 <TextView
                     android:layout_width="wrap_content"

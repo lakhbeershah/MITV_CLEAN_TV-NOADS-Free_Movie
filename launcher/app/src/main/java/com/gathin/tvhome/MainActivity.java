@@ -1028,6 +1028,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             TextClock clock = findViewById(R.id.clock);
             TextClock date = findViewById(R.id.date);
             ClockHelper.applyHomeClock(this, clock, date, clockBlock);
+            if (clockBlock != null) {
+                clockBlock.setVisibility(View.VISIBLE);
+                clockBlock.bringToFront();
+                clockBlock.requestLayout();
+            }
         } catch (Throwable ignored) {}
     }
 
@@ -2687,14 +2692,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private final Runnable clockCheck = this::updateClockVisibility;
 
     private void updateClockVisibility() {
-        boolean valid = System.currentTimeMillis() >= TIME_VALID_AFTER_MS;
-        clockBlock.setVisibility(valid ? View.VISIBLE : View.INVISIBLE);
-        handler.removeCallbacks(clockCheck);
-        if (valid) {
-            updateGreeting();
-        } else {
-            handler.postDelayed(clockCheck, 1_000L);
+        if (clockBlock != null) {
+            clockBlock.setVisibility(View.VISIBLE);
+            clockBlock.bringToFront();
         }
+        applyHomeClockSettings();
+        handler.removeCallbacks(clockCheck);
+        updateGreeting();
     }
 
     private void updateGreeting() {

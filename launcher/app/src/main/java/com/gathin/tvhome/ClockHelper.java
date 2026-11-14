@@ -9,6 +9,10 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextClock;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
  * Centralized Clock & Date Layout Engine for Launcher Studio and Screensaver.
  */
@@ -36,9 +40,28 @@ public class ClockHelper {
     public static final String DATE_VERBAL_FULL = "EEEE, d MMMM yyyy";
     public static final String DATE_DMY_SLASH = "dd/MM/yyyy";
     public static final String DATE_DMY_DASH = "dd-MM-yyyy";
-    public static final String DATE_MDY_SLASH = "MM/dd/yyyy";
-    public static final String DATE_YMD_DASH = "yyyy-MM-dd";
     public static final String DATE_HIDDEN = "none";
+
+    public static String getFormattedSampleTime(String pattern) {
+        if (pattern == null || pattern.isEmpty()) pattern = FMT_12_SEC;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
+            return sdf.format(new Date());
+        } catch (Throwable t) {
+            return "4:42:15 PM";
+        }
+    }
+
+    public static String getFormattedSampleDate(String pattern) {
+        if (DATE_HIDDEN.equals(pattern)) return "(Date Hidden)";
+        if (pattern == null || pattern.isEmpty()) pattern = DATE_VERBAL_STD;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
+            return sdf.format(new Date());
+        } catch (Throwable t) {
+            return "SAT, 14 NOV 2026";
+        }
+    }
 
     public static void applyHomeClock(Context context, TextClock clock, TextClock date, View container) {
         if (context == null) return;
@@ -48,8 +71,9 @@ public class ClockHelper {
         String pos = sp.getString(KEY_HOME_POS, "top_right");
 
         if (clock != null) {
+            clock.setVisibility(View.VISIBLE);
             clock.setFormat12Hour(timeFmt);
-            clock.setFormat24Hour(timeFmt.contains("a") ? timeFmt.replace(" a", "") : timeFmt);
+            clock.setFormat24Hour(timeFmt);
         }
 
         if (date != null) {
@@ -62,28 +86,52 @@ public class ClockHelper {
             }
         }
 
-        if (container != null && container.getLayoutParams() instanceof RelativeLayout.LayoutParams) {
-            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) container.getLayoutParams();
-            lp.removeRule(RelativeLayout.ALIGN_PARENT_END);
-            lp.removeRule(RelativeLayout.ALIGN_PARENT_START);
-            lp.removeRule(RelativeLayout.CENTER_HORIZONTAL);
-            if ("center".equals(pos)) {
-                lp.addRule(RelativeLayout.CENTER_HORIZONTAL);
-                if (container instanceof LinearLayout) {
-                    ((LinearLayout) container).setGravity(Gravity.CENTER_HORIZONTAL);
+        if (container != null) {
+            container.setVisibility(View.VISIBLE);
+            container.bringToFront();
+
+            if (container.getLayoutParams() instanceof RelativeLayout.LayoutParams) {
+                RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) container.getLayoutParams();
+                lp.removeRule(RelativeLayout.ALIGN_PARENT_END);
+                lp.removeRule(RelativeLayout.ALIGN_PARENT_START);
+                lp.removeRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                lp.removeRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                lp.removeRule(RelativeLayout.CENTER_HORIZONTAL);
+                lp.removeRule(RelativeLayout.CENTER_IN_PARENT);
+                lp.removeRule(RelativeLayout.END_OF);
+                lp.removeRule(RelativeLayout.RIGHT_OF);
+                lp.removeRule(RelativeLayout.START_OF);
+                lp.removeRule(RelativeLayout.LEFT_OF);
+
+                float density = context.getResources().getDisplayMetrics().density;
+                lp.addRule(RelativeLayout.CENTER_VERTICAL);
+
+                if ("center".equals(pos)) {
+                    lp.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                    lp.setMarginStart(0);
+                    lp.setMarginEnd(0);
+                    if (container instanceof LinearLayout) {
+                        ((LinearLayout) container).setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+                    }
+                } else if ("top_left".equals(pos)) {
+                    lp.addRule(RelativeLayout.END_OF, R.id.topButtons);
+                    lp.setMarginStart((int) (20 * density));
+                    lp.setMarginEnd(0);
+                    if (container instanceof LinearLayout) {
+                        ((LinearLayout) container).setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                    }
+                } else { // "top_right" (default)
+                    lp.addRule(RelativeLayout.ALIGN_PARENT_END);
+                    lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    lp.setMarginStart(0);
+                    lp.setMarginEnd(0);
+                    if (container instanceof LinearLayout) {
+                        ((LinearLayout) container).setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+                    }
                 }
-            } else if ("top_left".equals(pos)) {
-                lp.addRule(RelativeLayout.ALIGN_PARENT_START);
-                if (container instanceof LinearLayout) {
-                    ((LinearLayout) container).setGravity(Gravity.START);
-                }
-            } else {
-                lp.addRule(RelativeLayout.ALIGN_PARENT_END);
-                if (container instanceof LinearLayout) {
-                    ((LinearLayout) container).setGravity(Gravity.END);
-                }
+                container.setLayoutParams(lp);
+                container.requestLayout();
             }
-            container.setLayoutParams(lp);
         }
     }
 
@@ -102,7 +150,7 @@ public class ClockHelper {
         if (clock != null) {
             clock.setVisibility(isAnalog ? View.GONE : View.VISIBLE);
             clock.setFormat12Hour(timeFmt);
-            clock.setFormat24Hour(timeFmt.contains("a") ? timeFmt.replace(" a", "") : timeFmt);
+            clock.setFormat24Hour(timeFmt);
         }
 
         if (date != null) {
@@ -139,6 +187,7 @@ public class ClockHelper {
                 }
             }
             container.setLayoutParams(lp);
+            container.requestLayout();
         }
     }
 }
