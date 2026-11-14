@@ -651,8 +651,9 @@ public class ControlCenterManager {
             btnOpenMargin.setOnClickListener(v -> {
                 lastOpenedSubView = viewMargin;
                 switchToView(viewMargin, "LAUNCHER STUDIO");
-                View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
-                if (plus != null) plus.requestFocus();
+                View firstFocus = panel != null ? panel.findViewById(R.id.ccBtnTileScaleStandard) : null;
+                if (firstFocus == null && panel != null) firstFocus = panel.findViewById(R.id.ccBtnTileScaleCompact);
+                if (firstFocus != null) firstFocus.requestFocus();
             });
         }
 
@@ -680,8 +681,9 @@ public class ControlCenterManager {
         if (viewMargin != null) {
             lastOpenedSubView = viewMargin;
             switchToView(viewMargin, "LAUNCHER STUDIO");
-            View plus = panel != null ? panel.findViewById(R.id.ccBtnMarginPlus) : null;
-            if (plus != null) plus.requestFocus();
+            View firstFocus = panel != null ? panel.findViewById(R.id.ccBtnTileScaleStandard) : null;
+            if (firstFocus == null && panel != null) firstFocus = panel.findViewById(R.id.ccBtnTileScaleCompact);
+            if (firstFocus != null) firstFocus.requestFocus();
         }
     }
 
@@ -703,8 +705,9 @@ public class ControlCenterManager {
                 sv.scrollTo(0, 0);
             }
             if (target == viewMargin) {
-                View plus = panel.findViewById(R.id.ccBtnMarginPlus);
-                if (plus != null) plus.requestFocus();
+                View firstFocus = panel != null ? panel.findViewById(R.id.ccBtnTileScaleStandard) : null;
+                if (firstFocus == null && panel != null) firstFocus = panel.findViewById(R.id.ccBtnTileScaleCompact);
+                if (firstFocus != null) firstFocus.requestFocus();
             } else if (target == viewScreensaver) {
                 if (sv != null) sv.scrollTo(0, 0);
                 View editLink = panel.findViewById(R.id.ccBtnEditAlbumLink2);
@@ -1060,62 +1063,7 @@ public class ControlCenterManager {
     // =========================================================================
 
     private void setupHomeStudioView(View root) {
-        // 1. Dock Vertical Margin & Clearance (PX)
-        txtMarginValue = root.findViewById(R.id.ccTxtMarginValue);
-        View btnMarginMinus = root.findViewById(R.id.ccBtnMarginMinus);
-        View btnMarginPlus = root.findViewById(R.id.ccBtnMarginPlus);
-
-        currentMarginPx = activity.getCustomMarginPx();
-        updateMarginDisplay();
-
-        if (btnMarginMinus != null) {
-            btnMarginMinus.setOnClickListener(v -> {
-                if (currentMarginPx > 0) {
-                    currentMarginPx = Math.max(0, currentMarginPx - 1);
-                    updateMarginDisplay();
-                    activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
-                }
-            });
-        }
-
-        if (btnMarginPlus != null) {
-            btnMarginPlus.setOnClickListener(v -> {
-                if (currentMarginPx < 80) {
-                    currentMarginPx = Math.min(80, currentMarginPx + 1);
-                    updateMarginDisplay();
-                    activity.setCustomMarginPx(currentMarginPx); // Auto-saved & live preview!
-                }
-            });
-        }
-
-        // 2. Dock Columns Stepper (31)
-        txtColsValue = root.findViewById(R.id.ccTxtColsValue);
-        View btnColsMinus = root.findViewById(R.id.ccBtnColsMinus);
-        View btnColsPlus = root.findViewById(R.id.ccBtnColsPlus);
-        currentColumns = activity.getCustomColumns();
-        updateColsDisplay();
-
-        if (btnColsMinus != null) {
-            btnColsMinus.setOnClickListener(v -> {
-                if (currentColumns > 4) {
-                    currentColumns--;
-                    updateColsDisplay();
-                    activity.setCustomColumns(currentColumns); // Live update!
-                }
-            });
-        }
-
-        if (btnColsPlus != null) {
-            btnColsPlus.setOnClickListener(v -> {
-                if (currentColumns < 7) {
-                    currentColumns++;
-                    updateColsDisplay();
-                    activity.setCustomColumns(currentColumns); // Live update!
-                }
-            });
-        }
-
-        // 3. App Tile Size Scaler (32)
+        // App Tile Size Scaler (32)
         btnScaleCompact = root.findViewById(R.id.ccBtnTileScaleCompact);
         btnScaleStandard = root.findViewById(R.id.ccBtnTileScaleStandard);
         btnScaleSpacious = root.findViewById(R.id.ccBtnTileScaleSpacious);
