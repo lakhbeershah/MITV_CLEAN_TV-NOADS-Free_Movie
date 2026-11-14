@@ -57,7 +57,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="CLEAN TV BROWSER"
+                    android:text="PEACE BROWSER"
                     android:textColor="@color/text_primary"
                     android:textSize="26sp"
                     android:textStyle="bold"

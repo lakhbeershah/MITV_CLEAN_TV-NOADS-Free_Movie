@@ -17,11 +17,10 @@
 
     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
-        <item>org.smarttube.stable</item>
-        <item>com.phlox.tvwebbrowser</item>
+        <item>com.clean.browser</item>
         <item>com.example.tvfilebox</item>
+        <item>org.smarttube.stable</item>
         <item>in.startv.hotstar</item>
-        <item>com.yablio.sendfilestotv</item>
         <item>com.android.vending</item>
     </string-array>
     <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
@@ -67,6 +66,9 @@
 
     <!-- A tile's name instead of the app's own: "package=Name". It also shows above the dock. -->
     <string-array name="app_labels">
+        <item>com.clean.browser=Peace Browser</item>
+        <item>com.example.tvfilebox=Peace File Manager</item>
+        <item>com.gathin.tvhome=Peace Launcher</item>
     </string-array>
     <!-- A tile's artwork instead of the app's banner: "package=drawable", a banner_* drawable bundled with the
          launcher (res/drawable). banner_tv is a magenta field with the Live TV glyph. -->

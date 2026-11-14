@@ -385,7 +385,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="LAUNCHER STUDIO"
+                            android:text="PEACE LAUNCHER STUDIO"
                             android:textColor="#FFFFFFFF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -394,7 +394,7 @@
                             android:id="@+id/ccMainMarginSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Layout • Columns • Sound Profile • Private DNS • Theme"
+                            android:text="Layout • Clock &amp; Date • Tile Scale • Dimming"
                             android:textColor="#99FFFFFF"
                             android:textSize="10sp"
                             android:layout_marginTop="1dp" />

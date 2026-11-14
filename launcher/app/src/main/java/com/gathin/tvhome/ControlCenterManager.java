@@ -650,7 +650,7 @@ public class ControlCenterManager {
         if (btnOpenMargin != null) {
             btnOpenMargin.setOnClickListener(v -> {
                 lastOpenedSubView = viewMargin;
-                switchToView(viewMargin, "LAUNCHER STUDIO");
+                switchToView(viewMargin, "PEACE LAUNCHER STUDIO");
                 View firstFocus = panel != null ? panel.findViewById(R.id.ccBtnTileScaleStandard) : null;
                 if (firstFocus == null && panel != null) firstFocus = panel.findViewById(R.id.ccBtnTileScaleCompact);
                 if (firstFocus != null) firstFocus.requestFocus();
@@ -680,7 +680,7 @@ public class ControlCenterManager {
     public void openHomeStudio() {
         if (viewMargin != null) {
             lastOpenedSubView = viewMargin;
-            switchToView(viewMargin, "LAUNCHER STUDIO");
+            switchToView(viewMargin, "PEACE LAUNCHER STUDIO");
             View firstFocus = panel != null ? panel.findViewById(R.id.ccBtnTileScaleStandard) : null;
             if (firstFocus == null && panel != null) firstFocus = panel.findViewById(R.id.ccBtnTileScaleCompact);
             if (firstFocus != null) firstFocus.requestFocus();
