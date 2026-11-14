@@ -2,12 +2,13 @@ package com.gathin.tvhome;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextClock;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,28 +43,76 @@ public class ClockHelper {
     public static final String DATE_DMY_DASH = "dd-MM-yyyy";
     public static final String DATE_HIDDEN = "none";
 
+    /**
+     * Returns the accurate calibrated timestamp, resolving 2019 epoch resets
+     * via network time offset and offline monotonic fallback.
+     */
+    public static long getAccurateTimeMillis(Context context) {
+        if (context == null) return System.currentTimeMillis();
+        SharedPreferences sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        long systemNow = System.currentTimeMillis();
+        long offset = sp.getLong("time_offset_ms", 0L);
+        long lastKnownGood = sp.getLong("last_known_good_time_ms", 0L);
+
+        long calculated = systemNow + offset;
+
+        // If system time or calculated time is before Jan 1, 2025 (e.g. 2019 epoch reset bug)
+        if (calculated < 1735689600000L) {
+            if (lastKnownGood >= 1735689600000L) {
+                long lastSavedElapsed = sp.getLong("last_saved_elapsed_realtime", 0L);
+                long currentElapsed = SystemClock.elapsedRealtime();
+                if (currentElapsed >= lastSavedElapsed && lastSavedElapsed > 0) {
+                    calculated = lastKnownGood + (currentElapsed - lastSavedElapsed);
+                } else {
+                    calculated = lastKnownGood + currentElapsed;
+                }
+            }
+        } else {
+            // Persist valid 2025+ timestamp periodically
+            long lastSaved = sp.getLong("last_saved_elapsed_realtime", 0L);
+            long currentElapsed = SystemClock.elapsedRealtime();
+            if (currentElapsed - lastSaved > 60_000L) {
+                sp.edit()
+                        .putLong("last_known_good_time_ms", calculated)
+                        .putLong("last_saved_elapsed_realtime", currentElapsed)
+                        .apply();
+            }
+        }
+        return calculated;
+    }
+
     public static String getFormattedSampleTime(String pattern) {
+        return getFormattedSampleTime(null, pattern);
+    }
+
+    public static String getFormattedSampleTime(Context context, String pattern) {
         if (pattern == null || pattern.isEmpty()) pattern = FMT_12_SEC;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
-            return sdf.format(new Date());
+            long now = context != null ? getAccurateTimeMillis(context) : System.currentTimeMillis();
+            return sdf.format(new Date(now));
         } catch (Throwable t) {
             return "4:42:15 PM";
         }
     }
 
     public static String getFormattedSampleDate(String pattern) {
+        return getFormattedSampleDate(null, pattern);
+    }
+
+    public static String getFormattedSampleDate(Context context, String pattern) {
         if (DATE_HIDDEN.equals(pattern)) return "(Date Hidden)";
         if (pattern == null || pattern.isEmpty()) pattern = DATE_VERBAL_STD;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
-            return sdf.format(new Date());
+            long now = context != null ? getAccurateTimeMillis(context) : System.currentTimeMillis();
+            return sdf.format(new Date(now));
         } catch (Throwable t) {
             return "SAT, 14 NOV 2026";
         }
     }
 
-    public static void applyHomeClock(Context context, TextClock clock, TextClock date, View container) {
+    public static void applyHomeClock(Context context, TextView clock, TextView date, View container) {
         if (context == null) return;
         SharedPreferences sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String timeFmt = sp.getString(KEY_HOME_TIME_FMT, FMT_12_SEC);
@@ -72,8 +121,14 @@ public class ClockHelper {
 
         if (clock != null) {
             clock.setVisibility(View.VISIBLE);
-            clock.setFormat12Hour(timeFmt);
-            clock.setFormat24Hour(timeFmt);
+            if (clock instanceof AccurateTextClock) {
+                ((AccurateTextClock) clock).setFormat12Hour(timeFmt);
+                ((AccurateTextClock) clock).setFormat24Hour(timeFmt);
+            } else if (clock instanceof android.widget.TextClock) {
+                android.widget.TextClock tc = (android.widget.TextClock) clock;
+                tc.setFormat12Hour(timeFmt);
+                tc.setFormat24Hour(timeFmt);
+            }
         }
 
         if (date != null) {
@@ -81,8 +136,14 @@ public class ClockHelper {
                 date.setVisibility(View.GONE);
             } else {
                 date.setVisibility(View.VISIBLE);
-                date.setFormat12Hour(dateFmt);
-                date.setFormat24Hour(dateFmt);
+                if (date instanceof AccurateTextClock) {
+                    ((AccurateTextClock) date).setFormat12Hour(dateFmt);
+                    ((AccurateTextClock) date).setFormat24Hour(dateFmt);
+                } else if (date instanceof android.widget.TextClock) {
+                    android.widget.TextClock tc = (android.widget.TextClock) date;
+                    tc.setFormat12Hour(dateFmt);
+                    tc.setFormat24Hour(dateFmt);
+                }
             }
         }
 
@@ -135,7 +196,7 @@ public class ClockHelper {
         }
     }
 
-    public static void applyScreensaverClock(Context context, TextClock clock, TextClock date, View analogClock, View container) {
+    public static void applyScreensaverClock(Context context, TextView clock, TextView date, View analogClock, View container) {
         if (context == null) return;
         SharedPreferences sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String style = sp.getString(KEY_SS_STYLE, "digital");
@@ -149,8 +210,14 @@ public class ClockHelper {
         }
         if (clock != null) {
             clock.setVisibility(isAnalog ? View.GONE : View.VISIBLE);
-            clock.setFormat12Hour(timeFmt);
-            clock.setFormat24Hour(timeFmt);
+            if (clock instanceof AccurateTextClock) {
+                ((AccurateTextClock) clock).setFormat12Hour(timeFmt);
+                ((AccurateTextClock) clock).setFormat24Hour(timeFmt);
+            } else if (clock instanceof android.widget.TextClock) {
+                android.widget.TextClock tc = (android.widget.TextClock) clock;
+                tc.setFormat12Hour(timeFmt);
+                tc.setFormat24Hour(timeFmt);
+            }
         }
 
         if (date != null) {
@@ -158,8 +225,14 @@ public class ClockHelper {
                 date.setVisibility(View.GONE);
             } else {
                 date.setVisibility(View.VISIBLE);
-                date.setFormat12Hour(dateFmt);
-                date.setFormat24Hour(dateFmt);
+                if (date instanceof AccurateTextClock) {
+                    ((AccurateTextClock) date).setFormat12Hour(dateFmt);
+                    ((AccurateTextClock) date).setFormat24Hour(dateFmt);
+                } else if (date instanceof android.widget.TextClock) {
+                    android.widget.TextClock tc = (android.widget.TextClock) date;
+                    tc.setFormat12Hour(dateFmt);
+                    tc.setFormat24Hour(dateFmt);
+                }
             }
         }
 

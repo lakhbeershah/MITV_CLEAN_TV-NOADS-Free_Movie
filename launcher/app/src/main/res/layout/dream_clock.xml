@@ -41,7 +41,7 @@
             android:layout_gravity="end"
             android:visibility="gone" />
 
-        <TextClock
+        <com.gathin.tvhome.AccurateTextClock
             android:id="@+id/clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -57,7 +57,7 @@
             android:shadowRadius="14"
             android:shadowDy="3" />
 
-        <TextClock
+        <com.gathin.tvhome.AccurateTextClock
             android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

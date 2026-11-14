@@ -109,6 +109,7 @@ public class AnalogClockView extends View {
         }
 
         Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(ClockHelper.getAccurateTimeMillis(getContext()));
         int hours = cal.get(Calendar.HOUR);
         int minutes = cal.get(Calendar.MINUTE);
         int seconds = cal.get(Calendar.SECOND);

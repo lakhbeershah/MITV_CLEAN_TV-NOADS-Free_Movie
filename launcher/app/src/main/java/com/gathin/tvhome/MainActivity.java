@@ -523,6 +523,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             wallpaperDimmingScrim.setAlpha(dimPercent / 100f);
         }
         photoSyncBadge = findViewById(R.id.photoSyncBadge);
+        NetworkTimeSyncEngine.syncTimeAsync(this);
         WebRemoteServer.startServer(this);
         PhotoSyncEngine.setSyncListener(this::showNewMemoriesBadge);
         PhotoSyncEngine.startPeriodicSync(this);
@@ -1025,9 +1026,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     public void applyHomeClockSettings() {
         try {
-            TextClock clock = findViewById(R.id.clock);
-            TextClock date = findViewById(R.id.date);
+            TextView clock = findViewById(R.id.clock);
+            TextView date = findViewById(R.id.date);
             ClockHelper.applyHomeClock(this, clock, date, clockBlock);
+            if (clock instanceof AccurateTextClock) {
+                ((AccurateTextClock) clock).updateText();
+            }
+            if (date instanceof AccurateTextClock) {
+                ((AccurateTextClock) date).updateText();
+            }
             if (clockBlock != null) {
                 clockBlock.setVisibility(View.VISIBLE);
                 clockBlock.bringToFront();
@@ -1179,6 +1186,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         restartIdleClock();
         promptsPaused = false;
+        NetworkTimeSyncEngine.syncTimeAsync(this);
         applyCustomHomePrefs();
         if (grid.getAdapter() == null) grid.setAdapter(adapter);   // dropped by onTrimMemory
         switch (tileRefresh.onResume(packagesChangedSinceRebuild())) {
