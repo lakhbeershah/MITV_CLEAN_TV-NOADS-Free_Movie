@@ -241,18 +241,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } else {
                     targetX = 0f;
                 }
-            } else if (itemPos < focusedPosition) {
-                if (focusedPosition == lastPos) {
-                    targetX = -(expandX * 2f + spacing);
-                } else {
-                    targetX = -(expandX + spacing);
-                }
             } else {
-                if (focusedPosition == 0) {
-                    targetX = expandX * 2f + spacing;
-                } else {
-                    targetX = expandX + spacing;
-                }
+                targetX = 0f;
             }
 
             if (Math.abs(card.getTranslationX() - targetX) > 0.5f) {
@@ -523,12 +513,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (position == 0) tx = expandX;
             else if (position == lastPos) tx = -expandX;
             else tx = 0f;
-        } else if (position < focusedPosition) {
-            if (focusedPosition == lastPos) tx = -(expandX * 2f + spacing);
-            else tx = -(expandX + spacing);
         } else {
-            if (focusedPosition == 0) tx = expandX * 2f + spacing;
-            else tx = expandX + spacing;
+            tx = 0f;
         }
         h.card.setTranslationX(tx);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
@@ -919,10 +905,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 float fScale = animations ? FOCUS_SCALE : 1f;
                 float expandX = (fScale - 1.0f) * view.getWidth() / 2f;
                 float targetX = 0f;
-                if (p == 0) targetX = expandX;
-                else if (p == lastPos && lastPos > 0) targetX = -expandX;
+                if (focused) {
+                    if (p == 0) targetX = expandX;
+                    else if (p == lastPos && lastPos > 0) targetX = -expandX;
+                }
 
-                if (focused) view.setTranslationX(targetX);
+                view.setTranslationX(targetX);
                 banner.animate().cancel();
                 name.animate().cancel();
                 float scale = !animations ? 1f : FOCUS_SCALE;
@@ -941,6 +929,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     // A short zoom with no hardware layer: building a layer for so short an animation costs more
                     // frames than it saves. The name just appears instead of fading.
                     view.animate().scaleX(s).scaleY(s)
+                            .translationX(targetX)
                             .translationY(0f)
                             .translationZ(focused && advancedEffects ? 8f * density : 0f)
                             .setDuration(focused ? Motion.REDUCED_MS : 60)
@@ -953,6 +942,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if (focused) name.setTranslationY(density * 4f);
                 } else {
                     view.animate().scaleX(s).scaleY(s)
+                            .translationX(targetX)
                             .translationY(0f)
                             .translationZ(focused ? 20f * density : 0f)
                             .setDuration(focused ? 260 : 180)
